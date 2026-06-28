@@ -1,29 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useLeads } from "@/lib/leads-api";
+import { useDataTableState } from "@/lib/use-data-table-state";
 import type { Lead, LeadStatus } from "@/lib/types";
+import type { ColumnDef } from "@tanstack/react-table";
 
-import { FiEye, FiEdit2, FiPlus } from "react-icons/fi";
-
+import { DataTable } from "@/components/ui/data-table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TableSkeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
+import { FiEye, FiPlus } from "react-icons/fi";
 
 const ALL_STATUSES: LeadStatus[] = ["new", "quoted", "negotiating", "won", "lost"];
 
@@ -35,20 +25,8 @@ const STATUS_COLORS: Record<LeadStatus, string> = {
   lost: "bg-red-900/30 text-red-400 border-red-800",
 };
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-function StatusBadge({ status }: { status: LeadStatus }) {
-  return (
-    <Badge variant="outline" className={STATUS_COLORS[status]}>
-      {capitalize(status)}
-    </Badge>
-  );
 }
 
 function formatDate(dateStr: string | null) {
@@ -60,136 +38,151 @@ function formatDate(dateStr: string | null) {
   });
 }
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
+function getColumns(router: ReturnType<typeof useRouter>): ColumnDef<Lead>[] {
+  return [
+    {
+      id: "name",
+      header: "Name",
+      accessorKey: "name",
+      meta: { sortable: true },
+      cell: ({ row }) => (
+        <span className="font-medium text-on-surface">{row.original.name}</span>
+      ),
+    },
+    {
+      id: "phone",
+      header: "Phone",
+      accessorKey: "phone",
+      cell: ({ row }) => (
+        <span className="text-on-surface-medium">{row.original.phone}</span>
+      ),
+    },
+    {
+      id: "event_type",
+      header: "Event Type",
+      accessorKey: "event_type",
+      cell: ({ row }) => (
+        <span className="text-on-surface-medium">{row.original.event_type}</span>
+      ),
+    },
+    {
+      id: "approx_date",
+      header: "Date",
+      accessorKey: "approx_date",
+      meta: { sortable: true },
+      cell: ({ row }) => (
+        <span className="text-on-surface-medium">{formatDate(row.original.approx_date)}</span>
+      ),
+    },
+    {
+      id: "status",
+      header: "Status",
+      accessorKey: "status",
+      meta: { sortable: true },
+      cell: ({ row }) => (
+        <Badge variant="outline" className={STATUS_COLORS[row.original.status as LeadStatus]}>
+          {capitalize(row.original.status)}
+        </Badge>
+      ),
+    },
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => router.push(`/leads/${row.original.id}`)}
+          title="View"
+        >
+          <FiEye className="h-4 w-4" />
+        </Button>
+      ),
+    },
+  ];
+}
 
-export default function LeadsPage() {
+function LeadsContent() {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<LeadStatus | undefined>(undefined);
+  const ts = useDataTableState({ defaultSortBy: "created_at", defaultSortDir: "desc" });
 
-  const { data: leads, isLoading, isError } = useLeads({ status: statusFilter });
+  const { data, isLoading, isError } = useLeads({
+    status: statusFilter,
+    search: ts.search || undefined,
+    page: ts.page,
+    pageSize: ts.pageSize,
+    sortBy: ts.sortBy,
+    sortDir: ts.sortDir,
+  });
 
-  function handleRowClick(lead: Lead) {
-    router.push(`/leads/${lead.id}`);
-  }
+  const columns = getColumns(router);
 
   return (
     <div className="p-6">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-on-surface">Leads</h1>
         <Button onClick={() => router.push("/leads/new")}>
-          <FiPlus className="h-4 w-4" />
-          Add Lead
+          <FiPlus className="h-4 w-4 mr-1" /> Add Lead
         </Button>
       </div>
 
-      {/* Status Tabs */}
-      <Tabs
-        value={statusFilter ?? "all"}
-        onValueChange={(val) =>
-          setStatusFilter(val === "all" ? undefined : (val as LeadStatus))
-        }
-        className="mb-4"
-      >
-        <TabsList className="bg-surface-high">
-          <TabsTrigger value="all">All</TabsTrigger>
-          {ALL_STATUSES.map((s) => (
-            <TabsTrigger key={s} value={s}>
-              {capitalize(s)}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <Input
+          placeholder="Search name, phone, email…"
+          value={ts.search}
+          onChange={(e) => ts.setSearch(e.target.value)}
+          className="max-w-xs bg-surface border-outline text-on-surface"
+        />
+        <Tabs
+          value={statusFilter ?? "all"}
+          onValueChange={(v) =>
+            setStatusFilter(v === "all" ? undefined : (v as LeadStatus))
+          }
+        >
+          <TabsList className="bg-surface-high">
+            <TabsTrigger value="all">All</TabsTrigger>
+            {ALL_STATUSES.map((s) => (
+              <TabsTrigger key={s} value={s}>
+                {capitalize(s)}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
+      </div>
 
-      {/* Loading / Error */}
-      {isLoading && <TableSkeleton cols={6} />}
       {isError && (
-        <p className="text-red-400">Failed to load leads. Please try again.</p>
+        <p className="text-destructive text-sm mb-4">Failed to load leads. Please try again.</p>
       )}
 
-      {/* Table */}
-      {!isLoading && !isError && leads && (
-        <div className="rounded-lg border border-outline overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-surface-high">
-                <TableHead className="text-on-surface-medium">Name</TableHead>
-                <TableHead className="text-on-surface-medium">Phone</TableHead>
-                <TableHead className="text-on-surface-medium">Event Type</TableHead>
-                <TableHead className="text-on-surface-medium">Date</TableHead>
-                <TableHead className="text-on-surface-medium">Status</TableHead>
-                <TableHead className="text-on-surface-medium text-right">
-                  Actions
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {leads.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="py-0">
-                    <EmptyState
-                      variant="leads"
-                      title="No leads found"
-                      description="Track enquiries and prospects by adding your first lead."
-                    />
-                  </TableCell>
-                </TableRow>
-              )}
-              {leads.map((lead) => (
-                <TableRow
-                  key={lead.id}
-                  className="border-outline-low cursor-pointer hover:bg-surface-high transition-colors"
-                  onClick={() => handleRowClick(lead)}
-                >
-                  <TableCell className="text-on-surface font-medium">
-                    {lead.name}
-                  </TableCell>
-                  <TableCell className="text-on-surface-medium">
-                    {lead.phone}
-                  </TableCell>
-                  <TableCell className="text-on-surface-medium">
-                    {lead.event_type}
-                  </TableCell>
-                  <TableCell className="text-on-surface-medium">
-                    {formatDate(lead.approx_date)}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={lead.status} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/leads/${lead.id}`);
-                        }}
-                        title="View"
-                      >
-                        <FiEye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/leads/${lead.id}`);
-                        }}
-                        title="Edit"
-                      >
-                        <FiEdit2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+      <DataTable
+        columns={columns}
+        data={data?.items ?? []}
+        total={data?.total ?? 0}
+        page={ts.page}
+        pageSize={ts.pageSize}
+        onPageChange={ts.setPage}
+        onPageSizeChange={ts.setPageSize}
+        onSortChange={ts.setSort}
+        sortBy={ts.sortBy}
+        sortDir={ts.sortDir}
+        isLoading={isLoading}
+        emptyState={
+          <EmptyState
+            variant="leads"
+            title="No leads found"
+            description="Track enquiries and prospects by adding your first lead."
+          />
+        }
+      />
     </div>
+  );
+}
+
+export default function LeadsPage() {
+  return (
+    <Suspense fallback={null}>
+      <LeadsContent />
+    </Suspense>
   );
 }

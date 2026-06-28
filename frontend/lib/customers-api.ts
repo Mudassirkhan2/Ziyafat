@@ -1,12 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api";
-import type { Customer, Booking } from "./types";
+import type { Customer, Booking, Paginated } from "./types";
 
-export function useCustomers(search?: string) {
-  const qs = search ? `?search=${encodeURIComponent(search)}` : "";
-  return useQuery<Customer[]>({
-    queryKey: ["customers", search],
-    queryFn: () => api.get<Customer[]>(`/customers${qs}`),
+export function useCustomers(params?: {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+}) {
+  const q = new URLSearchParams();
+  if (params?.search) q.set("search", params.search);
+  if (params?.page) q.set("page", String(params.page));
+  if (params?.pageSize) q.set("page_size", String(params.pageSize));
+  if (params?.sortBy) q.set("sort_by", params.sortBy);
+  if (params?.sortDir) q.set("sort_dir", params.sortDir);
+  const qs = q.toString() ? `?${q.toString()}` : "";
+  return useQuery<Paginated<Customer>>({
+    queryKey: ["customers", params],
+    queryFn: () => api.get<Paginated<Customer>>(`/customers${qs}`),
   });
 }
 

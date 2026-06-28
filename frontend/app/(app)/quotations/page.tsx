@@ -1,18 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
-import {
-  useQuotations,
-  useCreateQuotation,
-} from "@/lib/quotations-api";
-import { useBookings } from "@/lib/bookings-api";
-import type { Quotation, QuotationStatus } from "@/lib/types";
+import { useQuotations, useCreateQuotation } from "@/lib/quotations-api";
+import { useBookingsForSelect } from "@/lib/bookings-api";
+import { useDataTableState } from "@/lib/use-data-table-state";
+import type { Booking, Quotation, QuotationStatus } from "@/lib/types";
+import type { ColumnDef } from "@tanstack/react-table";
 
+import { DataTable } from "@/components/ui/data-table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Sheet,
@@ -23,7 +23,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { TableSkeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FiPlus, FiLoader, FiX, FiEye } from "react-icons/fi";
 import {
@@ -35,14 +34,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -72,7 +63,7 @@ const STATUS_COLORS: Record<QuotationStatus, string> = {
 };
 
 // ---------------------------------------------------------------------------
-// Schema — scalar fields only; line items managed separately
+// Schema
 // ---------------------------------------------------------------------------
 
 const quotationSchema = z.object({
@@ -85,7 +76,7 @@ const quotationSchema = z.object({
 type QuotationFormValues = z.infer<typeof quotationSchema>;
 
 // ---------------------------------------------------------------------------
-// Line item row type (string fields for controlled inputs)
+// Line item row type
 // ---------------------------------------------------------------------------
 
 interface LineItemRow {
@@ -146,7 +137,7 @@ function CreateQuotationSheet({
   onOpenChange: (open: boolean) => void;
 }) {
   const createQuotation = useCreateQuotation();
-  const { data: bookings } = useBookings();
+  const { data: bookings } = useBookingsForSelect();
 
   const [lineItems, setLineItems] = useState<LineItemRow[]>([emptyRow()]);
 
@@ -161,7 +152,6 @@ function CreateQuotationSheet({
   });
 
   const discountValue = form.watch("discount") ?? "0";
-
   const subtotal = lineItems.reduce((sum, row) => sum + rowTotal(row), 0);
   const total = subtotal - (parseFloat(discountValue) || 0);
 
@@ -233,7 +223,7 @@ function CreateQuotationSheet({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {(bookings ?? []).map((b) => (
+                      {(bookings?.items ?? []).map((b) => (
                         <SelectItem key={b.id} value={b.id}>
                           {b.title}
                         </SelectItem>
@@ -348,7 +338,10 @@ function CreateQuotationSheet({
               </Button>
 
               <div className="rounded-md bg-surface-high border border-outline-low px-4 py-2 text-sm text-on-surface-medium">
-                Subtotal: <span className="font-medium text-on-surface">₹{subtotal.toLocaleString("en-IN")}</span>
+                Subtotal:{" "}
+                <span className="font-medium text-on-surface">
+                  ₹{subtotal.toLocaleString("en-IN")}
+                </span>
               </div>
             </div>
 
@@ -382,37 +375,116 @@ function CreateQuotationSheet({
 }
 
 // ---------------------------------------------------------------------------
+// Column definitions
+// ---------------------------------------------------------------------------
+
+function getColumns(
+  router: ReturnType<typeof useRouter>,
+  bookingMap: Map<string, Booking>
+): ColumnDef<Quotation>[] {
+  return [
+    {
+      id: "booking",
+      header: "Booking",
+      cell: ({ row }) => {
+        const booking = bookingMap.get(row.original.booking_id);
+        return (
+          <span className="font-medium text-on-surface">
+            {booking ? booking.title : row.original.booking_id}
+          </span>
+        );
+      },
+    },
+    {
+      id: "status",
+      header: "Status",
+      accessorKey: "status",
+      meta: { sortable: true },
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+    },
+    {
+      id: "total",
+      header: "Total",
+      accessorKey: "total",
+      meta: { sortable: true },
+      cell: ({ row }) => (
+        <span className="text-on-surface-medium">
+          ₹{row.original.total.toLocaleString("en-IN")}
+        </span>
+      ),
+    },
+    {
+      id: "valid_until",
+      header: "Valid Until",
+      cell: ({ row }) => (
+        <span className="text-on-surface-medium">{formatDate(row.original.valid_until)}</span>
+      ),
+    },
+    {
+      id: "created_at",
+      header: "Created",
+      accessorKey: "created_at",
+      meta: { sortable: true },
+      cell: ({ row }) => (
+        <span className="text-on-surface-medium">{formatDate(row.original.created_at)}</span>
+      ),
+    },
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => router.push(`/quotations/${row.original.id}`)}
+          title="View"
+        >
+          <FiEye className="h-4 w-4" />
+        </Button>
+      ),
+    },
+  ];
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
-export default function QuotationsPage() {
+function QuotationsContent() {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<QuotationStatus | undefined>(undefined);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const ts = useDataTableState({ defaultSortBy: "created_at", defaultSortDir: "desc" });
 
-  const { data: quotations, isLoading, isError } = useQuotations({ status: statusFilter });
-  const { data: bookings } = useBookings();
+  const { data: bookings } = useBookingsForSelect();
 
-  // Build a lookup map for quick booking title retrieval
-  const bookingMap = new Map((bookings ?? []).map((b) => [b.id, b]));
+  const { data, isLoading, isError } = useQuotations({
+    status: statusFilter,
+    page: ts.page,
+    pageSize: ts.pageSize,
+    sortBy: ts.sortBy,
+    sortDir: ts.sortDir,
+  });
+
+  const bookingMap = new Map((bookings?.items ?? []).map((b) => [b.id, b]));
+  const columns = getColumns(router, bookingMap);
 
   return (
     <div className="p-6">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-on-surface">Quotations</h1>
         <Button onClick={() => setSheetOpen(true)}>
-          <FiPlus className="h-4 w-4" />
+          <FiPlus className="h-4 w-4 mr-1" />
           New Quotation
         </Button>
       </div>
 
-      {/* Status Tabs */}
       <Tabs
         value={statusFilter ?? "all"}
-        onValueChange={(val) =>
-          setStatusFilter(val === "all" ? undefined : (val as QuotationStatus))
-        }
+        onValueChange={(val) => {
+          setStatusFilter(val === "all" ? undefined : (val as QuotationStatus));
+          ts.setPage(1);
+        }}
         className="mb-4"
       >
         <TabsList className="bg-surface-high">
@@ -425,84 +497,42 @@ export default function QuotationsPage() {
         </TabsList>
       </Tabs>
 
-      {/* Loading / Error */}
-      {isLoading && <TableSkeleton cols={7} />}
       {isError && (
-        <p className="text-red-400">Failed to load quotations. Please try again.</p>
+        <p className="text-destructive text-sm mb-4">
+          Failed to load quotations. Please try again.
+        </p>
       )}
 
-      {/* Table */}
-      {!isLoading && !isError && quotations && (
-        <div className="rounded-lg border border-outline overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-surface-high">
-                <TableHead className="text-on-surface-medium">Booking</TableHead>
-                <TableHead className="text-on-surface-medium">Version</TableHead>
-                <TableHead className="text-on-surface-medium">Status</TableHead>
-                <TableHead className="text-on-surface-medium">Total</TableHead>
-                <TableHead className="text-on-surface-medium">Valid Until</TableHead>
-                <TableHead className="text-on-surface-medium">Created</TableHead>
-                <TableHead className="text-on-surface-medium text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {quotations.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} className="py-0">
-                    <EmptyState
-                      variant="quotations"
-                      title="No quotations found"
-                      description="Create a quotation for a booking to share with your customer."
-                    />
-                  </TableCell>
-                </TableRow>
-              )}
-              {quotations.map((q) => {
-                const booking = bookingMap.get(q.booking_id);
-                return (
-                  <TableRow
-                    key={q.id}
-                    className="border-outline-low hover:bg-surface-high transition-colors"
-                  >
-                    <TableCell className="text-on-surface font-medium">
-                      {booking ? booking.title : q.booking_id}
-                    </TableCell>
-                    <TableCell className="text-on-surface-medium">
-                      v{q.version}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={q.status} />
-                    </TableCell>
-                    <TableCell className="text-on-surface-medium">
-                      ₹{q.total.toLocaleString("en-IN")}
-                    </TableCell>
-                    <TableCell className="text-on-surface-medium">
-                      {formatDate(q.valid_until)}
-                    </TableCell>
-                    <TableCell className="text-on-surface-medium">
-                      {formatDate(q.created_at)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => router.push(`/quotations/${q.id}`)}
-                        title="View"
-                      >
-                        <FiEye className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+      <DataTable
+        columns={columns}
+        data={data?.items ?? []}
+        total={data?.total ?? 0}
+        page={ts.page}
+        pageSize={ts.pageSize}
+        onPageChange={ts.setPage}
+        onPageSizeChange={ts.setPageSize}
+        onSortChange={ts.setSort}
+        sortBy={ts.sortBy}
+        sortDir={ts.sortDir}
+        isLoading={isLoading}
+        emptyState={
+          <EmptyState
+            variant="quotations"
+            title="No quotations found"
+            description="Create a quotation for a booking to share with your customer."
+          />
+        }
+      />
 
-      {/* Create Sheet */}
       <CreateQuotationSheet open={sheetOpen} onOpenChange={setSheetOpen} />
     </div>
+  );
+}
+
+export default function QuotationsPage() {
+  return (
+    <Suspense fallback={null}>
+      <QuotationsContent />
+    </Suspense>
   );
 }

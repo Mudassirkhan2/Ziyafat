@@ -13,14 +13,8 @@ export function useBookingEvents(bookingId: string) {
 export function useCreateEvent(bookingId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: {
-      name: string;
-      date: string;
-      guest_count: number;
-      catering_model: CateringModel;
-      venue?: string;
-      notes?: string;
-    }) => api.post<BookingEvent>(`/bookings/${bookingId}/events`, body),
+    mutationFn: (body: Partial<BookingEvent> & { name: string; date: string; guest_count: number; catering_model: CateringModel }) =>
+      api.post<BookingEvent>(`/bookings/${bookingId}/events`, body),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["bookings", bookingId, "events"] }),
   });

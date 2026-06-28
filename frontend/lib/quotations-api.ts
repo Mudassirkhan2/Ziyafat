@@ -1,20 +1,28 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api";
-import type { Quotation, QuotationLineItem, QuotationStatus } from "./types";
+import type { Quotation, QuotationLineItem, QuotationStatus, Paginated } from "./types";
 
 interface QuotationParams {
   booking_id?: string;
   status?: QuotationStatus;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
 }
 
 export function useQuotations(params?: QuotationParams) {
-  const query = new URLSearchParams();
-  if (params?.booking_id) query.set("booking_id", params.booking_id);
-  if (params?.status) query.set("status", params.status);
-  const qs = query.toString();
-  return useQuery<Quotation[]>({
+  const q = new URLSearchParams();
+  if (params?.booking_id) q.set("booking_id", params.booking_id);
+  if (params?.status) q.set("status", params.status);
+  if (params?.page) q.set("page", String(params.page));
+  if (params?.pageSize) q.set("page_size", String(params.pageSize));
+  if (params?.sortBy) q.set("sort_by", params.sortBy);
+  if (params?.sortDir) q.set("sort_dir", params.sortDir);
+  const qs = q.toString();
+  return useQuery<Paginated<Quotation>>({
     queryKey: ["quotations", params],
-    queryFn: () => api.get<Quotation[]>(`/quotations${qs ? `?${qs}` : ""}`),
+    queryFn: () => api.get<Paginated<Quotation>>(`/quotations${qs ? `?${qs}` : ""}`),
   });
 }
 

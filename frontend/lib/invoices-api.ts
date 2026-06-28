@@ -1,20 +1,28 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api";
-import type { Invoice, QuotationLineItem, InvoiceStatus } from "./types";
+import type { Invoice, QuotationLineItem, InvoiceStatus, Paginated } from "./types";
 
 interface InvoiceParams {
   booking_id?: string;
   status?: InvoiceStatus;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
 }
 
 export function useInvoices(params?: InvoiceParams) {
-  const query = new URLSearchParams();
-  if (params?.booking_id) query.set("booking_id", params.booking_id);
-  if (params?.status) query.set("status", params.status);
-  const qs = query.toString();
-  return useQuery<Invoice[]>({
+  const q = new URLSearchParams();
+  if (params?.booking_id) q.set("booking_id", params.booking_id);
+  if (params?.status) q.set("status", params.status);
+  if (params?.page) q.set("page", String(params.page));
+  if (params?.pageSize) q.set("page_size", String(params.pageSize));
+  if (params?.sortBy) q.set("sort_by", params.sortBy);
+  if (params?.sortDir) q.set("sort_dir", params.sortDir);
+  const qs = q.toString();
+  return useQuery<Paginated<Invoice>>({
     queryKey: ["invoices", params],
-    queryFn: () => api.get<Invoice[]>(`/invoices${qs ? `?${qs}` : ""}`),
+    queryFn: () => api.get<Paginated<Invoice>>(`/invoices${qs ? `?${qs}` : ""}`),
   });
 }
 

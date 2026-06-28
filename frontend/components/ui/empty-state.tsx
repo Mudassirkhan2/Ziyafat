@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 function BookingsSVG() {
   return (
     <svg viewBox="0 0 80 80" width="80" height="80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Calendar body */}
       <rect x="10" y="18" width="60" height="52" rx="5" stroke="currentColor" strokeWidth="1.5" />
       {/* Header bar */}
       <rect x="10" y="18" width="60" height="16" rx="5" fill="currentColor" fillOpacity="0.08" />

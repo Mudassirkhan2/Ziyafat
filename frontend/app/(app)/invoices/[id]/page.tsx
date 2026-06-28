@@ -183,9 +183,37 @@ export default function InvoiceDetailPage({
           </p>
         </div>
         <div>
+          <p className="text-xs text-on-surface-low uppercase tracking-wide mb-1">Invoice Date</p>
+          <p className="text-sm text-on-surface-medium">{formatDate(invoice.invoice_date ?? invoice.created_at)}</p>
+        </div>
+        <div>
           <p className="text-xs text-on-surface-low uppercase tracking-wide mb-1">Created</p>
           <p className="text-sm text-on-surface-medium">{formatDate(invoice.created_at)}</p>
         </div>
+        {invoice.attendees_count && (
+          <div>
+            <p className="text-xs text-on-surface-low uppercase tracking-wide mb-1">Attendees</p>
+            <p className="text-sm text-on-surface-medium">{invoice.attendees_count} pax</p>
+          </div>
+        )}
+        {invoice.payment_method && (
+          <div>
+            <p className="text-xs text-on-surface-low uppercase tracking-wide mb-1">Payment Method</p>
+            <p className="text-sm text-on-surface-medium capitalize">{invoice.payment_method.replace(/_/g, " ")}</p>
+          </div>
+        )}
+        {invoice.payment_received_date && (
+          <div>
+            <p className="text-xs text-on-surface-low uppercase tracking-wide mb-1">Payment Received</p>
+            <p className="text-sm text-on-surface-medium">{formatDate(invoice.payment_received_date)}</p>
+          </div>
+        )}
+        {invoice.gstin_customer && (
+          <div>
+            <p className="text-xs text-on-surface-low uppercase tracking-wide mb-1">Customer GSTIN</p>
+            <p className="text-sm text-on-surface font-mono">{invoice.gstin_customer}</p>
+          </div>
+        )}
       </div>
 
       {/* Line items table */}
@@ -240,11 +268,53 @@ export default function InvoiceDetailPage({
               <span>− ₹{invoice.discount.toLocaleString("en-IN")}</span>
             </div>
           )}
+          {(invoice.service_charge_amount ?? 0) > 0 && (
+            <div className="flex justify-between text-sm text-on-surface-medium">
+              <span>Service Charge</span>
+              <span>₹{(invoice.service_charge_amount ?? 0).toLocaleString("en-IN")}</span>
+            </div>
+          )}
+          {(invoice.tax_amount ?? 0) > 0 && (
+            <div className="flex justify-between text-sm text-on-surface-medium">
+              <span>Tax</span>
+              <span>₹{(invoice.tax_amount ?? 0).toLocaleString("en-IN")}</span>
+            </div>
+          )}
+          {(invoice.gratuity_amount ?? 0) > 0 && (
+            <div className="flex justify-between text-sm text-on-surface-medium">
+              <span>Gratuity</span>
+              <span>₹{(invoice.gratuity_amount ?? 0).toLocaleString("en-IN")}</span>
+            </div>
+          )}
+          {(invoice.delivery_fee ?? 0) > 0 && (
+            <div className="flex justify-between text-sm text-on-surface-medium">
+              <span>Delivery Fee</span>
+              <span>₹{(invoice.delivery_fee ?? 0).toLocaleString("en-IN")}</span>
+            </div>
+          )}
+          {(invoice.staffing_fee ?? 0) > 0 && (
+            <div className="flex justify-between text-sm text-on-surface-medium">
+              <span>Staffing Fee</span>
+              <span>₹{(invoice.staffing_fee ?? 0).toLocaleString("en-IN")}</span>
+            </div>
+          )}
           <Separator className="my-1 border-outline-low" />
           <div className="flex justify-between text-base font-bold text-on-surface">
             <span>Total</span>
             <span>₹{invoice.total.toLocaleString("en-IN")}</span>
           </div>
+          {(invoice.amount_paid ?? 0) > 0 && (
+            <>
+              <div className="flex justify-between text-sm text-green-400">
+                <span>Amount Paid</span>
+                <span>− ₹{(invoice.amount_paid ?? 0).toLocaleString("en-IN")}</span>
+              </div>
+              <div className="flex justify-between text-sm font-semibold text-on-surface">
+                <span>Balance Due</span>
+                <span>₹{(invoice.balance_due ?? invoice.total - (invoice.amount_paid ?? 0)).toLocaleString("en-IN")}</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

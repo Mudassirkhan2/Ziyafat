@@ -2,7 +2,7 @@ import asyncio
 import re
 from datetime import datetime, date, timezone
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from beanie import PydanticObjectId
@@ -13,6 +13,7 @@ from models.booking import Booking
 from models.organisation import Organisation
 from models.user import User, UserRole
 from services.pdf_service import render_pdf
+from schemas.pagination import PaginatedResponse
 
 
 def _org_fallback():
@@ -72,6 +73,18 @@ class InvoiceResponse(BaseModel):
     total: float
     due_date: Optional[date]
     notes: Optional[str]
+    invoice_date: Optional[date]
+    service_charge_amount: float
+    tax_amount: float
+    gratuity_amount: float
+    delivery_fee: float
+    staffing_fee: float
+    amount_paid: float
+    balance_due: float
+    payment_method: Optional[str]
+    payment_received_date: Optional[date]
+    attendees_count: Optional[int]
+    gstin_customer: Optional[str]
     created_at: datetime
     updated_at: datetime
 
@@ -85,6 +98,18 @@ class CreateInvoiceBody(BaseModel):
     total: float = 0.0
     due_date: Optional[date] = None
     notes: Optional[str] = None
+    invoice_date: Optional[date] = None
+    service_charge_amount: float = 0.0
+    tax_amount: float = 0.0
+    gratuity_amount: float = 0.0
+    delivery_fee: float = 0.0
+    staffing_fee: float = 0.0
+    amount_paid: float = 0.0
+    balance_due: float = 0.0
+    payment_method: Optional[str] = None
+    payment_received_date: Optional[date] = None
+    attendees_count: Optional[int] = None
+    gstin_customer: Optional[str] = None
 
 
 class UpdateInvoiceBody(BaseModel):
@@ -95,16 +120,28 @@ class UpdateInvoiceBody(BaseModel):
     total: Optional[float] = None
     due_date: Optional[date] = None
     notes: Optional[str] = None
+    invoice_date: Optional[date] = None
+    service_charge_amount: Optional[float] = None
+    tax_amount: Optional[float] = None
+    gratuity_amount: Optional[float] = None
+    delivery_fee: Optional[float] = None
+    staffing_fee: Optional[float] = None
+    amount_paid: Optional[float] = None
+    balance_due: Optional[float] = None
+    payment_method: Optional[str] = None
+    payment_received_date: Optional[date] = None
+    attendees_count: Optional[int] = None
+    gstin_customer: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-async def _generate_invoice_number() -> str:
+async def _generate_invoice_number(org_id) -> str:
     year = datetime.now(timezone.utc).year
     prefix = f"INV-{year}-"
-    all_invoices = await Invoice.find({"invoice_number": {"$regex": f"^{prefix}"}}).to_list()
+    all_invoices = await Invoice.find({"org_id": org_id, "invoice_number": {"$regex": f"^{prefix}"}}).to_list()
     if not all_invoices:
         return f"{prefix}001"
     seqs = []
@@ -169,6 +206,18 @@ async def _invoice_response(inv: Invoice) -> InvoiceResponse:
         total=inv.total,
         due_date=inv.due_date,
         notes=inv.notes,
+        invoice_date=inv.invoice_date,
+        service_charge_amount=inv.service_charge_amount,
+        tax_amount=inv.tax_amount,
+        gratuity_amount=inv.gratuity_amount,
+        delivery_fee=inv.delivery_fee,
+        staffing_fee=inv.staffing_fee,
+        amount_paid=inv.amount_paid,
+        balance_due=inv.balance_due,
+        payment_method=inv.payment_method,
+        payment_received_date=inv.payment_received_date,
+        attendees_count=inv.attendees_count,
+        gstin_customer=inv.gstin_customer,
         created_at=inv.created_at,
         updated_at=inv.updated_at,
     )
@@ -178,19 +227,51 @@ async def _invoice_response(inv: Invoice) -> InvoiceResponse:
 # Routes
 # ---------------------------------------------------------------------------
 
-@router.get("", response_model=list[InvoiceResponse])
+_INVOICE_SORT_FIELDS = {"created_at", "total", "status"}
+
+
+@router.get("", response_model=PaginatedResponse[InvoiceResponse])
 async def list_invoices(
     booking_id: Optional[str] = None,
     status: Optional[InvoiceStatus] = None,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    sort_by: str = Query(default="created_at"),
+    sort_dir: str = Query(default="desc", pattern="^(asc|desc)$"),
     current_user: User = Depends(get_current_user),
 ):
-    filters = {}
+    if sort_by not in _INVOICE_SORT_FIELDS:
+        raise HTTPException(status_code=400, detail=f"sort_by must be one of {sorted(_INVOICE_SORT_FIELDS)}")
+
+    # When filtering by booking_id, fetch all for that booking without DB pagination
+    if booking_id:
+        filters = {"org_id": current_user.org_id}
+        if status:
+            filters["status"] = status
+        all_inv = await Invoice.find(filters).to_list()
+        matched = [inv for inv in all_inv if _resolve_id(inv.booking_id) == booking_id]
+        items = await asyncio.gather(*[_invoice_response(inv) for inv in matched])
+        return PaginatedResponse.build(
+            items=list(items), total=len(items), page=1, page_size=len(items) or 1
+        )
+
+    filters = {"org_id": current_user.org_id}
     if status:
         filters["status"] = status
-    invoices = await Invoice.find(filters).to_list()
-    if booking_id:
-        invoices = [inv for inv in invoices if _resolve_id(inv.booking_id) == booking_id]
-    return [await _invoice_response(inv) for inv in invoices]
+
+    sort_str = f"+{sort_by}" if sort_dir == "asc" else f"-{sort_by}"
+    skip = (page - 1) * page_size
+
+    total = await Invoice.find(filters).count()
+    invoices = await Invoice.find(filters).sort(sort_str).skip(skip).limit(page_size).to_list()
+    items = await asyncio.gather(*[_invoice_response(inv) for inv in invoices])
+
+    return PaginatedResponse.build(
+        items=list(items),
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.post("", response_model=InvoiceResponse, status_code=status.HTTP_201_CREATED)
@@ -199,7 +280,7 @@ async def create_invoice(
     current_user: User = Depends(require_role(UserRole.owner, UserRole.manager)),
 ):
     booking = await Booking.get(body.booking_id)
-    if not booking:
+    if not booking or booking.org_id != current_user.org_id:
         raise HTTPException(status_code=404, detail="Booking not found")
 
     line_items: list[QuotationLineItem] = []
@@ -234,9 +315,10 @@ async def create_invoice(
     else:
         line_items = _build_line_items(body.line_items)
 
-    invoice_number = await _generate_invoice_number()
+    invoice_number = await _generate_invoice_number(current_user.org_id)
     now = datetime.now(timezone.utc)
     invoice = Invoice(
+        org_id=current_user.org_id,
         booking_id=booking,
         quotation_id=quotation_link,
         invoice_number=invoice_number,
@@ -247,6 +329,18 @@ async def create_invoice(
         total=total,
         due_date=body.due_date,
         notes=body.notes,
+        invoice_date=body.invoice_date,
+        service_charge_amount=body.service_charge_amount,
+        tax_amount=body.tax_amount,
+        gratuity_amount=body.gratuity_amount,
+        delivery_fee=body.delivery_fee,
+        staffing_fee=body.staffing_fee,
+        amount_paid=body.amount_paid,
+        balance_due=body.balance_due,
+        payment_method=body.payment_method,
+        payment_received_date=body.payment_received_date,
+        attendees_count=body.attendees_count,
+        gstin_customer=body.gstin_customer,
         created_at=now,
         updated_at=now,
     )
@@ -260,7 +354,7 @@ async def get_invoice(
     current_user: User = Depends(get_current_user),
 ):
     invoice = await Invoice.get(invoice_id)
-    if not invoice:
+    if not invoice or invoice.org_id != current_user.org_id:
         raise HTTPException(status_code=404, detail="Invoice not found")
     return await _invoice_response(invoice)
 
@@ -272,7 +366,7 @@ async def update_invoice(
     current_user: User = Depends(require_role(UserRole.owner, UserRole.manager)),
 ):
     invoice = await Invoice.get(invoice_id)
-    if not invoice:
+    if not invoice or invoice.org_id != current_user.org_id:
         raise HTTPException(status_code=404, detail="Invoice not found")
 
     if body.line_items is not None and invoice.status != InvoiceStatus.draft:
@@ -295,6 +389,30 @@ async def update_invoice(
         invoice.due_date = body.due_date
     if body.notes is not None:
         invoice.notes = body.notes
+    if body.invoice_date is not None:
+        invoice.invoice_date = body.invoice_date
+    if body.service_charge_amount is not None:
+        invoice.service_charge_amount = body.service_charge_amount
+    if body.tax_amount is not None:
+        invoice.tax_amount = body.tax_amount
+    if body.gratuity_amount is not None:
+        invoice.gratuity_amount = body.gratuity_amount
+    if body.delivery_fee is not None:
+        invoice.delivery_fee = body.delivery_fee
+    if body.staffing_fee is not None:
+        invoice.staffing_fee = body.staffing_fee
+    if body.amount_paid is not None:
+        invoice.amount_paid = body.amount_paid
+    if body.balance_due is not None:
+        invoice.balance_due = body.balance_due
+    if body.payment_method is not None:
+        invoice.payment_method = body.payment_method
+    if body.payment_received_date is not None:
+        invoice.payment_received_date = body.payment_received_date
+    if body.attendees_count is not None:
+        invoice.attendees_count = body.attendees_count
+    if body.gstin_customer is not None:
+        invoice.gstin_customer = body.gstin_customer
 
     invoice.updated_at = datetime.now(timezone.utc)
     await invoice.save()
@@ -307,7 +425,7 @@ async def delete_invoice(
     current_user: User = Depends(require_role(UserRole.owner, UserRole.manager)),
 ):
     invoice = await Invoice.get(invoice_id)
-    if not invoice:
+    if not invoice or invoice.org_id != current_user.org_id:
         raise HTTPException(status_code=404, detail="Invoice not found")
     if invoice.status != InvoiceStatus.draft:
         raise HTTPException(status_code=400, detail="Can only delete draft invoices")
@@ -320,10 +438,10 @@ async def get_invoice_pdf(
     current_user: User = Depends(get_current_user),
 ):
     invoice = await Invoice.get(invoice_id)
-    if not invoice:
+    if not invoice or invoice.org_id != current_user.org_id:
         raise HTTPException(status_code=404, detail="Invoice not found")
     booking = await Booking.get(_resolve_id(invoice.booking_id))
-    org = await Organisation.find_one()
+    org = await Organisation.get(current_user.org_id)
     if org is None:
         org = _org_fallback()
 

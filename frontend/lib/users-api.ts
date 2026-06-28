@@ -1,11 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api";
-import type { StaffUser } from "./types";
+import type { StaffUser, Paginated } from "./types";
 
-export function useUsers() {
-  return useQuery<StaffUser[]>({
-    queryKey: ["users"],
-    queryFn: () => api.get<StaffUser[]>("/users"),
+export function useUsers(params?: {
+  search?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
+}) {
+  const q = new URLSearchParams();
+  if (params?.search) q.set("search", params.search);
+  if (params?.page) q.set("page", String(params.page));
+  if (params?.pageSize) q.set("page_size", String(params.pageSize));
+  if (params?.sortBy) q.set("sort_by", params.sortBy);
+  if (params?.sortDir) q.set("sort_dir", params.sortDir);
+  const qs = q.toString() ? `?${q.toString()}` : "";
+  return useQuery<Paginated<StaffUser>>({
+    queryKey: ["users", params],
+    queryFn: () => api.get<Paginated<StaffUser>>(`/users${qs}`),
   });
 }
 

@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/", "/login", "/setup"];
+const PUBLIC_PATHS = ["/", "/login", "/signup", "/setup"];
+// Paths that authenticated users should NOT be able to visit
+const AUTH_ONLY_PATHS = ["/login", "/signup"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -15,20 +17,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check setup status first — fresh installs redirect everyone to /setup
-  if (pathname !== "/setup") {
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-      const setupRes = await fetch(`${apiUrl}/api/v1/setup/status`);
-      if (setupRes.ok) {
-        const { completed } = await setupRes.json();
-        if (!completed) {
-          return NextResponse.redirect(new URL("/setup", request.url));
-        }
-      }
-    } catch {
-      // API unreachable — allow through so the UI can show an error
-    }
+  const accessToken = request.cookies.get("access_token");
+
+  // Authenticated users visiting login/signup get sent to the app
+  if (accessToken && AUTH_ONLY_PATHS.includes(pathname)) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // Public paths don't require auth
@@ -41,7 +34,6 @@ export async function middleware(request: NextRequest) {
   }
 
   // All other paths require an access token cookie
-  const accessToken = request.cookies.get("access_token");
   if (!accessToken) {
     return NextResponse.redirect(new URL("/login", request.url));
   }

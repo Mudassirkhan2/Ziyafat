@@ -30,6 +30,20 @@ class OrgResponse(BaseModel):
     on_secondary_container: str
     report_header: ReportHeaderConfig
     storefront_sections: list[StorefrontSection]
+    gstin: str | None
+    website: str | None
+    bank_account_name: str | None
+    bank_account_number: str | None
+    bank_ifsc: str | None
+    bank_name: str | None
+    default_payment_terms: str | None
+    default_cancellation_policy: str | None
+    default_service_charge_percentage: float
+    default_tax_rate: float
+    default_gratuity_percentage: float
+    invoice_prefix: str
+    social_links: dict
+    setup_completed: bool
 
 
 class ReportHeaderUpdateConfig(BaseModel):
@@ -57,25 +71,39 @@ class OrgUpdateRequest(BaseModel):
     on_secondary_container: str | None = None
     report_header: ReportHeaderUpdateConfig | None = None
     storefront_sections: list[StorefrontSection] | None = None
+    gstin: str | None = None
+    website: str | None = None
+    bank_account_name: str | None = None
+    bank_account_number: str | None = None
+    bank_ifsc: str | None = None
+    bank_name: str | None = None
+    default_payment_terms: str | None = None
+    default_cancellation_policy: str | None = None
+    default_service_charge_percentage: float | None = None
+    default_tax_rate: float | None = None
+    default_gratuity_percentage: float | None = None
+    invoice_prefix: str | None = None
+    social_links: dict | None = None
+    setup_completed: bool | None = None
 
 
-async def _get_org() -> Organisation:
-    org = await Organisation.find_one()
+async def _get_org(current_user: User) -> Organisation:
+    org = await Organisation.get(current_user.org_id)
     if not org:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Organisation not found")
     return org
 
 
 @router.get("", response_model=OrgResponse)
-async def get_organisation(_: User = Depends(get_current_user)):
-    return await _get_org()
+async def get_organisation(current_user: User = Depends(get_current_user)):
+    return await _get_org(current_user)
 
 
 @router.patch("", response_model=OrgResponse)
 async def update_organisation(
-    body: OrgUpdateRequest, _: User = Depends(get_current_user)
+    body: OrgUpdateRequest, current_user: User = Depends(get_current_user)
 ):
-    org = await _get_org()
+    org = await _get_org(current_user)
     update_data = body.model_dump(exclude_none=True)
 
     if "report_header" in update_data:
@@ -93,9 +121,9 @@ async def update_organisation(
 @router.post("/logo", response_model=OrgResponse)
 async def upload_org_logo(
     file: UploadFile = File(...),
-    _: User = Depends(require_role(UserRole.owner, UserRole.manager)),
+    current_user: User = Depends(require_role(UserRole.owner, UserRole.manager)),
 ):
-    org = await _get_org()
+    org = await _get_org(current_user)
     file_bytes = await file.read()
     url = await asyncio.to_thread(upload_image, file_bytes, "ziyafat/org", f"{org.slug}-logo")
     org.logo_url = url
@@ -106,9 +134,9 @@ async def upload_org_logo(
 @router.post("/banner", response_model=OrgResponse)
 async def upload_org_banner(
     file: UploadFile = File(...),
-    _: User = Depends(require_role(UserRole.owner, UserRole.manager)),
+    current_user: User = Depends(require_role(UserRole.owner, UserRole.manager)),
 ):
-    org = await _get_org()
+    org = await _get_org(current_user)
     file_bytes = await file.read()
     url = await asyncio.to_thread(upload_image, file_bytes, "ziyafat/org", f"{org.slug}-banner")
     org.banner_url = url

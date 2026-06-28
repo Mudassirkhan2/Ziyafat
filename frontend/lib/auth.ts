@@ -5,6 +5,7 @@ export type UserRole = "owner" | "manager" | "kitchen" | "viewer";
 
 export type CurrentUser = {
   id: string;
+  org_id: string;
   name: string;
   email: string;
   role: UserRole;

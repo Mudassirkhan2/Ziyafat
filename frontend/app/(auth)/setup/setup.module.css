@@ -1,0 +1,660 @@
+.shell {
+  --bg: #06100f;
+  --em: #0e6e6e;
+  --em-deep: #072e2e;
+  --bright: #74d6cf;
+  --gold: #caa463;
+  --gold-s: #e6cf9c;
+  --tx: #eef3ee;
+  --mt: #9bb1a5;
+  --line: rgba(255, 255, 255, 0.09);
+
+  display: grid;
+  grid-template-columns: 0.98fr 1.02fr;
+  min-height: 100vh;
+  font-family: var(--font-sans-pub), system-ui, sans-serif;
+  background: #0a0a0a;
+  color: var(--tx);
+}
+
+@media (max-width: 1024px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+  .brandside {
+    display: none;
+  }
+}
+
+/* ── Form side (left) ─────────────────────────────────────── */
+
+.formside {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 48px 40px;
+  background: #0a0a0a;
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+.formwrap {
+  width: 100%;
+  max-width: 440px;
+  padding: 16px 0 56px;
+}
+
+.topLogo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--tx);
+  margin-bottom: 40px;
+}
+
+.topLogoName {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* ── Step header ──────────────────────────────────────────── */
+
+.stepHeader {
+  margin-bottom: 28px;
+}
+
+.stepEyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mt);
+  margin-bottom: 6px;
+}
+
+.stepName {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 30px;
+  font-weight: 500;
+  color: var(--tx);
+  margin: 0 0 18px;
+  line-height: 1.18;
+}
+
+.progressTrack {
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--em), var(--gold));
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stepDots {
+  display: flex;
+  gap: 6px;
+}
+
+.stepDot {
+  height: 6px;
+  width: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.15);
+  transition: background 0.25s, width 0.25s;
+}
+
+.stepDotActive {
+  background: var(--gold);
+  width: 18px;
+}
+
+.stepDotDone {
+  background: var(--bright);
+}
+
+/* ── Fields ──────────────────────────────────────────────── */
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.fieldWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mt);
+}
+
+.inputWrap {
+  position: relative;
+}
+
+.inputToggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--mt);
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.inputToggle:hover {
+  color: var(--tx);
+}
+
+.input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.04);
+  color: #eef3ee;
+  font-family: inherit;
+  font-size: 15px;
+  box-sizing: border-box;
+  transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+  -webkit-appearance: none;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #74d6cf;
+  box-shadow: 0 0 0 3px rgba(14, 110, 110, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.input::placeholder {
+  color: var(--mt);
+  opacity: 0.7;
+}
+
+.inputPr {
+  padding-right: 44px;
+}
+
+.fieldError {
+  font-size: 12px;
+  color: #f87171;
+}
+
+/* ── Branding step ───────────────────────────────────────── */
+
+.brandingIntro {
+  font-size: 14px;
+  color: var(--mt);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.swatchRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.swatch {
+  width: 40px;
+  height: 28px;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  padding: 0;
+}
+
+.swatch:hover {
+  transform: scale(1.12);
+}
+
+.swatchActive {
+  border-color: #e6cf9c !important;
+  box-shadow: 0 0 0 3px rgba(202, 164, 99, 0.3);
+}
+
+.colorGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.colorField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.colorPicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.colorSwatch {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  padding: 2px;
+  flex-shrink: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+.colorHex {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.04);
+  color: #eef3ee;
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  box-sizing: border-box;
+  transition: border-color 0.18s;
+  min-width: 0;
+}
+
+.colorHex:focus {
+  outline: none;
+  border-color: #74d6cf;
+  box-shadow: 0 0 0 3px rgba(14, 110, 110, 0.25);
+}
+
+.colorPreviewRow {
+  display: flex;
+  gap: 8px;
+}
+
+.colorPreview {
+  flex: 1;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+
+/* ── Radio alignment ─────────────────────────────────────── */
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.radioOption {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s;
+}
+
+.radioOption:hover {
+  border-color: rgba(116, 214, 207, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.radioOptionActive {
+  border-color: rgba(116, 214, 207, 0.45);
+  background: rgba(14, 110, 110, 0.09);
+}
+
+.radioIndicator {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  flex-shrink: 0;
+  position: relative;
+  transition: border-color 0.15s;
+}
+
+.radioIndicatorActive {
+  border-color: #74d6cf;
+}
+
+.radioIndicatorActive::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #74d6cf;
+}
+
+.radioLabel {
+  font-size: 14px;
+  color: var(--tx);
+  cursor: pointer;
+  text-transform: capitalize;
+  user-select: none;
+}
+
+/* ── Nav buttons ──────────────────────────────────────────── */
+
+.navRow {
+  display: flex;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.skipRow {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.skipLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13.5px;
+  color: var(--mt);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.skipLink:hover {
+  color: var(--tx);
+}
+
+.btnBack {
+  flex: 1;
+  padding: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--mt);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: border-color 0.18s, color 0.18s, background 0.18s;
+}
+
+.btnBack:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  color: var(--tx);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.btnNext {
+  flex: 2;
+  padding: 13px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #e6cf9c, #caa463);
+  color: #241b07;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 30px -8px rgba(202, 164, 99, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.btnNext:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.btnNext:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Root error ──────────────────────────────────────────── */
+
+.rootError {
+  font-size: 13px;
+  color: #f87171;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.2);
+}
+
+/* ── Loading / done states ───────────────────────────────── */
+
+.stateScreen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a0a;
+  font-family: var(--font-sans-pub), system-ui, sans-serif;
+}
+
+.stateCard {
+  max-width: 400px;
+  width: calc(100% - 40px);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.stateTitle {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: #eef3ee;
+  margin: 0;
+}
+
+.stateText {
+  font-size: 14px;
+  color: #9bb1a5;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 280px;
+}
+
+.stateBtn {
+  margin-top: 4px;
+  padding: 13px 28px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #e6cf9c, #caa463);
+  color: #241b07;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 24px -6px rgba(202, 164, 99, 0.45);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 0.15s;
+}
+
+.stateBtn:hover {
+  opacity: 0.9;
+}
+
+/* ── Brand side (right) ──────────────────────────────────── */
+
+.brandside {
+  position: relative;
+  overflow: hidden;
+  padding: 48px 56px;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(160deg, #072e2e, #06100f 70%);
+}
+
+.brandLogo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #eef3ee;
+  z-index: 1;
+}
+
+.brandLogoName {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.brandMiddle {
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  z-index: 1;
+}
+
+.brandEyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #9bb1a5;
+}
+
+.brandEyebrowDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #caa463;
+  flex-shrink: 0;
+}
+
+.brandHeading {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(26px, 2.6vw, 36px);
+  font-weight: 500;
+  line-height: 1.22;
+  color: #eef3ee;
+  margin: 0;
+}
+
+.brandHeading em {
+  font-style: italic;
+  color: #e6cf9c;
+}
+
+.svgWrap {
+  width: 100%;
+  max-width: 420px;
+}
+
+.featureList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #eef3ee;
+}
+
+.featureCheck {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(14, 110, 110, 0.25);
+  border: 1px solid rgba(116, 214, 207, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #74d6cf;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Background glows */
+
+.g1 {
+  position: absolute;
+  top: -60px;
+  left: -60px;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(14, 110, 110, 0.35) 0%, transparent 70%);
+  filter: blur(90px);
+  pointer-events: none;
+}
+
+.g2 {
+  position: absolute;
+  bottom: -80px;
+  right: -80px;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(202, 164, 99, 0.22) 0%, transparent 70%);
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  z-index: 0;
+}

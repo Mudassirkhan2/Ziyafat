@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 from dependencies import get_current_user, require_role
 from models.user import User, UserRole
 from core.security import hash_password, verify_password
+from schemas.pagination import PaginatedResponse
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
@@ -51,10 +52,38 @@ def _user_response(user: User) -> UserResponse:
     )
 
 
-@router.get("", response_model=list[UserResponse])
-async def list_users(current_user: User = Depends(get_current_user)):
-    users = await User.find_all().to_list()
-    return [_user_response(u) for u in users]
+_USER_SORT_FIELDS = {"name", "email", "role"}
+
+
+@router.get("", response_model=PaginatedResponse[UserResponse])
+async def list_users(
+    search: Optional[str] = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    sort_by: str = Query(default="name"),
+    sort_dir: str = Query(default="asc", pattern="^(asc|desc)$"),
+    current_user: User = Depends(get_current_user),
+):
+    if sort_by not in _USER_SORT_FIELDS:
+        raise HTTPException(status_code=400, detail=f"sort_by must be one of {sorted(_USER_SORT_FIELDS)}")
+
+    query_filter = {"org_id": current_user.org_id}
+    if search:
+        regex = {"$regex": search, "$options": "i"}
+        query_filter["$or"] = [{"name": regex}, {"email": regex}]
+
+    sort_str = f"+{sort_by}" if sort_dir == "asc" else f"-{sort_by}"
+    skip = (page - 1) * page_size
+
+    total = await User.find(query_filter).count()
+    users = await User.find(query_filter).sort(sort_str).skip(skip).limit(page_size).to_list()
+
+    return PaginatedResponse.build(
+        items=[_user_response(u) for u in users],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -62,11 +91,12 @@ async def create_user(
     body: CreateUserBody,
     current_user: User = Depends(require_role(UserRole.owner)),
 ):
-    existing = await User.find_one(User.email == body.email)
+    existing = await User.find_one({"email": body.email, "org_id": current_user.org_id})
     if existing:
         raise HTTPException(status_code=400, detail="Email already in use")
     now = datetime.now(timezone.utc)
     user = User(
+        org_id=current_user.org_id,
         name=body.name,
         email=body.email,
         hashed_password=hash_password(body.password),
@@ -81,7 +111,7 @@ async def create_user(
 @router.get("/{user_id}", response_model=UserResponse)
 async def get_user(user_id: str, current_user: User = Depends(get_current_user)):
     user = await User.get(user_id)
-    if not user:
+    if not user or user.org_id != current_user.org_id:
         raise HTTPException(status_code=404, detail="User not found")
     return _user_response(user)
 
@@ -93,7 +123,7 @@ async def update_user(
     current_user: User = Depends(require_role(UserRole.owner)),
 ):
     user = await User.get(user_id)
-    if not user:
+    if not user or user.org_id != current_user.org_id:
         raise HTTPException(status_code=404, detail="User not found")
     if body.name is not None:
         user.name = body.name
@@ -114,7 +144,7 @@ async def deactivate_user(
     if str(current_user.id) == user_id:
         raise HTTPException(status_code=400, detail="Cannot deactivate yourself")
     user = await User.get(user_id)
-    if not user:
+    if not user or user.org_id != current_user.org_id:
         raise HTTPException(status_code=404, detail="User not found")
     user.is_active = False
     user.updated_at = datetime.now(timezone.utc)
@@ -134,7 +164,7 @@ async def change_password(
         raise HTTPException(status_code=403, detail="Cannot change another user's password")
 
     target_user = await User.get(user_id)
-    if not target_user:
+    if not target_user or target_user.org_id != current_user.org_id:
         raise HTTPException(status_code=404, detail="User not found")
 
     if not is_owner:

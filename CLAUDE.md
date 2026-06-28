@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Ziyafat is a single-tenant SaaS ERP for Hyderabadi catering businesses. It covers leads, bookings, events, dish catalogs, quotations, invoices, and a public storefront. Built with Next.js 15 (frontend) and FastAPI (backend).
+Ziyafat is a single-tenant SaaS ERP for catering businesses of every cuisine and scale. It covers leads, bookings, events, dish catalogs, quotations, invoices, and a public storefront. Built with Next.js 15 (frontend) and FastAPI (backend).
 
 ## Repository Structure
 

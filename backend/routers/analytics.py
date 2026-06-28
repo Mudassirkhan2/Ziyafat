@@ -57,8 +57,9 @@ def _fill_statuses(counts: dict[str, int], enum_class) -> dict[str, int]:
 
 
 @router.get("/dashboard", response_model=DashboardData)
-async def get_dashboard(_: object = Depends(get_current_user)) -> DashboardData:
+async def get_dashboard(current_user=Depends(get_current_user)) -> DashboardData:
     now = datetime.now(timezone.utc)
+    oid = current_user.org_id
 
     (
         all_leads,
@@ -68,12 +69,12 @@ async def get_dashboard(_: object = Depends(get_current_user)) -> DashboardData:
         all_invoices,
         all_customers,
     ) = await asyncio.gather(
-        Lead.find().to_list(),
-        Booking.find().to_list(),
-        Event.find().to_list(),
-        Quotation.find().to_list(),
-        Invoice.find().to_list(),
-        Customer.find().to_list(),
+        Lead.find(Lead.org_id == oid).to_list(),
+        Booking.find(Booking.org_id == oid).to_list(),
+        Event.find(Event.org_id == oid).to_list(),
+        Quotation.find(Quotation.org_id == oid).to_list(),
+        Invoice.find(Invoice.org_id == oid).to_list(),
+        Customer.find(Customer.org_id == oid).to_list(),
     )
 
     # KPIs

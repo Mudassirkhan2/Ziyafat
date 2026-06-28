@@ -1,22 +1,39 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api";
-import type { Dish } from "./types";
+import type { Dish, Paginated } from "./types";
 
 interface DishParams {
   category?: string;
   is_veg?: boolean;
   active_only?: boolean;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: string;
+  sortDir?: "asc" | "desc";
 }
 
 export function useDishes(params?: DishParams) {
-  const query = new URLSearchParams();
-  if (params?.category) query.set("category", params.category);
-  if (params?.is_veg !== undefined) query.set("is_veg", String(params.is_veg));
-  if (params?.active_only !== undefined) query.set("active_only", String(params.active_only));
-  const qs = query.toString();
-  return useQuery<Dish[]>({
+  const q = new URLSearchParams();
+  if (params?.category) q.set("category", params.category);
+  if (params?.is_veg !== undefined) q.set("is_veg", String(params.is_veg));
+  if (params?.active_only !== undefined) q.set("active_only", String(params.active_only));
+  if (params?.search) q.set("search", params.search);
+  if (params?.page) q.set("page", String(params.page));
+  if (params?.pageSize) q.set("page_size", String(params.pageSize));
+  if (params?.sortBy) q.set("sort_by", params.sortBy);
+  if (params?.sortDir) q.set("sort_dir", params.sortDir);
+  const qs = q.toString();
+  return useQuery<Paginated<Dish>>({
     queryKey: ["dishes", params],
-    queryFn: () => api.get<Dish[]>(`/dishes${qs ? `?${qs}` : ""}`),
+    queryFn: () => api.get<Paginated<Dish>>(`/dishes${qs ? `?${qs}` : ""}`),
+  });
+}
+
+export function useDishesForSelect() {
+  return useQuery<Paginated<Dish>>({
+    queryKey: ["dishes", "select"],
+    queryFn: () => api.get<Paginated<Dish>>("/dishes?page_size=1000&sort_by=name&sort_dir=asc&active_only=true"),
   });
 }
 
@@ -31,14 +48,8 @@ export function useDish(id: string) {
 export function useCreateDish() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: {
-      name: string;
-      category: string;
-      description?: string;
-      per_plate_cost: number;
-      selling_price: number;
-      is_veg?: boolean;
-    }) => api.post<Dish>("/dishes", body),
+    mutationFn: (body: Partial<Dish> & { name: string; category: string; per_plate_cost: number; selling_price: number }) =>
+      api.post<Dish>("/dishes", body),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["dishes"] }),
   });
 }
@@ -46,15 +57,7 @@ export function useCreateDish() {
 export function useUpdateDish(id: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: Partial<{
-      name: string;
-      category: string;
-      description: string;
-      per_plate_cost: number;
-      selling_price: number;
-      is_veg: boolean;
-      is_active: boolean;
-    }>) => api.patch<Dish>(`/dishes/${id}`, body),
+    mutationFn: (body: Partial<Dish>) => api.patch<Dish>(`/dishes/${id}`, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["dishes"] });
       queryClient.invalidateQueries({ queryKey: ["dishes", id] });

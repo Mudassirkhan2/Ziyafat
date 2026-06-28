@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api";
+import { applyOrgTheme } from "./dls/tokens";
 import type { Organisation } from "./types";
 
 export function useOrg() {
@@ -18,6 +19,7 @@ export function useUpdateOrg() {
     onSuccess: (data) => {
       queryClient.setQueryData(["org"], data);
       queryClient.invalidateQueries({ queryKey: ["org-info"] });
+      applyOrgTheme(data);
     },
   });
 }

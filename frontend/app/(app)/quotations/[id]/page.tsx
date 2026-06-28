@@ -194,6 +194,30 @@ export default function QuotationDetailPage({
           <p className="text-xs text-on-surface-low uppercase tracking-wide mb-1">Created</p>
           <p className="text-sm text-on-surface-medium">{formatDate(quotation.created_at)}</p>
         </div>
+        {quotation.per_person_price && (
+          <div>
+            <p className="text-xs text-on-surface-low uppercase tracking-wide mb-1">Per Person</p>
+            <p className="text-sm text-on-surface font-medium">₹{quotation.per_person_price.toLocaleString("en-IN")}</p>
+          </div>
+        )}
+        {quotation.minimum_guarantee_count && (
+          <div>
+            <p className="text-xs text-on-surface-low uppercase tracking-wide mb-1">Min. Guarantee</p>
+            <p className="text-sm text-on-surface-medium">{quotation.minimum_guarantee_count} pax</p>
+          </div>
+        )}
+        {quotation.client_signature_status && (
+          <div>
+            <p className="text-xs text-on-surface-low uppercase tracking-wide mb-1">Signature</p>
+            <p className="text-sm text-on-surface-medium capitalize">{quotation.client_signature_status.replace(/_/g, " ")}</p>
+          </div>
+        )}
+        {quotation.signed_date && (
+          <div>
+            <p className="text-xs text-on-surface-low uppercase tracking-wide mb-1">Signed On</p>
+            <p className="text-sm text-on-surface-medium">{formatDate(quotation.signed_date)}</p>
+          </div>
+        )}
       </div>
 
       {/* Line items table */}
@@ -248,11 +272,62 @@ export default function QuotationDetailPage({
               <span>− ₹{quotation.discount.toLocaleString("en-IN")}</span>
             </div>
           )}
+          {(quotation.service_charge_amount ?? 0) > 0 && (
+            <div className="flex justify-between text-sm text-on-surface-medium">
+              <span>Service Charge{quotation.service_charge_percentage ? ` (${quotation.service_charge_percentage}%)` : ""}</span>
+              <span>₹{(quotation.service_charge_amount ?? 0).toLocaleString("en-IN")}</span>
+            </div>
+          )}
+          {(quotation.tax_amount ?? 0) > 0 && (
+            <div className="flex justify-between text-sm text-on-surface-medium">
+              <span>Tax{quotation.tax_percentage ? ` (${quotation.tax_percentage}%)` : ""}</span>
+              <span>₹{(quotation.tax_amount ?? 0).toLocaleString("en-IN")}</span>
+            </div>
+          )}
+          {(quotation.gratuity_amount ?? 0) > 0 && (
+            <div className="flex justify-between text-sm text-on-surface-medium">
+              <span>Gratuity{quotation.gratuity_percentage ? ` (${quotation.gratuity_percentage}%)` : ""}</span>
+              <span>₹{(quotation.gratuity_amount ?? 0).toLocaleString("en-IN")}</span>
+            </div>
+          )}
+          {(quotation.delivery_fee ?? 0) > 0 && (
+            <div className="flex justify-between text-sm text-on-surface-medium">
+              <span>Delivery Fee</span>
+              <span>₹{(quotation.delivery_fee ?? 0).toLocaleString("en-IN")}</span>
+            </div>
+          )}
+          {(quotation.setup_fee ?? 0) > 0 && (
+            <div className="flex justify-between text-sm text-on-surface-medium">
+              <span>Setup Fee</span>
+              <span>₹{(quotation.setup_fee ?? 0).toLocaleString("en-IN")}</span>
+            </div>
+          )}
           <Separator className="my-1 border-outline-low" />
           <div className="flex justify-between text-base font-bold text-on-surface">
             <span>Total</span>
             <span>₹{quotation.total.toLocaleString("en-IN")}</span>
           </div>
+          {(quotation.deposit_amount ?? 0) > 0 && (
+            <>
+              <Separator className="my-1 border-outline-low" />
+              <div className="flex justify-between text-sm text-on-surface-medium">
+                <span>Deposit Required{quotation.deposit_percentage ? ` (${quotation.deposit_percentage}%)` : ""}</span>
+                <span>₹{(quotation.deposit_amount ?? 0).toLocaleString("en-IN")}</span>
+              </div>
+              {quotation.deposit_due_date && (
+                <div className="flex justify-between text-xs text-on-surface-low">
+                  <span>Deposit Due</span>
+                  <span>{formatDate(quotation.deposit_due_date)}</span>
+                </div>
+              )}
+              {quotation.final_balance_due_date && (
+                <div className="flex justify-between text-xs text-on-surface-low">
+                  <span>Balance Due</span>
+                  <span>{formatDate(quotation.final_balance_due_date)}</span>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -261,6 +336,22 @@ export default function QuotationDetailPage({
         <div className="rounded-lg border border-outline-low p-4">
           <p className="text-xs text-on-surface-low uppercase tracking-wide mb-2">Notes</p>
           <p className="text-sm text-on-surface-medium whitespace-pre-wrap">{quotation.notes}</p>
+        </div>
+      )}
+
+      {/* Payment Terms */}
+      {quotation.payment_terms_text && (
+        <div className="rounded-lg border border-outline-low p-4">
+          <p className="text-xs text-on-surface-low uppercase tracking-wide mb-2">Payment Terms</p>
+          <p className="text-sm text-on-surface-medium whitespace-pre-wrap">{quotation.payment_terms_text}</p>
+        </div>
+      )}
+
+      {/* Cancellation Policy */}
+      {quotation.cancellation_policy_text && (
+        <div className="rounded-lg border border-outline-low p-4">
+          <p className="text-xs text-on-surface-low uppercase tracking-wide mb-2">Cancellation Policy</p>
+          <p className="text-sm text-on-surface-medium whitespace-pre-wrap">{quotation.cancellation_policy_text}</p>
         </div>
       )}
 

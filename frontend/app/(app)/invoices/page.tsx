@@ -1,19 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
-import {
-  useInvoices,
-  useCreateInvoice,
-} from "@/lib/invoices-api";
-import { useBookings } from "@/lib/bookings-api";
+import { useInvoices, useCreateInvoice } from "@/lib/invoices-api";
 import { useQuotations } from "@/lib/quotations-api";
-import type { Invoice, InvoiceStatus, QuotationLineItem } from "@/lib/types";
+import { useBookingsForSelect } from "@/lib/bookings-api";
+import { useDataTableState } from "@/lib/use-data-table-state";
+import type { Booking, Invoice, InvoiceStatus, QuotationLineItem } from "@/lib/types";
+import type { ColumnDef } from "@tanstack/react-table";
 
+import { DataTable } from "@/components/ui/data-table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Sheet,
@@ -24,7 +24,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { TableSkeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FiPlus, FiLoader, FiX, FiEye } from "react-icons/fi";
 import {
@@ -36,14 +35,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -65,7 +56,7 @@ const STATUS_COLORS: Record<InvoiceStatus, string> = {
 };
 
 // ---------------------------------------------------------------------------
-// Schema — scalar fields only; line items managed separately
+// Schema
 // ---------------------------------------------------------------------------
 
 const invoiceSchema = z.object({
@@ -79,7 +70,7 @@ const invoiceSchema = z.object({
 type InvoiceFormValues = z.infer<typeof invoiceSchema>;
 
 // ---------------------------------------------------------------------------
-// Line item row type (string fields for controlled inputs)
+// Line item row type
 // ---------------------------------------------------------------------------
 
 interface LineItemRow {
@@ -140,8 +131,7 @@ function CreateInvoiceSheet({
   onOpenChange: (open: boolean) => void;
 }) {
   const createInvoice = useCreateInvoice();
-  const { data: bookings } = useBookings();
-  const { data: allQuotations } = useQuotations();
+  const { data: bookings } = useBookingsForSelect();
 
   const [lineItems, setLineItems] = useState<LineItemRow[]>([emptyRow()]);
 
@@ -160,10 +150,10 @@ function CreateInvoiceSheet({
   const selectedQuotationId = form.watch("quotation_id");
   const discountValue = form.watch("discount") ?? "0";
 
-  // Filter quotations to only those belonging to the selected booking
-  const bookingQuotations = (allQuotations ?? []).filter(
-    (q) => q.booking_id === selectedBookingId
+  const { data: bookingQuotationsData } = useQuotations(
+    selectedBookingId ? { booking_id: selectedBookingId } : undefined
   );
+  const bookingQuotations = bookingQuotationsData?.items ?? [];
 
   const hasQuotation = !!selectedQuotationId;
 
@@ -191,7 +181,6 @@ function CreateInvoiceSheet({
 
   function onSubmit(values: InvoiceFormValues) {
     if (hasQuotation) {
-      // Backend copies line items from the quotation
       createInvoice.mutate(
         {
           booking_id: values.booking_id,
@@ -210,7 +199,6 @@ function CreateInvoiceSheet({
         }
       );
     } else {
-      // Manual line items
       const lineItemsPayload: QuotationLineItem[] = lineItems.map((row) => ({
         dish_id: null,
         label: row.label,
@@ -259,7 +247,6 @@ function CreateInvoiceSheet({
                   <Select
                     onValueChange={(val) => {
                       field.onChange(val);
-                      // Reset quotation when booking changes
                       form.setValue("quotation_id", "");
                     }}
                     value={field.value}
@@ -270,7 +257,7 @@ function CreateInvoiceSheet({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {(bookings ?? []).map((b) => (
+                      {(bookings?.items ?? []).map((b) => (
                         <SelectItem key={b.id} value={b.id}>
                           {b.title}
                         </SelectItem>
@@ -296,7 +283,13 @@ function CreateInvoiceSheet({
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={selectedBookingId ? "Select a quotation" : "Select a booking first"} />
+                        <SelectValue
+                          placeholder={
+                            selectedBookingId
+                              ? "Select a quotation"
+                              : "Select a booking first"
+                          }
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -461,37 +454,126 @@ function CreateInvoiceSheet({
 }
 
 // ---------------------------------------------------------------------------
+// Column definitions
+// ---------------------------------------------------------------------------
+
+function getColumns(
+  router: ReturnType<typeof useRouter>,
+  bookingMap: Map<string, Booking>
+): ColumnDef<Invoice>[] {
+  return [
+    {
+      id: "invoice_number",
+      header: "Invoice #",
+      accessorKey: "invoice_number",
+      cell: ({ row }) => (
+        <span className="font-medium text-on-surface font-mono">
+          {row.original.invoice_number}
+        </span>
+      ),
+    },
+    {
+      id: "booking",
+      header: "Booking",
+      cell: ({ row }) => {
+        const booking = bookingMap.get(row.original.booking_id);
+        return (
+          <span className="text-on-surface-medium">
+            {booking ? booking.title : row.original.booking_id}
+          </span>
+        );
+      },
+    },
+    {
+      id: "status",
+      header: "Status",
+      accessorKey: "status",
+      meta: { sortable: true },
+      cell: ({ row }) => <StatusBadge status={row.original.status} />,
+    },
+    {
+      id: "total",
+      header: "Total",
+      accessorKey: "total",
+      meta: { sortable: true },
+      cell: ({ row }) => (
+        <span className="text-on-surface-medium">
+          ₹{row.original.total.toLocaleString("en-IN")}
+        </span>
+      ),
+    },
+    {
+      id: "due_date",
+      header: "Due Date",
+      cell: ({ row }) => (
+        <span className="text-on-surface-medium">{formatDate(row.original.due_date)}</span>
+      ),
+    },
+    {
+      id: "created_at",
+      header: "Created",
+      accessorKey: "created_at",
+      meta: { sortable: true },
+      cell: ({ row }) => (
+        <span className="text-on-surface-medium">{formatDate(row.original.created_at)}</span>
+      ),
+    },
+    {
+      id: "actions",
+      header: "",
+      cell: ({ row }) => (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => router.push(`/invoices/${row.original.id}`)}
+          title="View"
+        >
+          <FiEye className="h-4 w-4" />
+        </Button>
+      ),
+    },
+  ];
+}
+
+// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
-export default function InvoicesPage() {
+function InvoicesContent() {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | undefined>(undefined);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const ts = useDataTableState({ defaultSortBy: "created_at", defaultSortDir: "desc" });
 
-  const { data: invoices, isLoading, isError } = useInvoices({ status: statusFilter });
-  const { data: bookings } = useBookings();
+  const { data: bookings } = useBookingsForSelect();
 
-  // Build a lookup map for quick booking title retrieval
-  const bookingMap = new Map((bookings ?? []).map((b) => [b.id, b]));
+  const { data, isLoading, isError } = useInvoices({
+    status: statusFilter,
+    page: ts.page,
+    pageSize: ts.pageSize,
+    sortBy: ts.sortBy,
+    sortDir: ts.sortDir,
+  });
+
+  const bookingMap = new Map((bookings?.items ?? []).map((b) => [b.id, b]));
+  const columns = getColumns(router, bookingMap);
 
   return (
     <div className="p-6">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-on-surface">Invoices</h1>
         <Button onClick={() => setSheetOpen(true)}>
-          <FiPlus className="h-4 w-4" />
+          <FiPlus className="h-4 w-4 mr-1" />
           New Invoice
         </Button>
       </div>
 
-      {/* Status Tabs */}
       <Tabs
         value={statusFilter ?? "all"}
-        onValueChange={(val) =>
-          setStatusFilter(val === "all" ? undefined : (val as InvoiceStatus))
-        }
+        onValueChange={(val) => {
+          setStatusFilter(val === "all" ? undefined : (val as InvoiceStatus));
+          ts.setPage(1);
+        }}
         className="mb-4"
       >
         <TabsList className="bg-surface-high">
@@ -504,84 +586,42 @@ export default function InvoicesPage() {
         </TabsList>
       </Tabs>
 
-      {/* Loading / Error */}
-      {isLoading && <TableSkeleton cols={7} />}
       {isError && (
-        <p className="text-red-400">Failed to load invoices. Please try again.</p>
+        <p className="text-destructive text-sm mb-4">
+          Failed to load invoices. Please try again.
+        </p>
       )}
 
-      {/* Table */}
-      {!isLoading && !isError && invoices && (
-        <div className="rounded-lg border border-outline overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-surface-high">
-                <TableHead className="text-on-surface-medium">Invoice #</TableHead>
-                <TableHead className="text-on-surface-medium">Booking</TableHead>
-                <TableHead className="text-on-surface-medium">Status</TableHead>
-                <TableHead className="text-on-surface-medium">Total</TableHead>
-                <TableHead className="text-on-surface-medium">Due Date</TableHead>
-                <TableHead className="text-on-surface-medium">Created</TableHead>
-                <TableHead className="text-on-surface-medium text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {invoices.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={7} className="py-0">
-                    <EmptyState
-                      variant="invoices"
-                      title="No invoices found"
-                      description="Generate an invoice from a booking or quotation."
-                    />
-                  </TableCell>
-                </TableRow>
-              )}
-              {invoices.map((invoice) => {
-                const booking = bookingMap.get(invoice.booking_id);
-                return (
-                  <TableRow
-                    key={invoice.id}
-                    className="border-outline-low hover:bg-surface-high transition-colors"
-                  >
-                    <TableCell className="text-on-surface font-medium font-mono">
-                      {invoice.invoice_number}
-                    </TableCell>
-                    <TableCell className="text-on-surface-medium">
-                      {booking ? booking.title : invoice.booking_id}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={invoice.status} />
-                    </TableCell>
-                    <TableCell className="text-on-surface-medium">
-                      ₹{invoice.total.toLocaleString("en-IN")}
-                    </TableCell>
-                    <TableCell className="text-on-surface-medium">
-                      {formatDate(invoice.due_date)}
-                    </TableCell>
-                    <TableCell className="text-on-surface-medium">
-                      {formatDate(invoice.created_at)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => router.push(`/invoices/${invoice.id}`)}
-                        title="View"
-                      >
-                        <FiEye className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+      <DataTable
+        columns={columns}
+        data={data?.items ?? []}
+        total={data?.total ?? 0}
+        page={ts.page}
+        pageSize={ts.pageSize}
+        onPageChange={ts.setPage}
+        onPageSizeChange={ts.setPageSize}
+        onSortChange={ts.setSort}
+        sortBy={ts.sortBy}
+        sortDir={ts.sortDir}
+        isLoading={isLoading}
+        emptyState={
+          <EmptyState
+            variant="invoices"
+            title="No invoices found"
+            description="Generate an invoice from a booking or quotation."
+          />
+        }
+      />
 
-      {/* Create Sheet */}
       <CreateInvoiceSheet open={sheetOpen} onOpenChange={setSheetOpen} />
     </div>
+  );
+}
+
+export default function InvoicesPage() {
+  return (
+    <Suspense fallback={null}>
+      <InvoicesContent />
+    </Suspense>
   );
 }

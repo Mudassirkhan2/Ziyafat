@@ -1,0 +1,20 @@
+<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="32" height="32" rx="7" fill="#1c1917"/>
+  <defs>
+    <linearGradient id="logo-grad" x1="5" y1="6" x2="27" y2="27">
+      <stop stop-color="#e6cf9c" />
+      <stop offset="1" stop-color="#caa463" />
+    </linearGradient>
+    <mask id="logo-mask">
+      <rect width="32" height="32" fill="#fff" />
+      <path d="M13 17.5H19.5L13 22.5H19.5" stroke="#000" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+    </mask>
+  </defs>
+  <path d="M13.8 8.5c-1.5-1.2 1.5-2.4 0-3.6" stroke="#e6cf9c" stroke-width="1.4" stroke-linecap="round" opacity=".75" />
+  <path d="M18.2 8.5c-1.5-1.2 1.5-2.4 0-3.6" stroke="#e6cf9c" stroke-width="1.4" stroke-linecap="round" opacity=".55" />
+  <g mask="url(#logo-mask)">
+    <path d="M5 23A11 9 0 0 1 27 23Z" fill="url(#logo-grad)" />
+  </g>
+  <rect x="3.5" y="23" width="25" height="3.4" rx="1.7" fill="url(#logo-grad)" />
+  <circle cx="16" cy="11.5" r="1.9" fill="url(#logo-grad)" />
+</svg>

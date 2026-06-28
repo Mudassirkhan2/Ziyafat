@@ -17,6 +17,12 @@ import {
 } from "@/lib/events-api";
 import { useDishes } from "@/lib/dishes-api";
 import type { BookingEvent, BookingStatus, CateringModel } from "@/lib/types";
+import {
+  CEREMONY_TYPE_OPTIONS,
+  SERVICE_STYLE_OPTIONS,
+  FOOD_PREFERENCE_OPTIONS,
+  EVENT_STATUS_OPTIONS,
+} from "@/lib/constants";
 
 import {
   Table,
@@ -85,9 +91,26 @@ const BOOKING_STATUSES: BookingStatus[] = [
 const eventSchema = z.object({
   name: z.string().min(1, "Name is required"),
   date: z.string().min(1, "Date is required"),
+  start_time: z.string().optional(),
+  end_time: z.string().optional(),
   venue: z.string().optional(),
+  venue_address: z.string().optional(),
+  venue_contact: z.string().optional(),
   guest_count: z.string().min(1, "Guest count is required"),
+  veg_count: z.string().optional(),
+  non_veg_count: z.string().optional(),
+  confirmed_count: z.string().optional(),
+  actual_headcount: z.string().optional(),
   catering_model: z.enum(["per_plate", "chef_driven"]),
+  ceremony_type: z.string().optional(),
+  service_style: z.string().optional(),
+  food_preference: z.string().optional(),
+  event_status: z.string().optional(),
+  room_setup_style: z.string().optional(),
+  staffing_count: z.string().optional(),
+  equipment_needed: z.string().optional(),
+  kitchen_notes: z.string().optional(),
+  access_instructions: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -145,9 +168,26 @@ function EventSheet({
     defaultValues: {
       name: event?.name ?? "",
       date: event?.date ?? "",
+      start_time: event?.start_time ?? "",
+      end_time: event?.end_time ?? "",
       venue: event?.venue ?? "",
+      venue_address: event?.venue_address ?? "",
+      venue_contact: event?.venue_contact ?? "",
       guest_count: event?.guest_count?.toString() ?? "",
+      veg_count: event?.veg_count?.toString() ?? "",
+      non_veg_count: event?.non_veg_count?.toString() ?? "",
+      confirmed_count: event?.confirmed_count?.toString() ?? "",
+      actual_headcount: event?.actual_headcount?.toString() ?? "",
       catering_model: event?.catering_model ?? "per_plate",
+      ceremony_type: event?.ceremony_type ?? "",
+      service_style: event?.service_style ?? "",
+      food_preference: event?.food_preference ?? "",
+      event_status: event?.event_status ?? "",
+      room_setup_style: event?.room_setup_style ?? "",
+      staffing_count: event?.staffing_requirements?.toString() ?? "",
+      equipment_needed: event?.equipment_needed ?? "",
+      kitchen_notes: event?.kitchen_notes ?? "",
+      access_instructions: event?.access_instructions ?? "",
       notes: event?.notes ?? "",
     },
   });
@@ -156,9 +196,26 @@ function EventSheet({
     const payload = {
       name: values.name,
       date: values.date,
-      guest_count: parseInt(values.guest_count, 10),
-      catering_model: values.catering_model,
+      start_time: values.start_time || undefined,
+      end_time: values.end_time || undefined,
       venue: values.venue || undefined,
+      venue_address: values.venue_address || undefined,
+      venue_contact: values.venue_contact || undefined,
+      guest_count: parseInt(values.guest_count, 10),
+      veg_count: values.veg_count ? parseInt(values.veg_count, 10) : undefined,
+      non_veg_count: values.non_veg_count ? parseInt(values.non_veg_count, 10) : undefined,
+      confirmed_count: values.confirmed_count ? parseInt(values.confirmed_count, 10) : undefined,
+      actual_headcount: values.actual_headcount ? parseInt(values.actual_headcount, 10) : undefined,
+      catering_model: values.catering_model,
+      ceremony_type: (values.ceremony_type as never) || undefined,
+      service_style: (values.service_style as never) || undefined,
+      food_preference: (values.food_preference as never) || undefined,
+      event_status: (values.event_status as never) || undefined,
+      room_setup_style: values.room_setup_style || undefined,
+      staffing_requirements: values.staffing_count ? parseInt(values.staffing_count, 10) : undefined,
+      equipment_needed: values.equipment_needed || undefined,
+      kitchen_notes: values.kitchen_notes || undefined,
+      access_instructions: values.access_instructions || undefined,
       notes: values.notes || undefined,
     };
 
@@ -201,25 +258,135 @@ function EventSheet({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date *</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
+            <div className="grid grid-cols-3 gap-3">
+              <FormField
+                control={form.control}
+                name="date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date *</FormLabel>
+                    <FormControl><Input type="date" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="start_time"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Start Time</FormLabel>
+                    <FormControl><Input type="time" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="end_time"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>End Time</FormLabel>
+                    <FormControl><Input type="time" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="ceremony_type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ceremony Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {CEREMONY_TYPE_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="event_status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Event Status</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {EVENT_STATUS_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="service_style"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Service Style</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select style" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {SERVICE_STYLE_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="food_preference"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Food Preference</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select preference" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {FOOD_PREFERENCE_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="venue"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Venue</FormLabel>
+                  <FormLabel>Venue Name</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g. Grand Hall" {...field} />
                   </FormControl>
@@ -227,19 +394,100 @@ function EventSheet({
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
-              name="guest_count"
+              name="venue_address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Guest Count *</FormLabel>
+                  <FormLabel>Venue Address</FormLabel>
                   <FormControl>
-                    <Input type="number" placeholder="e.g. 250" {...field} />
+                    <Textarea placeholder="Full venue address" rows={2} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="venue_contact"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Venue Contact</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Venue manager name / phone" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="guest_count"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Expected Guests *</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="e.g. 250" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="confirmed_count"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirmed Count</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="Confirmed" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <FormField
+                control={form.control}
+                name="veg_count"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Veg</FormLabel>
+                    <FormControl><Input type="number" placeholder="0" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="non_veg_count"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Non-Veg</FormLabel>
+                    <FormControl><Input type="number" placeholder="0" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="actual_headcount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Actual (post-event)</FormLabel>
+                    <FormControl><Input type="number" placeholder="0" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="catering_model"
@@ -261,6 +509,77 @@ function EventSheet({
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="room_setup_style"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Room Setup Style</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. Banquet, Buffet, Classroom" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="staffing_count"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Staff Required (count)</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="e.g. 12" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="equipment_needed"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Equipment Needed</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="e.g. Chafing dishes, crockery sets" rows={2} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="kitchen_notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Kitchen Notes</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Special prep instructions" rows={2} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="access_instructions"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Access Instructions</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Gate access, parking, loading bay" rows={2} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="notes"
@@ -268,7 +587,7 @@ function EventSheet({
                 <FormItem>
                   <FormLabel>Notes</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Any additional notes…" rows={3} {...field} />
+                    <Textarea placeholder="Any additional notes…" rows={2} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -349,7 +668,7 @@ function MenuDialog({
           <DialogTitle>Set Menu — {event.name}</DialogTitle>
         </DialogHeader>
         <div className="space-y-2 max-h-80 overflow-y-auto py-2">
-          {(dishes ?? []).map((dish) => (
+          {(dishes?.items ?? []).map((dish) => (
             <label key={dish.id} className="flex items-center gap-3 cursor-pointer rounded-lg border border-outline p-2 hover:bg-surface-high">
               <input
                 type="checkbox"

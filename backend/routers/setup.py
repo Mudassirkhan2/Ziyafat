@@ -53,14 +53,15 @@ class SetupRequest(BaseModel):
 
 @router.get("/status")
 async def setup_status():
-    count = await User.count()
-    return {"completed": count > 0}
+    return {"completed": False}
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def run_setup(body: SetupRequest):
-    if await User.count() > 0:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Setup already completed")
+    if await Organisation.find_one(Organisation.slug == body.org_slug):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Organisation slug already taken")
+    if await User.find_one(User.email == body.owner_email):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already in use")
 
     org = Organisation(
         name=body.org_name,
@@ -81,6 +82,7 @@ async def run_setup(body: SetupRequest):
     await org.insert()
 
     owner = User(
+        org_id=org.id,
         name=body.owner_name,
         email=body.owner_email,
         hashed_password=hash_password(body.owner_password),

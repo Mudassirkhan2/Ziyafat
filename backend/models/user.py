@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
 from enum import Enum
-from beanie import Document
+from beanie import Document, PydanticObjectId
 from pydantic import Field
+from pymongo import ASCENDING, IndexModel
 
 
 class UserRole(str, Enum):
@@ -12,6 +13,7 @@ class UserRole(str, Enum):
 
 
 class User(Document):
+    org_id: PydanticObjectId
     name: str
     email: str
     hashed_password: str
@@ -23,4 +25,6 @@ class User(Document):
 
     class Settings:
         name = "users"
-        indexes = ["email"]
+        indexes = [
+            IndexModel([("email", ASCENDING), ("org_id", ASCENDING)], unique=True),
+        ]

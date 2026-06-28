@@ -1,146 +1,146 @@
-/* Ziyafat DLS — flat token CSS for Claude Design (no PostCSS/Tailwind required)
- * Extracted from app/globals.css — covers all CSS custom properties and
- * the key DLS utility classes so the design agent can style with tokens. */
-
-/* ── DLS raw tokens: Light ── */
 :root {
-  --surface-lowest:  #f0f0f0;
-  --surface-low:     #f5f5f5;
-  --surface:         #fafafa;
-  --surface-high:    #ffffff;
+  --surface-lowest: #f0f0f0;
+  --surface-low: #f5f5f5;
+  --surface: #fafafa;
+  --surface-high: #ffffff;
   --surface-highest: #ffffff;
-  --surface-dim:     #e5e5e5;
-  --surface-bright:  #ffffff;
+  --surface-dim: #e5e5e5;
+  --surface-bright: #ffffff;
 
-  --on-surface:        #171717;
+  --on-surface: #171717;
   --on-surface-medium: #525252;
-  --on-surface-low:    #737373;
+  --on-surface-low: #737373;
   --on-surface-lowest: #a3a3a3;
 
   --outline-lowest: #f0f0f0;
-  --outline-low:    #e5e5e5;
-  --outline:        #d4d4d4;
-  --outline-high:   #a3a3a3;
+  --outline-low: #e5e5e5;
+  --outline: #d4d4d4;
+  --outline-high: #a3a3a3;
 }
 
 /* ── DLS raw tokens: Dark ── */
 html.dark {
-  --surface-lowest:  #0a0a0a;
-  --surface-low:     #0d0d0d;
-  --surface:         #171717;
-  --surface-high:    #222222;
+  --surface-lowest: #0a0a0a;
+  --surface-low: #0d0d0d;
+  --surface: #171717;
+  --surface-high: #222222;
   --surface-highest: #383838;
-  --surface-dim:     #060606;
-  --surface-bright:  #2d2d2d;
+  --surface-dim: #060606;
+  --surface-bright: #2d2d2d;
 
-  --on-surface:        #f5f5f5;
+  --on-surface: #f5f5f5;
   --on-surface-medium: #a3a3a3;
-  --on-surface-low:    #737373;
+  --on-surface-low: #737373;
   --on-surface-lowest: #404040;
 
   --outline-lowest: #1a1a1a;
-  --outline-low:    #262626;
-  --outline:        #404040;
-  --outline-high:   #525252;
+  --outline-low: #262626;
+  --outline: #404040;
+  --outline-high: #525252;
 }
 
 /* ── Org theme defaults (amber / Ziyafat brand) ── */
 :root {
-  --color-primary:              #d97706;
-  --color-on-primary:           #0c0a09;
-  --color-primary-container:    #451a03;
+  --color-primary: #d97706;
+  --color-on-primary: #0c0a09;
+  --color-primary-container: #451a03;
   --color-on-primary-container: #fed7aa;
-  --color-secondary:              #f59e0b;
-  --color-on-secondary:           #0c0a09;
-  --color-secondary-container:    #78350f;
+  --color-secondary: #f59e0b;
+  --color-on-secondary: #0c0a09;
+  --color-secondary-container: #78350f;
   --color-on-secondary-container: #fde68a;
 
-  --color-brand-surface:   #1c1917;
-  --color-brand-accent:    #d97706;
+  --color-brand-surface: #1c1917;
+  --color-brand-accent: #d97706;
   --color-brand-accent-fg: #0c0a09;
 }
 
 /* ── Semantic color vars (mirrors Tailwind @theme inline) ── */
 :root {
-  --color-background:  var(--surface);
-  --color-foreground:  var(--on-surface);
+  --color-background: var(--surface);
+  --color-foreground: var(--on-surface);
 
-  --color-surface-lowest:  var(--surface-lowest);
-  --color-surface-low:     var(--surface-low);
-  --color-surface:         var(--surface);
-  --color-surface-high:    var(--surface-high);
+  --color-surface-lowest: var(--surface-lowest);
+  --color-surface-low: var(--surface-low);
+  --color-surface: var(--surface);
+  --color-surface-high: var(--surface-high);
   --color-surface-highest: var(--surface-highest);
-  --color-surface-dim:     var(--surface-dim);
-  --color-surface-bright:  var(--surface-bright);
+  --color-surface-dim: var(--surface-dim);
+  --color-surface-bright: var(--surface-bright);
 
-  --color-on-surface:        var(--on-surface);
+  --color-on-surface: var(--on-surface);
   --color-on-surface-medium: var(--on-surface-medium);
-  --color-on-surface-low:    var(--on-surface-low);
+  --color-on-surface-low: var(--on-surface-low);
   --color-on-surface-lowest: var(--on-surface-lowest);
 
   --color-outline-lowest: var(--outline-lowest);
-  --color-outline-low:    var(--outline-low);
-  --color-outline:        var(--outline);
-  --color-outline-high:   var(--outline-high);
+  --color-outline-low: var(--outline-low);
+  --color-outline: var(--outline);
+  --color-outline-high: var(--outline-high);
 }
 
 /* ── shadcn variable mapping ── */
 :root {
-  --background:           var(--color-surface);
-  --foreground:           var(--color-on-surface);
-  --card:                 var(--color-surface-high);
-  --card-foreground:      var(--color-on-surface);
-  --popover:              var(--color-surface-high);
-  --popover-foreground:   var(--color-on-surface);
-  --primary:              var(--color-primary);
-  --primary-foreground:   var(--color-on-primary);
-  --secondary:            var(--color-secondary);
+  --background: var(--color-surface);
+  --foreground: var(--color-on-surface);
+  --card: var(--color-surface-high);
+  --card-foreground: var(--color-on-surface);
+  --popover: var(--color-surface-high);
+  --popover-foreground: var(--color-on-surface);
+  --primary: var(--color-primary);
+  --primary-foreground: var(--color-on-primary);
+  --secondary: var(--color-secondary);
   --secondary-foreground: var(--color-on-secondary);
-  --muted:                var(--color-surface-highest);
-  --muted-foreground:     var(--color-on-surface-medium);
-  --accent:               var(--color-surface-bright);
-  --accent-foreground:    var(--color-on-surface);
-  --destructive:          oklch(0.577 0.245 27.325);
-  --border:               var(--color-outline);
-  --input:                var(--color-outline-low);
-  --ring:                 var(--color-primary);
-  --radius:               0.5rem;
-  --sidebar:              var(--color-surface-low);
-  --sidebar-foreground:   var(--color-on-surface);
-  --sidebar-primary:      var(--color-primary);
+  --muted: var(--color-surface-highest);
+  --muted-foreground: var(--color-on-surface-medium);
+  --accent: var(--color-surface-bright);
+  --accent-foreground: var(--color-on-surface);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: var(--color-outline);
+  --input: var(--color-outline-low);
+  --ring: var(--color-primary);
+  --radius: 0.5rem;
+  --sidebar: var(--color-surface-low);
+  --sidebar-foreground: var(--color-on-surface);
+  --sidebar-primary: var(--color-primary);
   --sidebar-primary-foreground: var(--color-on-primary);
-  --sidebar-accent:       var(--color-surface-high);
-  --sidebar-accent-foreground:  var(--color-on-surface);
-  --sidebar-border:       var(--color-outline-low);
-  --sidebar-ring:         var(--color-primary);
+  --sidebar-accent: var(--color-surface-high);
+  --sidebar-accent-foreground: var(--color-on-surface);
+  --sidebar-border: var(--color-outline-low);
+  --sidebar-ring: var(--color-primary);
 
   /* Tailwind color aliases */
-  --color-card:               var(--card);
-  --color-card-foreground:    var(--card-foreground);
-  --color-popover:            var(--popover);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted:              var(--muted);
-  --color-muted-foreground:   var(--muted-foreground);
-  --color-accent:             var(--accent);
-  --color-accent-foreground:  var(--accent-foreground);
-  --color-destructive:        var(--destructive);
-  --color-border:             var(--border);
-  --color-input:              var(--input);
-  --color-ring:               var(--ring);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
-  --radius-sm:  calc(var(--radius) * 0.6);
-  --radius-md:  calc(var(--radius) * 0.8);
-  --radius-lg:  var(--radius);
-  --radius-xl:  calc(var(--radius) * 1.4);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 /* ── Base reset ── */
-*, *::before, *::after { box-sizing: border-box; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);
@@ -149,53 +149,166 @@ body {
 }
 
 /* ── DLS surface utility classes ── */
-.bg-surface-lowest  { background-color: var(--color-surface-lowest); }
-.bg-surface-low     { background-color: var(--color-surface-low); }
-.bg-surface         { background-color: var(--color-surface); }
-.bg-surface-high    { background-color: var(--color-surface-high); }
-.bg-surface-highest { background-color: var(--color-surface-highest); }
-.bg-surface-dim     { background-color: var(--color-surface-dim); }
-.bg-surface-bright  { background-color: var(--color-surface-bright); }
+.bg-surface-lowest {
+  background-color: var(--color-surface-lowest);
+}
+
+.bg-surface-low {
+  background-color: var(--color-surface-low);
+}
+
+.bg-surface {
+  background-color: var(--color-surface);
+}
+
+.bg-surface-high {
+  background-color: var(--color-surface-high);
+}
+
+.bg-surface-highest {
+  background-color: var(--color-surface-highest);
+}
+
+.bg-surface-dim {
+  background-color: var(--color-surface-dim);
+}
+
+.bg-surface-bright {
+  background-color: var(--color-surface-bright);
+}
 
 /* ── DLS text utility classes ── */
-.text-on-surface        { color: var(--color-on-surface); }
-.text-on-surface-medium { color: var(--color-on-surface-medium); }
-.text-on-surface-low    { color: var(--color-on-surface-low); }
-.text-on-surface-lowest { color: var(--color-on-surface-lowest); }
+.text-on-surface {
+  color: var(--color-on-surface);
+}
+
+.text-on-surface-medium {
+  color: var(--color-on-surface-medium);
+}
+
+.text-on-surface-low {
+  color: var(--color-on-surface-low);
+}
+
+.text-on-surface-lowest {
+  color: var(--color-on-surface-lowest);
+}
 
 /* ── DLS border utility classes ── */
-.border-outline-lowest { border-color: var(--color-outline-lowest); }
-.border-outline-low    { border-color: var(--color-outline-low); }
-.border-outline        { border-color: var(--color-outline); }
-.border-outline-high   { border-color: var(--color-outline-high); }
+.border-outline-lowest {
+  border-color: var(--color-outline-lowest);
+}
+
+.border-outline-low {
+  border-color: var(--color-outline-low);
+}
+
+.border-outline {
+  border-color: var(--color-outline);
+}
+
+.border-outline-high {
+  border-color: var(--color-outline-high);
+}
 
 /* ── shadcn/standard color utilities ── */
-.bg-background  { background-color: var(--background); }
-.bg-foreground  { background-color: var(--foreground); }
-.bg-card        { background-color: var(--card); }
-.bg-popover     { background-color: var(--popover); }
-.bg-primary     { background-color: var(--primary); }
-.bg-secondary   { background-color: var(--secondary); }
-.bg-muted       { background-color: var(--muted); }
-.bg-accent      { background-color: var(--accent); }
-.bg-destructive { background-color: var(--destructive); }
+.bg-background {
+  background-color: var(--background);
+}
 
-.text-foreground          { color: var(--foreground); }
-.text-card-foreground     { color: var(--card-foreground); }
-.text-popover-foreground  { color: var(--popover-foreground); }
-.text-primary             { color: var(--primary); }
-.text-primary-foreground  { color: var(--primary-foreground); }
-.text-secondary           { color: var(--secondary); }
-.text-secondary-foreground{ color: var(--secondary-foreground); }
-.text-muted-foreground    { color: var(--muted-foreground); }
-.text-accent-foreground   { color: var(--accent-foreground); }
-.text-destructive         { color: var(--destructive); }
+.bg-foreground {
+  background-color: var(--foreground);
+}
 
-.border-border { border-color: var(--border); }
-.border-input  { border-color: var(--input); }
-.border-ring   { border-color: var(--ring); }
-.outline-ring  { outline-color: var(--ring); }
+.bg-card {
+  background-color: var(--card);
+}
+
+.bg-popover {
+  background-color: var(--popover);
+}
+
+.bg-primary {
+  background-color: var(--primary);
+}
+
+.bg-secondary {
+  background-color: var(--secondary);
+}
+
+.bg-muted {
+  background-color: var(--muted);
+}
+
+.bg-accent {
+  background-color: var(--accent);
+}
+
+.bg-destructive {
+  background-color: var(--destructive);
+}
+
+.text-foreground {
+  color: var(--foreground);
+}
+
+.text-card-foreground {
+  color: var(--card-foreground);
+}
+
+.text-popover-foreground {
+  color: var(--popover-foreground);
+}
+
+.text-primary {
+  color: var(--primary);
+}
+
+.text-primary-foreground {
+  color: var(--primary-foreground);
+}
+
+.text-secondary {
+  color: var(--secondary);
+}
+
+.text-secondary-foreground {
+  color: var(--secondary-foreground);
+}
+
+.text-muted-foreground {
+  color: var(--muted-foreground);
+}
+
+.text-accent-foreground {
+  color: var(--accent-foreground);
+}
+
+.text-destructive {
+  color: var(--destructive);
+}
+
+.border-border {
+  border-color: var(--border);
+}
+
+.border-input {
+  border-color: var(--input);
+}
+
+.border-ring {
+  border-color: var(--ring);
+}
+
+.outline-ring {
+  outline-color: var(--ring);
+}
 
 /* ── Ring utility ── */
-.ring-ring { --tw-ring-color: var(--ring); }
-.focus-visible\:ring-ring\/50:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 50%, transparent); }
+.ring-ring {
+  --tw-ring-color: var(--ring);
+}
+
+.focus-visible\:ring-ring\/50:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 50%, transparent);
+}

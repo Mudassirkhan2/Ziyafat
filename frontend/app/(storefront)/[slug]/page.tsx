@@ -125,9 +125,8 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
                         <div className="p-3">
                           <div className="flex items-center gap-1.5 mb-1">
                             <span
-                              className={`inline-block w-2.5 h-2.5 rounded-full border ${
-                                dish.is_veg ? "bg-green-500 border-green-600" : "bg-red-500 border-red-600"
-                              }`}
+                              className={`inline-block w-2.5 h-2.5 rounded-full border ${dish.is_veg ? "bg-green-500 border-green-600" : "bg-red-500 border-red-600"
+                                }`}
                             />
                             <p className="font-medium text-gray-900 text-sm">{dish.name}</p>
                           </div>

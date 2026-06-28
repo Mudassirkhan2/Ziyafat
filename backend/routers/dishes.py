@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime, timezone
 from typing import Optional
-from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from beanie import PydanticObjectId
@@ -10,8 +10,10 @@ from models.dish import Dish, RecipeIngredient
 from models.ingredient import Ingredient, SUPPORTED_UNITS
 from models.organisation import Organisation
 from models.user import User, UserRole
+from models.enums import DishCourse, CuisineType
 from services.cloudinary_service import upload_image
 from services.pdf_service import render_pdf
+from schemas.pagination import PaginatedResponse
 
 
 def _org_fallback():
@@ -49,6 +51,16 @@ class DishResponse(BaseModel):
     image_url: Optional[str]
     has_recipe: bool
     recipe_cost_per_plate: Optional[float]
+    course: Optional[str]
+    cuisine_type: Optional[str]
+    allergens: list[str]
+    dietary_tags: list[str]
+    portion_size: Optional[str]
+    minimum_order_quantity: Optional[int]
+    preparation_time_minutes: Optional[int]
+    notes_for_kitchen: Optional[str]
+    is_available_for_storefront: bool
+    tags: list[str]
     created_at: datetime
     updated_at: datetime
 
@@ -60,6 +72,16 @@ class CreateDishBody(BaseModel):
     per_plate_cost: float
     selling_price: float
     is_veg: bool = True
+    course: Optional[DishCourse] = None
+    cuisine_type: Optional[CuisineType] = None
+    allergens: list[str] = []
+    dietary_tags: list[str] = []
+    portion_size: Optional[str] = None
+    minimum_order_quantity: Optional[int] = None
+    preparation_time_minutes: Optional[int] = None
+    notes_for_kitchen: Optional[str] = None
+    is_available_for_storefront: bool = True
+    tags: list[str] = []
 
 
 class UpdateDishBody(BaseModel):
@@ -70,6 +92,16 @@ class UpdateDishBody(BaseModel):
     selling_price: Optional[float] = None
     is_veg: Optional[bool] = None
     is_active: Optional[bool] = None
+    course: Optional[DishCourse] = None
+    cuisine_type: Optional[CuisineType] = None
+    allergens: Optional[list[str]] = None
+    dietary_tags: Optional[list[str]] = None
+    portion_size: Optional[str] = None
+    minimum_order_quantity: Optional[int] = None
+    preparation_time_minutes: Optional[int] = None
+    notes_for_kitchen: Optional[str] = None
+    is_available_for_storefront: Optional[bool] = None
+    tags: Optional[list[str]] = None
 
 
 class RecipeIngredientBody(BaseModel):
@@ -109,6 +141,16 @@ def _dish_response(dish: Dish) -> DishResponse:
         image_url=dish.image_url,
         has_recipe=len(dish.recipe_ingredients) > 0,
         recipe_cost_per_plate=dish.recipe_cost_per_plate,
+        course=dish.course,
+        cuisine_type=dish.cuisine_type,
+        allergens=dish.allergens,
+        dietary_tags=dish.dietary_tags,
+        portion_size=dish.portion_size,
+        minimum_order_quantity=dish.minimum_order_quantity,
+        preparation_time_minutes=dish.preparation_time_minutes,
+        notes_for_kitchen=dish.notes_for_kitchen,
+        is_available_for_storefront=dish.is_available_for_storefront,
+        tags=dish.tags,
         created_at=dish.created_at,
         updated_at=dish.updated_at,
     )
@@ -137,26 +179,47 @@ async def _compute_recipe_cost(recipe: list) -> float:
     return round(total, 2)
 
 
-@router.get("", response_model=list[DishResponse])
+_DISH_SORT_FIELDS = {"name", "category", "selling_price", "per_plate_cost"}
+
+
+@router.get("", response_model=PaginatedResponse[DishResponse])
 async def list_dishes(
     category: Optional[str] = None,
     is_veg: Optional[bool] = None,
     active_only: bool = True,
+    search: Optional[str] = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    sort_by: str = Query(default="name"),
+    sort_dir: str = Query(default="asc", pattern="^(asc|desc)$"),
     current_user: User = Depends(get_current_user),
 ):
-    query = {}
+    if sort_by not in _DISH_SORT_FIELDS:
+        raise HTTPException(status_code=400, detail=f"sort_by must be one of {sorted(_DISH_SORT_FIELDS)}")
+
+    query = {"org_id": current_user.org_id}
     if active_only:
         query["is_active"] = True
     if is_veg is not None:
         query["is_veg"] = is_veg
+    if search:
+        regex = {"$regex": search, "$options": "i"}
+        query["$or"] = [{"name": regex}, {"category": regex}]
+    elif category is not None:
+        query["category"] = {"$regex": category, "$options": "i"}
 
-    dishes = await Dish.find(query).to_list()
+    sort_str = f"+{sort_by}" if sort_dir == "asc" else f"-{sort_by}"
+    skip = (page - 1) * page_size
 
-    if category is not None:
-        category_lower = category.lower()
-        dishes = [d for d in dishes if category_lower in d.category.lower()]
+    total = await Dish.find(query).count()
+    dishes = await Dish.find(query).sort(sort_str).skip(skip).limit(page_size).to_list()
 
-    return [_dish_response(d) for d in dishes]
+    return PaginatedResponse.build(
+        items=[_dish_response(d) for d in dishes],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @router.post("", response_model=DishResponse, status_code=status.HTTP_201_CREATED)
@@ -166,12 +229,23 @@ async def create_dish(
 ):
     now = datetime.now(timezone.utc)
     dish = Dish(
+        org_id=current_user.org_id,
         name=body.name,
         category=body.category,
         description=body.description,
         per_plate_cost=body.per_plate_cost,
         selling_price=body.selling_price,
         is_veg=body.is_veg,
+        course=body.course,
+        cuisine_type=body.cuisine_type,
+        allergens=body.allergens,
+        dietary_tags=body.dietary_tags,
+        portion_size=body.portion_size,
+        minimum_order_quantity=body.minimum_order_quantity,
+        preparation_time_minutes=body.preparation_time_minutes,
+        notes_for_kitchen=body.notes_for_kitchen,
+        is_available_for_storefront=body.is_available_for_storefront,
+        tags=body.tags,
         created_at=now,
         updated_at=now,
     )
@@ -181,8 +255,8 @@ async def create_dish(
 
 @router.get("/pdf")
 async def get_dishes_pdf(current_user: User = Depends(get_current_user)):
-    dishes = await Dish.find({"is_active": True}).to_list()
-    org = await Organisation.find_one()
+    dishes = await Dish.find({"org_id": current_user.org_id, "is_active": True}).to_list()
+    org = await Organisation.get(current_user.org_id)
     if org is None:
         org = _org_fallback()
 
@@ -205,7 +279,7 @@ async def get_dishes_pdf(current_user: User = Depends(get_current_user)):
 @router.get("/{dish_id}", response_model=DishResponse)
 async def get_dish(dish_id: str, current_user: User = Depends(get_current_user)):
     dish = await Dish.get(dish_id)
-    if not dish:
+    if not dish or dish.org_id != current_user.org_id:
         raise HTTPException(status_code=404, detail="Dish not found")
     return _dish_response(dish)
 
@@ -217,7 +291,7 @@ async def update_dish(
     current_user: User = Depends(require_role(UserRole.owner, UserRole.manager)),
 ):
     dish = await Dish.get(dish_id)
-    if not dish:
+    if not dish or dish.org_id != current_user.org_id:
         raise HTTPException(status_code=404, detail="Dish not found")
 
     if body.name is not None:
@@ -234,6 +308,26 @@ async def update_dish(
         dish.is_veg = body.is_veg
     if body.is_active is not None:
         dish.is_active = body.is_active
+    if body.course is not None:
+        dish.course = body.course
+    if body.cuisine_type is not None:
+        dish.cuisine_type = body.cuisine_type
+    if body.allergens is not None:
+        dish.allergens = body.allergens
+    if body.dietary_tags is not None:
+        dish.dietary_tags = body.dietary_tags
+    if body.portion_size is not None:
+        dish.portion_size = body.portion_size
+    if body.minimum_order_quantity is not None:
+        dish.minimum_order_quantity = body.minimum_order_quantity
+    if body.preparation_time_minutes is not None:
+        dish.preparation_time_minutes = body.preparation_time_minutes
+    if body.notes_for_kitchen is not None:
+        dish.notes_for_kitchen = body.notes_for_kitchen
+    if body.is_available_for_storefront is not None:
+        dish.is_available_for_storefront = body.is_available_for_storefront
+    if body.tags is not None:
+        dish.tags = body.tags
 
     dish.updated_at = datetime.now(timezone.utc)
     await dish.save()
@@ -246,7 +340,7 @@ async def delete_dish(
     current_user: User = Depends(require_role(UserRole.owner)),
 ):
     dish = await Dish.get(dish_id)
-    if not dish:
+    if not dish or dish.org_id != current_user.org_id:
         raise HTTPException(status_code=404, detail="Dish not found")
     dish.is_active = False
     dish.updated_at = datetime.now(timezone.utc)
@@ -260,7 +354,7 @@ async def upload_dish_image(
     current_user: User = Depends(require_role(UserRole.owner, UserRole.manager)),
 ):
     dish = await Dish.get(dish_id)
-    if not dish:
+    if not dish or dish.org_id != current_user.org_id:
         raise HTTPException(status_code=404, detail="Dish not found")
     file_bytes = await file.read()
     url = await asyncio.to_thread(upload_image, file_bytes, "ziyafat/dishes", dish_id)
@@ -276,7 +370,7 @@ async def get_dish_recipe(
     current_user: User = Depends(get_current_user),
 ):
     dish = await Dish.get(dish_id)
-    if not dish:
+    if not dish or dish.org_id != current_user.org_id:
         raise HTTPException(status_code=404, detail="Dish not found")
 
     items = []
@@ -308,7 +402,7 @@ async def replace_dish_recipe(
     current_user: User = Depends(require_role(UserRole.owner, UserRole.manager)),
 ):
     dish = await Dish.get(dish_id)
-    if not dish:
+    if not dish or dish.org_id != current_user.org_id:
         raise HTTPException(status_code=404, detail="Dish not found")
 
     # Validate all ingredients and cache fetched objects to avoid double-fetch
@@ -366,7 +460,7 @@ async def clear_dish_recipe(
     current_user: User = Depends(require_role(UserRole.owner, UserRole.manager)),
 ):
     dish = await Dish.get(dish_id)
-    if not dish:
+    if not dish or dish.org_id != current_user.org_id:
         raise HTTPException(status_code=404, detail="Dish not found")
     dish.recipe_ingredients = []
     dish.recipe_cost_per_plate = None

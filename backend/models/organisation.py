@@ -1,7 +1,11 @@
+import re
 from typing import Literal
 from beanie import Document
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from pymongo import ASCENDING, IndexModel
+
+GSTIN_RE = re.compile(r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$")
+IFSC_RE = re.compile(r"^[A-Z]{4}0[A-Z0-9]{6}$")
 
 
 class ReportHeaderConfig(BaseModel):
@@ -21,14 +25,14 @@ class StorefrontSection(BaseModel):
 
 class Organisation(Document):
     name: str
-    slug: str  # URL-safe, unique, set during setup
+    slug: str
     logo_url: str | None = None
     banner_url: str | None = None
     address: str | None = None
     phone: str | None = None
     email: str | None = None
     tagline: str | None = None
-    # DLS colors — org's chosen brand colors
+    # DLS colors
     primary: str = "#d97706"
     on_primary: str = "#0c0a09"
     primary_container: str = "#451a03"
@@ -40,6 +44,39 @@ class Organisation(Document):
     # Config
     report_header: ReportHeaderConfig = Field(default_factory=ReportHeaderConfig)
     storefront_sections: list[StorefrontSection] = Field(default_factory=list)
+    # Business identity
+    gstin: str | None = None
+    website: str | None = None
+    # Bank details
+    bank_account_name: str | None = None
+    bank_account_number: str | None = None
+    bank_ifsc: str | None = None
+    bank_name: str | None = None
+    # Invoice defaults (auto-fill new quotations/invoices)
+    default_service_charge_percentage: float = 0.0
+    default_tax_rate: float = 0.0
+    default_gratuity_percentage: float = 0.0
+    default_payment_terms: str | None = None
+    default_cancellation_policy: str | None = None
+    invoice_prefix: str = "INV"
+    # Social
+    social_links: dict = Field(default_factory=dict)
+    # Onboarding
+    setup_completed: bool = False
+
+    @field_validator("gstin")
+    @classmethod
+    def validate_gstin(cls, v: str | None) -> str | None:
+        if v and not GSTIN_RE.match(v):
+            raise ValueError("Invalid GSTIN format")
+        return v
+
+    @field_validator("bank_ifsc")
+    @classmethod
+    def validate_ifsc(cls, v: str | None) -> str | None:
+        if v and not IFSC_RE.match(v):
+            raise ValueError("Invalid IFSC format")
+        return v
 
     class Settings:
         name = "organisations"

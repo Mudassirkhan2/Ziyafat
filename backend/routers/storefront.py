@@ -42,7 +42,7 @@ async def get_storefront(slug: str):
     org = await Organisation.find_one({"slug": slug})
     if not org:
         raise HTTPException(status_code=404, detail="Storefront not found")
-    dishes = await Dish.find({"is_active": True}).to_list()
+    dishes = await Dish.find({"org_id": org.id, "is_active": True}).to_list()
     return StorefrontResponse(
         org=PublicOrg(
             name=org.name,
