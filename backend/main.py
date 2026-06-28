@@ -15,6 +15,8 @@ from routers.quotations import router as quotations_router
 from routers.invoices import router as invoices_router
 from routers.storefront import router as storefront_router
 from routers.ingredients import router as ingredients_router
+from routers.upload import router as upload_router
+from routers.analytics import router as analytics_router
 
 
 @asynccontextmanager
@@ -48,3 +50,5 @@ app.include_router(quotations_router)
 app.include_router(invoices_router)
 app.include_router(storefront_router)
 app.include_router(ingredients_router)
+app.include_router(upload_router)
+app.include_router(analytics_router)
