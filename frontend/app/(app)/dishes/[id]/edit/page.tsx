@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useDish, useUpdateDish } from "@/lib/dishes-api";
+import { toast } from "sonner";
 import {
   useIngredients,
   useDishRecipe,
@@ -143,7 +144,10 @@ export default function EditDishPage() {
         notes_for_kitchen: values.notes_for_kitchen || undefined,
         is_available_for_storefront: values.is_available_for_storefront,
       },
-      { onSuccess: () => router.push("/dishes") }
+      {
+        onSuccess: () => { toast.success("Dish saved."); router.push("/dishes"); },
+        onError: () => toast.error("Failed to save dish. Please try again."),
+      }
     );
   }
 
@@ -185,7 +189,11 @@ export default function EditDishPage() {
         ingredient_id: r.ingredient_id,
         quantity_per_100_guests: parseFloat(r.qty_per_100_guests),
         unit: r.unit,
-      }))
+      })),
+      {
+        onSuccess: () => toast.success("Recipe saved."),
+        onError: () => toast.error("Failed to save recipe. Please try again."),
+      }
     );
   }
 
@@ -234,9 +242,6 @@ export default function EditDishPage() {
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   <DishFormFields showActiveToggle />
 
-                  {updateDish.isError && (
-                    <p className="text-sm text-destructive">Failed to save dish. Please try again.</p>
-                  )}
 
                   <div className="flex justify-end gap-2 pt-2">
                     <Button type="button" variant="outline" onClick={() => router.push("/dishes")}>
@@ -320,18 +325,15 @@ export default function EditDishPage() {
                 <FiPlus className="h-4 w-4 mr-1" /> Add Ingredient
               </Button>
 
-              {replaceRecipe.isError && (
-                <p className="text-sm text-destructive">Failed to save recipe. Please try again.</p>
-              )}
-              {replaceRecipe.isSuccess && (
-                <p className="text-sm text-green-400">Recipe saved successfully.</p>
-              )}
 
               <div className="flex justify-end gap-2 pt-2">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => clearRecipe.mutate()}
+                  onClick={() => clearRecipe.mutate(undefined, {
+                    onSuccess: () => toast.success("Recipe cleared."),
+                    onError: () => toast.error("Failed to clear recipe."),
+                  })}
                   disabled={clearRecipe.isPending || recipeRows.length === 0}
                 >
                   {clearRecipe.isPending ? "Clearing…" : "Clear Recipe"}

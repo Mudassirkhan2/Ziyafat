@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { format } from "date-fns";
+import { ArrowLeft } from "lucide-react";
 import { useCreateLead } from "@/lib/leads-api";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -25,7 +27,7 @@ export default function NewLeadPage() {
       phone: "",
       email: "",
       event_type: "",
-      approx_date: "",
+      approx_date: undefined,
       approx_guest_count: "",
       source: "",
       notes: "",
@@ -39,7 +41,7 @@ export default function NewLeadPage() {
       tentative_venue: "",
       preferred_contact_time: "",
       dietary_notes: "",
-      follow_up_date: "",
+      follow_up_date: undefined,
       number_of_events: "",
     },
   });
@@ -51,7 +53,7 @@ export default function NewLeadPage() {
         phone: values.phone,
         event_type: values.event_type,
         email: values.email || undefined,
-        approx_date: values.approx_date || undefined,
+        approx_date: values.approx_date ? format(values.approx_date, "yyyy-MM-dd") : undefined,
         approx_guest_count: values.approx_guest_count ? parseInt(values.approx_guest_count, 10) : undefined,
         source: values.source || undefined,
         notes: values.notes || undefined,
@@ -65,7 +67,7 @@ export default function NewLeadPage() {
         tentative_venue: values.tentative_venue || undefined,
         preferred_contact_time: values.preferred_contact_time || undefined,
         dietary_notes: values.dietary_notes || undefined,
-        follow_up_date: values.follow_up_date || undefined,
+        follow_up_date: values.follow_up_date ? format(values.follow_up_date, "yyyy-MM-dd") : undefined,
         number_of_events: values.number_of_events ? parseInt(values.number_of_events, 10) : undefined,
       },
       {
@@ -76,34 +78,38 @@ export default function NewLeadPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-2xl mx-auto">
       <button
         type="button"
         onClick={() => router.push("/leads")}
-        className="text-sm text-on-surface-medium hover:text-on-surface mb-6 flex items-center gap-1"
+        className="inline-flex items-center gap-1.5 text-sm text-on-surface-medium hover:text-on-surface mb-8 transition-colors"
       >
-        ← Back to Leads
+        <ArrowLeft className="h-4 w-4" />
+        Back to Leads
       </button>
 
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-on-surface mb-6">New Lead</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-on-surface">New Lead</h1>
+        <p className="text-sm text-on-surface-medium mt-1">Capture a new enquiry or prospect.</p>
+      </div>
 
-        <div className="rounded-lg border border-outline bg-surface-high p-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <div className="rounded-xl border border-outline-low bg-surface-high overflow-hidden">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <div className="p-6">
               <LeadFormFields />
+            </div>
 
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => router.push("/leads")}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createLead.isPending}>
-                  {createLead.isPending ? "Saving…" : "Save Lead"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </div>
+            <div className="flex justify-end gap-2 px-6 py-4 bg-surface border-t border-outline-low">
+              <Button type="button" variant="outline" onClick={() => router.push("/leads")}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createLead.isPending}>
+                {createLead.isPending ? "Saving…" : "Save Lead"}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </div>
     </div>
   );

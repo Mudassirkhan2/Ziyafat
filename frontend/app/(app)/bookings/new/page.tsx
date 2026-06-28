@@ -5,8 +5,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
+import { format } from "date-fns"
 import { useCreateBooking } from "@/lib/bookings-api";
+import { toast } from "sonner";
 import { useCustomers } from "@/lib/customers-api";
+import { FormDatePicker } from "@/components/ui/form-fields";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,7 +35,7 @@ const schema = z.object({
   title: z.string().min(1, "Title is required"),
   notes: z.string().optional(),
   deposit_amount: z.string().optional(),
-  deposit_due_date: z.string().optional(),
+  deposit_due_date: z.date().optional(),
   minimum_guarantee: z.string().optional(),
   payment_terms: z.string().optional(),
   cancellation_policy: z.string().optional(),
@@ -54,7 +57,7 @@ export default function NewBookingPage() {
       title: "",
       notes: "",
       deposit_amount: "",
-      deposit_due_date: "",
+      deposit_due_date: undefined,
       minimum_guarantee: "",
       payment_terms: "",
       cancellation_policy: "",
@@ -69,13 +72,16 @@ export default function NewBookingPage() {
         title: values.title,
         notes: values.notes || undefined,
         deposit_amount: values.deposit_amount ? parseFloat(values.deposit_amount) : undefined,
-        deposit_due_date: values.deposit_due_date || undefined,
+        deposit_due_date: values.deposit_due_date ? format(values.deposit_due_date, "yyyy-MM-dd") : undefined,
         minimum_guarantee: values.minimum_guarantee ? parseInt(values.minimum_guarantee, 10) : undefined,
         payment_terms: values.payment_terms || undefined,
         cancellation_policy: values.cancellation_policy || undefined,
         special_instructions: values.special_instructions || undefined,
       },
-      { onSuccess: (booking) => router.push(`/bookings/${booking.id}`) },
+      {
+        onSuccess: (booking) => { toast.success("Booking created."); router.push(`/bookings/${booking.id}`); },
+        onError: () => toast.error("Failed to create booking. Try again."),
+      },
     );
   }
 
@@ -146,19 +152,7 @@ export default function NewBookingPage() {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="deposit_due_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Deposit Due Date</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <FormDatePicker name="deposit_due_date" label="Deposit Due Date" />
           </div>
 
           <FormField
@@ -231,9 +225,6 @@ export default function NewBookingPage() {
             )}
           />
 
-          {createBooking.isError && (
-            <p className="text-sm text-red-400">Failed to create booking. Try again.</p>
-          )}
 
           <div className="flex gap-3 pt-2">
             <Button type="submit" disabled={createBooking.isPending}>

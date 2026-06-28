@@ -10,6 +10,7 @@ import {
   useDeleteQuotation,
   useDuplicateQuotation,
 } from "@/lib/quotations-api";
+import { toast } from "sonner";
 import { useBooking } from "@/lib/bookings-api";
 import type { QuotationStatus } from "@/lib/types";
 
@@ -113,26 +114,36 @@ export default function QuotationDetailPage({
   // ---------------------------------------------------------------------------
 
   function handleMarkSent() {
-    updateQuotation.mutate({ status: "sent" });
+    updateQuotation.mutate({ status: "sent" }, {
+      onSuccess: () => toast.success("Quotation marked as sent."),
+      onError: () => toast.error("Action failed. Please try again."),
+    });
   }
 
   function handleMarkApproved() {
-    updateQuotation.mutate({ status: "approved" });
+    updateQuotation.mutate({ status: "approved" }, {
+      onSuccess: () => toast.success("Quotation marked as approved."),
+      onError: () => toast.error("Action failed. Please try again."),
+    });
   }
 
   function handleDuplicate() {
     duplicateQuotation.mutate(id, {
       onSuccess: (data) => {
+        toast.success("Quotation duplicated.");
         router.push(`/quotations/${data.id}`);
       },
+      onError: () => toast.error("Failed to duplicate quotation. Try again."),
     });
   }
 
   function handleDelete() {
     deleteQuotation.mutate(id, {
       onSuccess: () => {
+        toast.success("Quotation deleted.");
         router.push("/quotations");
       },
+      onError: () => toast.error("Failed to delete quotation. Try again."),
     });
   }
 
@@ -403,9 +414,6 @@ export default function QuotationDetailPage({
         )}
       </div>
 
-      {(updateQuotation.isError || duplicateQuotation.isError) && (
-        <p className="text-sm text-red-400">Action failed. Please try again.</p>
-      )}
 
       {/* Delete confirmation dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -416,9 +424,6 @@ export default function QuotationDetailPage({
           <p className="text-sm text-on-surface-medium">
             Are you sure you want to delete this quotation? This action cannot be undone.
           </p>
-          {deleteQuotation.isError && (
-            <p className="text-sm text-red-400">Failed to delete quotation. Try again.</p>
-          )}
           <DialogFooter>
             <Button
               variant="outline"

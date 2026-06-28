@@ -217,6 +217,11 @@
   .navSign {
     display: none;
   }
+
+  .navCta .btn {
+    padding: 9px 16px;
+    font-size: 13.5px;
+  }
 }
 
 /* ── Hero ──────────────────────────────────────────────── */

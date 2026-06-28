@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useCreateIngredient } from "@/lib/ingredients-api";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import {
@@ -50,7 +51,10 @@ export default function NewIngredientPage() {
         par_level: values.par_level ? parseFloat(values.par_level) : undefined,
         notes: values.notes || undefined,
       },
-      { onSuccess: () => router.push("/ingredients") },
+      {
+        onSuccess: () => { toast.success("Ingredient saved."); router.push("/ingredients"); },
+        onError: () => toast.error("Failed to create ingredient. Please try again."),
+      },
     );
   }
 
@@ -72,9 +76,6 @@ export default function NewIngredientPage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <IngredientFormFields />
 
-              {createIngredient.isError && (
-                <p className="text-sm text-red-400">Failed to create ingredient. Please try again.</p>
-              )}
 
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => router.push("/ingredients")}>

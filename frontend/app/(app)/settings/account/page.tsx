@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { useOrg, useUpdateOrg } from "@/lib/organisation-api";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -82,7 +83,8 @@ export default function AccountSettingsPage() {
   }, [org, form]);
 
   function onSubmit(values: AccountFormValues) {
-    updateOrg.mutate({
+    updateOrg.mutate(
+    {
       name: values.name,
       slug: values.slug,
       address: values.address || undefined,
@@ -107,6 +109,10 @@ export default function AccountSettingsPage() {
       invoice_prefix: values.invoice_prefix || undefined,
       default_payment_terms: values.default_payment_terms || undefined,
       default_cancellation_policy: values.default_cancellation_policy || undefined,
+    },
+    {
+      onSuccess: () => toast.success("Settings saved."),
+      onError: () => toast.error("Failed to save settings. Please try again."),
     });
   }
 
@@ -270,12 +276,6 @@ export default function AccountSettingsPage() {
           </FormItem>
         )} />
 
-        {updateOrg.isError && (
-          <p className="text-sm text-red-400">Failed to save. Try again.</p>
-        )}
-        {updateOrg.isSuccess && (
-          <p className="text-sm text-green-400">Saved successfully.</p>
-        )}
 
         <div className="flex justify-end pt-2">
           <Button type="submit" disabled={updateOrg.isPending}>

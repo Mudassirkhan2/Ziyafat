@@ -11,6 +11,7 @@ import {
   useUpdateCustomer,
   useCustomerBookings,
 } from "@/lib/customers-api";
+import { toast } from "sonner";
 import type { Booking } from "@/lib/types";
 import {
   CONTACT_TYPE_OPTIONS,
@@ -181,7 +182,10 @@ export default function EditCustomerPage() {
         preferred_payment_method: values.preferred_payment_method || null,
         communication_preference: values.communication_preference || null,
       },
-      { onSuccess: () => router.push("/customers") },
+      {
+        onSuccess: () => { toast.success("Customer saved."); router.push("/customers"); },
+        onError: () => toast.error("Failed to update customer. Please try again."),
+      },
     );
   }
 
@@ -413,9 +417,6 @@ export default function EditCustomerPage() {
                   )}
                 />
 
-                {updateCustomer.isError && (
-                  <p className="text-sm text-red-400">Failed to update customer. Please try again.</p>
-                )}
 
                 <div className="flex justify-end gap-2 pt-2">
                   <Button type="button" variant="outline" onClick={() => router.push("/customers")}>

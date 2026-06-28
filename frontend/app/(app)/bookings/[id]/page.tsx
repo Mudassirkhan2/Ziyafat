@@ -7,7 +7,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
+import { format } from "date-fns"
 import { useBooking, useUpdateBooking } from "@/lib/bookings-api";
+import { toast } from "sonner";
+import { FormDatePicker } from "@/components/ui/form-fields";
 import {
   useBookingEvents,
   useCreateEvent,
@@ -90,7 +93,7 @@ const BOOKING_STATUSES: BookingStatus[] = [
 
 const eventSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  date: z.string().min(1, "Date is required"),
+  date: z.date({ error: "Date is required" }),
   start_time: z.string().optional(),
   end_time: z.string().optional(),
   venue: z.string().optional(),
@@ -167,7 +170,7 @@ function EventSheet({
     resolver: zodResolver(eventSchema),
     defaultValues: {
       name: event?.name ?? "",
-      date: event?.date ?? "",
+      date: event?.date ? new Date(event.date) : undefined as unknown as Date,
       start_time: event?.start_time ?? "",
       end_time: event?.end_time ?? "",
       venue: event?.venue ?? "",
@@ -195,7 +198,7 @@ function EventSheet({
   function onSubmit(values: EventFormValues) {
     const payload = {
       name: values.name,
-      date: values.date,
+      date: format(values.date, "yyyy-MM-dd"),
       start_time: values.start_time || undefined,
       end_time: values.end_time || undefined,
       venue: values.venue || undefined,
@@ -222,14 +225,19 @@ function EventSheet({
     if (isEdit && event) {
       updateEvent.mutate(
         { eventId: event.id, body: payload },
-        { onSuccess: () => onOpenChange(false) }
+        {
+          onSuccess: () => { toast.success("Event updated."); onOpenChange(false); },
+          onError: () => toast.error("Failed to update event. Try again."),
+        }
       );
     } else {
       createEvent.mutate(payload, {
         onSuccess: () => {
+          toast.success("Event created.");
           form.reset();
           onOpenChange(false);
         },
+        onError: () => toast.error("Failed to create event. Try again."),
       });
     }
   }
@@ -260,17 +268,7 @@ function EventSheet({
             />
 
             <div className="grid grid-cols-3 gap-3">
-              <FormField
-                control={form.control}
-                name="date"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date *</FormLabel>
-                    <FormControl><Input type="date" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <FormDatePicker name="date" label="Date *" />
               <FormField
                 control={form.control}
                 name="start_time"
@@ -594,11 +592,6 @@ function EventSheet({
               )}
             />
 
-            {(createEvent.isError || updateEvent.isError) && (
-              <p className="text-sm text-red-400">
-                Failed to {isEdit ? "update" : "create"} event. Try again.
-              </p>
-            )}
 
             <div className="flex justify-end gap-2 pt-4">
               <Button
@@ -614,8 +607,8 @@ function EventSheet({
                     ? "Saving…"
                     : "Creating…"
                   : isEdit
-                  ? "Save"
-                  : "Create"}
+                    ? "Save"
+                    : "Create"}
               </Button>
             </div>
           </form>
@@ -657,7 +650,10 @@ function MenuDialog({
   function save() {
     updateEvent.mutate(
       { menu_dish_ids: selected },
-      { onSuccess: () => onOpenChange(false) }
+      {
+        onSuccess: () => { toast.success("Menu saved."); onOpenChange(false); },
+        onError: () => toast.error("Failed to save menu. Try again."),
+      }
     );
   }
 
@@ -711,7 +707,8 @@ function DeleteEventDialog({
 
   function handleDelete() {
     deleteEvent.mutate(event.id, {
-      onSuccess: () => setOpen(false),
+      onSuccess: () => { toast.success("Event deleted."); setOpen(false); },
+      onError: () => toast.error("Failed to delete event. Try again."),
     });
   }
 
@@ -735,9 +732,6 @@ function DeleteEventDialog({
             <span className="text-on-surface font-medium">{event.name}</span>? This
             action cannot be undone.
           </p>
-          {deleteEvent.isError && (
-            <p className="text-sm text-red-400">Failed to delete event. Try again.</p>
-          )}
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
@@ -784,7 +778,13 @@ export default function BookingDetailPage() {
 
   function handleStatusChange(status: string | null) {
     if (!status) return;
-    updateBooking.mutate({ status: status as BookingStatus });
+    updateBooking.mutate(
+      { status: status as BookingStatus },
+      {
+        onSuccess: () => toast.success("Status updated."),
+        onError: () => toast.error("Failed to update status. Try again."),
+      }
+    );
   }
 
   if (bookingLoading) {
@@ -848,11 +848,6 @@ export default function BookingDetailPage() {
             </Select>
           </div>
         </div>
-        {updateBooking.isError && (
-          <p className="text-sm text-red-400 mt-2">
-            Failed to update status. Try again.
-          </p>
-        )}
       </div>
 
       {/* Events Section */}

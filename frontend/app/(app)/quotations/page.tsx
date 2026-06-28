@@ -6,7 +6,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
+import { format } from "date-fns"
 import { useQuotations, useCreateQuotation } from "@/lib/quotations-api";
+import { toast } from "sonner";
+import { FormDatePicker } from "@/components/ui/form-fields";
 import { useBookingsForSelect } from "@/lib/bookings-api";
 import { useDataTableState } from "@/lib/use-data-table-state";
 import type { Booking, Quotation, QuotationStatus } from "@/lib/types";
@@ -68,7 +71,7 @@ const STATUS_COLORS: Record<QuotationStatus, string> = {
 
 const quotationSchema = z.object({
   booking_id: z.string().min(1, "Booking is required"),
-  valid_until: z.string().optional(),
+  valid_until: z.date().optional(),
   notes: z.string().optional(),
   discount: z.string().optional(),
 });
@@ -145,7 +148,7 @@ function CreateQuotationSheet({
     resolver: zodResolver(quotationSchema),
     defaultValues: {
       booking_id: "",
-      valid_until: "",
+      valid_until: undefined,
       notes: "",
       discount: "0",
     },
@@ -177,7 +180,7 @@ function CreateQuotationSheet({
   function onSubmit(values: QuotationFormValues) {
     const payload = {
       booking_id: values.booking_id,
-      valid_until: values.valid_until || undefined,
+      valid_until: values.valid_until ? format(values.valid_until, "yyyy-MM-dd") : undefined,
       notes: values.notes || undefined,
       line_items: lineItems.map((row) => ({
         dish_id: null,
@@ -194,9 +197,11 @@ function CreateQuotationSheet({
 
     createQuotation.mutate(payload, {
       onSuccess: () => {
+        toast.success("Quotation created.");
         resetForm();
         onOpenChange(false);
       },
+      onError: () => toast.error("Failed to create quotation. Try again."),
     });
   }
 
@@ -236,19 +241,7 @@ function CreateQuotationSheet({
             />
 
             {/* Valid Until */}
-            <FormField
-              control={form.control}
-              name="valid_until"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Valid Until</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <FormDatePicker name="valid_until" label="Valid Until" />
 
             {/* Notes */}
             <FormField
@@ -345,9 +338,6 @@ function CreateQuotationSheet({
               </div>
             </div>
 
-            {createQuotation.isError && (
-              <p className="text-sm text-red-400">Failed to create quotation. Try again.</p>
-            )}
 
             <div className="flex justify-end gap-2 pt-4">
               <Button

@@ -6,7 +6,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
+import { format } from "date-fns"
 import { useInvoices, useCreateInvoice } from "@/lib/invoices-api";
+import { toast } from "sonner";
+import { FormDatePicker } from "@/components/ui/form-fields";
 import { useQuotations } from "@/lib/quotations-api";
 import { useBookingsForSelect } from "@/lib/bookings-api";
 import { useDataTableState } from "@/lib/use-data-table-state";
@@ -62,7 +65,7 @@ const STATUS_COLORS: Record<InvoiceStatus, string> = {
 const invoiceSchema = z.object({
   booking_id: z.string().min(1, "Booking is required"),
   quotation_id: z.string().optional(),
-  due_date: z.string().optional(),
+  due_date: z.date().optional(),
   notes: z.string().optional(),
   discount: z.string().optional(),
 });
@@ -140,7 +143,7 @@ function CreateInvoiceSheet({
     defaultValues: {
       booking_id: "",
       quotation_id: "",
-      due_date: "",
+      due_date: undefined,
       notes: "",
       discount: "0",
     },
@@ -188,14 +191,16 @@ function CreateInvoiceSheet({
           subtotal: 0,
           discount: parseFloat(values.discount ?? "0") || 0,
           total: 0,
-          due_date: values.due_date || undefined,
+          due_date: values.due_date ? format(values.due_date, "yyyy-MM-dd") : undefined,
           notes: values.notes || undefined,
         },
         {
           onSuccess: () => {
+            toast.success("Invoice created.");
             resetForm();
             onOpenChange(false);
           },
+          onError: () => toast.error("Failed to create invoice. Try again."),
         }
       );
     } else {
@@ -215,14 +220,16 @@ function CreateInvoiceSheet({
           subtotal,
           discount: parseFloat(values.discount ?? "0") || 0,
           total,
-          due_date: values.due_date || undefined,
+          due_date: values.due_date ? format(values.due_date, "yyyy-MM-dd") : undefined,
           notes: values.notes || undefined,
         },
         {
           onSuccess: () => {
+            toast.success("Invoice created.");
             resetForm();
             onOpenChange(false);
           },
+          onError: () => toast.error("Failed to create invoice. Try again."),
         }
       );
     }
@@ -307,19 +314,7 @@ function CreateInvoiceSheet({
             />
 
             {/* Due Date */}
-            <FormField
-              control={form.control}
-              name="due_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Due Date</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <FormDatePicker name="due_date" label="Due Date" />
 
             {/* Notes */}
             <FormField
@@ -424,9 +419,6 @@ function CreateInvoiceSheet({
               </div>
             )}
 
-            {createInvoice.isError && (
-              <p className="text-sm text-red-400">Failed to create invoice. Try again.</p>
-            )}
 
             <div className="flex justify-end gap-2 pt-4">
               <Button

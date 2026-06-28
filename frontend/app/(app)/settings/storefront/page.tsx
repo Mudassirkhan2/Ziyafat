@@ -18,6 +18,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 import { useOrg, useUpdateOrg } from "@/lib/organisation-api";
+import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import type { StorefrontSection } from "@/lib/types";
@@ -115,7 +116,10 @@ export default function StorefrontSettingsPage() {
   }
 
   function handleSave() {
-    updateOrg.mutate({ storefront_sections: sections });
+    updateOrg.mutate({ storefront_sections: sections }, {
+      onSuccess: () => toast.success("Storefront layout saved."),
+      onError: () => toast.error("Failed to save. Try again."),
+    });
   }
 
   if (isLoading) return <p className="text-on-surface-medium">Loading…</p>;
@@ -143,8 +147,6 @@ export default function StorefrontSettingsPage() {
         </DndContext>
       </div>
 
-      {updateOrg.isError && <p className="text-sm text-red-400">Failed to save. Try again.</p>}
-      {updateOrg.isSuccess && <p className="text-sm text-green-400">Storefront layout saved.</p>}
 
       <div className="flex justify-end pt-2">
         <Button onClick={handleSave} disabled={updateOrg.isPending}>

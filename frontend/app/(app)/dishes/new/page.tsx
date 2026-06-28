@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useCreateDish } from "@/lib/dishes-api";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import {
@@ -57,7 +58,10 @@ export default function NewDishPage() {
         notes_for_kitchen: values.notes_for_kitchen || undefined,
         is_available_for_storefront: values.is_available_for_storefront,
       },
-      { onSuccess: () => router.push("/dishes") },
+      {
+        onSuccess: () => { toast.success("Dish saved."); router.push("/dishes"); },
+        onError: () => toast.error("Failed to create dish. Please try again."),
+      },
     );
   }
 
@@ -79,9 +83,6 @@ export default function NewDishPage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <DishFormFields />
 
-              {createDish.isError && (
-                <p className="text-sm text-red-400">Failed to create dish. Please try again.</p>
-              )}
 
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => router.push("/dishes")}>

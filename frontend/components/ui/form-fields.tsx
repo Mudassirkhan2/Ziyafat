@@ -24,6 +24,18 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 
+export function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[10px] font-semibold uppercase tracking-widest text-on-surface-low mb-3">
+      {children}
+    </p>
+  )
+}
+
+export function SectionDivider() {
+  return <div className="border-t border-outline-low my-5" />
+}
+
 export interface SelectOption {
   value: string
   label: string

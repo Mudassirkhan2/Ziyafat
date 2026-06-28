@@ -119,36 +119,39 @@ function LeadsContent() {
   const columns = getColumns(router);
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-on-surface">Leads</h1>
-        <Button onClick={() => router.push("/leads/new")}>
-          <FiPlus className="h-4 w-4 mr-1" /> Add Lead
+    <div className="p-4 md:p-6">
+      <div className="flex items-center justify-between mb-4 md:mb-6 gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-on-surface">Leads</h1>
+        <Button onClick={() => router.push("/leads/new")} className="shrink-0">
+          <FiPlus className="h-4 w-4" />
+          <span className="hidden sm:inline ml-1">Add Lead</span>
         </Button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 mb-4">
         <Input
           placeholder="Search name, phone, email…"
           value={ts.search}
           onChange={(e) => ts.setSearch(e.target.value)}
-          className="max-w-xs bg-surface border-outline text-on-surface"
+          className="w-full sm:max-w-xs bg-surface border-outline text-on-surface"
         />
-        <Tabs
-          value={statusFilter ?? "all"}
-          onValueChange={(v) =>
-            setStatusFilter(v === "all" ? undefined : (v as LeadStatus))
-          }
-        >
-          <TabsList className="bg-surface-high">
-            <TabsTrigger value="all">All</TabsTrigger>
-            {ALL_STATUSES.map((s) => (
-              <TabsTrigger key={s} value={s}>
-                {capitalize(s)}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        <div className="overflow-x-auto pb-0.5">
+          <Tabs
+            value={statusFilter ?? "all"}
+            onValueChange={(v) =>
+              setStatusFilter(v === "all" ? undefined : (v as LeadStatus))
+            }
+          >
+            <TabsList className="bg-surface-high whitespace-nowrap">
+              <TabsTrigger value="all">All</TabsTrigger>
+              {ALL_STATUSES.map((s) => (
+                <TabsTrigger key={s} value={s}>
+                  {capitalize(s)}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
       </div>
 
       {isError && (

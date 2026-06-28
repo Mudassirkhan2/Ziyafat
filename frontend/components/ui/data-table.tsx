@@ -76,7 +76,7 @@ export function DataTable<TData>({
 
   return (
     <div className="space-y-2">
-      <div className="rounded-lg border border-outline overflow-hidden">
+      <div className="rounded-lg border border-outline overflow-hidden overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
@@ -139,9 +139,9 @@ export function DataTable<TData>({
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-between text-sm text-on-surface-medium px-1">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-on-surface-medium px-1">
         <div className="flex items-center gap-2">
-          <span>Rows per page</span>
+          <span className="hidden sm:inline">Rows per page</span>
           <Select
             value={String(pageSize)}
             onValueChange={(v) => onPageSizeChange(Number(v))}
@@ -156,8 +156,8 @@ export function DataTable<TData>({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex items-center gap-3">
-          <span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs sm:text-sm">
             {total === 0
               ? "0 results"
               : `${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, total)} of ${total}`}

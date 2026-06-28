@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { useIngredient, useUpdateIngredient } from "@/lib/ingredients-api";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FiLoader } from "react-icons/fi";
@@ -100,7 +101,10 @@ export default function EditIngredientPage({
         notes: values.notes || undefined,
         is_active: values.is_active,
       },
-      { onSuccess: () => router.push("/ingredients") }
+      {
+        onSuccess: () => { toast.success("Ingredient saved."); router.push("/ingredients"); },
+        onError: () => toast.error("Failed to save ingredient. Please try again."),
+      }
     );
   }
 
@@ -141,9 +145,6 @@ export default function EditIngredientPage({
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <IngredientFormFields showActiveToggle />
 
-              {updateIngredient.isError && (
-                <p className="text-sm text-destructive">Failed to save ingredient. Please try again.</p>
-              )}
 
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => router.push("/ingredients")}>

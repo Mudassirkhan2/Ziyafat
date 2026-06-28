@@ -2,13 +2,11 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const PUBLIC_PATHS = ["/", "/login", "/signup", "/setup"];
-// Paths that authenticated users should NOT be able to visit
 const AUTH_ONLY_PATHS = ["/login", "/signup"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Pass through Next.js internals and static files
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
@@ -18,9 +16,10 @@ export async function middleware(request: NextRequest) {
   }
 
   const accessToken = request.cookies.get("access_token");
+  const refreshToken = request.cookies.get("refresh_token");
 
   // Authenticated users visiting login/signup get sent to the app
-  if (accessToken && AUTH_ONLY_PATHS.includes(pathname)) {
+  if ((accessToken || refreshToken) && AUTH_ONLY_PATHS.includes(pathname)) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
@@ -33,8 +32,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // All other paths require an access token cookie
-  if (!accessToken) {
+  // Require at least one valid token cookie — api.ts will refresh if needed
+  if (!accessToken && !refreshToken) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 

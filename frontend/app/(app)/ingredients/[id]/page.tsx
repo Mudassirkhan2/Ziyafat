@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { useIngredient, useUpdateIngredient } from "@/lib/ingredients-api";
+import { toast } from "sonner";
 import { INGREDIENT_CATEGORY_OPTIONS } from "@/lib/constants";
 
 import { Button } from "@/components/ui/button";
@@ -121,7 +122,10 @@ export default function EditIngredientPage() {
         notes: values.notes || undefined,
         is_active: values.is_active,
       },
-      { onSuccess: () => router.push("/ingredients") },
+      {
+        onSuccess: () => { toast.success("Ingredient saved."); router.push("/ingredients"); },
+        onError: () => toast.error("Failed to save ingredient. Please try again."),
+      },
     );
   }
 
@@ -372,9 +376,6 @@ export default function EditIngredientPage() {
                 )}
               />
 
-              {updateIngredient.isError && (
-                <p className="text-sm text-red-400">Failed to save ingredient. Please try again.</p>
-              )}
 
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => router.push("/ingredients")}>

@@ -7,6 +7,8 @@ import {
   FormSelect,
   FormTextarea,
   FormSwitch,
+  SectionLabel,
+  SectionDivider,
 } from "@/components/ui/form-fields"
 
 export const dishCreateSchema = z.object({
@@ -38,36 +40,63 @@ interface DishFormFieldsProps {
 
 export function DishFormFields({ showActiveToggle = false }: DishFormFieldsProps) {
   return (
-    <>
-      <div className="grid grid-cols-2 gap-4">
-        <FormInput name="name" label="Name *" placeholder="Dish name" />
-        <FormInput name="category" label="Category *" placeholder="e.g. Biryani, Starters" />
+    <div className="space-y-0">
+      {/* Basics */}
+      <div className="space-y-4">
+        <SectionLabel>Basics</SectionLabel>
+        <div className="grid grid-cols-2 gap-4">
+          <FormInput name="name" label="Name *" placeholder="Dish name" />
+          <FormInput name="category" label="Category *" placeholder="e.g. Biryani, Starters" />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <FormSelect name="course" label="Course" placeholder="Select course" options={DISH_COURSE_OPTIONS} />
+          <FormSelect name="cuisine_type" label="Cuisine" placeholder="Select cuisine" options={CUISINE_TYPE_OPTIONS} />
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <FormSelect name="course" label="Course" placeholder="Select course" options={DISH_COURSE_OPTIONS} />
-        <FormSelect name="cuisine_type" label="Cuisine" placeholder="Select cuisine" options={CUISINE_TYPE_OPTIONS} />
+      <SectionDivider />
+
+      {/* Pricing */}
+      <div className="space-y-4">
+        <SectionLabel>Pricing</SectionLabel>
+        <div className="grid grid-cols-2 gap-4">
+          <FormInput name="per_plate_cost" label="Cost per Plate (₹) *" type="number" step="0.01" placeholder="0.00" />
+          <FormInput name="selling_price" label="Selling Price (₹) *" type="number" step="0.01" placeholder="0.00" />
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <FormInput name="per_plate_cost" label="Cost per Plate (₹) *" type="number" step="0.01" placeholder="0.00" />
-        <FormInput name="selling_price" label="Selling Price (₹) *" type="number" step="0.01" placeholder="0.00" />
+      <SectionDivider />
+
+      {/* Production */}
+      <div className="space-y-4">
+        <SectionLabel>Production</SectionLabel>
+        <div className="grid grid-cols-3 gap-4">
+          <FormInput name="portion_size" label="Portion Size" placeholder="e.g. 250g" />
+          <FormInput name="minimum_order_quantity" label="Min. Order Qty" type="number" placeholder="Min plates" />
+          <FormInput name="preparation_time_minutes" label="Prep Time (mins)" type="number" placeholder="Minutes" />
+        </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <FormInput name="portion_size" label="Portion Size" placeholder="e.g. 250g" />
-        <FormInput name="minimum_order_quantity" label="Min. Order Qty" type="number" placeholder="Min plates" />
-        <FormInput name="preparation_time_minutes" label="Prep Time (mins)" type="number" placeholder="Minutes" />
+      <SectionDivider />
+
+      {/* Details */}
+      <div className="space-y-4">
+        <SectionLabel>Details</SectionLabel>
+        <FormTextarea name="description" label="Description" placeholder="Dish description" rows={2} />
+        <FormTextarea name="notes_for_kitchen" label="Kitchen Notes" placeholder="Preparation notes for kitchen staff" rows={2} />
       </div>
 
-      <FormTextarea name="description" label="Description" placeholder="Dish description" rows={2} />
-      <FormTextarea name="notes_for_kitchen" label="Kitchen Notes" placeholder="Preparation notes for kitchen staff" rows={2} />
+      <SectionDivider />
 
-      <div className="flex gap-6">
-        <FormSwitch name="is_veg" label="Vegetarian" />
-        {showActiveToggle && <FormSwitch name="is_active" label="Active" />}
-        <FormSwitch name="is_available_for_storefront" label="Show on Storefront" />
+      {/* Settings */}
+      <div className="space-y-3">
+        <SectionLabel>Settings</SectionLabel>
+        <div className="flex gap-6">
+          <FormSwitch name="is_veg" label="Vegetarian" />
+          {showActiveToggle && <FormSwitch name="is_active" label="Active" />}
+          <FormSwitch name="is_available_for_storefront" label="Show on Storefront" />
+        </div>
       </div>
-    </>
+    </div>
   )
 }

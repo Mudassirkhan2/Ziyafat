@@ -9,6 +9,7 @@ import {
   useUpdateInvoice,
   useDeleteInvoice,
 } from "@/lib/invoices-api";
+import { toast } from "sonner";
 import { useBooking } from "@/lib/bookings-api";
 import { useQuotation } from "@/lib/quotations-api";
 import type { InvoiceStatus } from "@/lib/types";
@@ -106,18 +107,26 @@ export default function InvoiceDetailPage({
   // ---------------------------------------------------------------------------
 
   function handleMarkSent() {
-    updateInvoice.mutate({ status: "sent" });
+    updateInvoice.mutate({ status: "sent" }, {
+      onSuccess: () => toast.success("Invoice marked as sent."),
+      onError: () => toast.error("Action failed. Please try again."),
+    });
   }
 
   function handleMarkPaid() {
-    updateInvoice.mutate({ status: "paid" });
+    updateInvoice.mutate({ status: "paid" }, {
+      onSuccess: () => toast.success("Invoice marked as paid."),
+      onError: () => toast.error("Action failed. Please try again."),
+    });
   }
 
   function handleDelete() {
     deleteInvoice.mutate(id, {
       onSuccess: () => {
+        toast.success("Invoice deleted.");
         router.push("/invoices");
       },
+      onError: () => toast.error("Failed to delete invoice. Try again."),
     });
   }
 
@@ -366,9 +375,6 @@ export default function InvoiceDetailPage({
         )}
       </div>
 
-      {updateInvoice.isError && (
-        <p className="text-sm text-red-400">Action failed. Please try again.</p>
-      )}
 
       {/* Delete confirmation dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -379,9 +385,6 @@ export default function InvoiceDetailPage({
           <p className="text-sm text-on-surface-medium">
             This will permanently delete the invoice. This action cannot be undone.
           </p>
-          {deleteInvoice.isError && (
-            <p className="text-sm text-red-400">Failed to delete invoice. Try again.</p>
-          )}
           <DialogFooter>
             <Button
               variant="outline"

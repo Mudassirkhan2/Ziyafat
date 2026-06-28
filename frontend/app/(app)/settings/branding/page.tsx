@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useOrg, useUpdateOrg, useUploadOrgLogo, useUploadOrgBanner } from "@/lib/organisation-api";
+import { toast } from "sonner";
 import { applyOrgTheme } from "@/lib/dls/tokens";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -63,7 +64,10 @@ export default function BrandingSettingsPage() {
   function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) {
-      uploadLogo.mutate(file);
+      uploadLogo.mutate(file, {
+        onSuccess: () => toast.success("Logo uploaded."),
+        onError: () => toast.error("Logo upload failed. Try again."),
+      });
       e.target.value = "";
     }
   }
@@ -71,7 +75,10 @@ export default function BrandingSettingsPage() {
   function handleBannerChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (file) {
-      uploadBanner.mutate(file);
+      uploadBanner.mutate(file, {
+        onSuccess: () => toast.success("Banner uploaded."),
+        onError: () => toast.error("Banner upload failed. Try again."),
+      });
       e.target.value = "";
     }
   }
@@ -90,12 +97,20 @@ export default function BrandingSettingsPage() {
 
   function handleSaveColors() {
     setPendingSection("colors");
-    updateOrg.mutate({ ...colors }, { onSettled: () => setPendingSection(null) });
+    updateOrg.mutate({ ...colors }, {
+      onSuccess: () => toast.success("Brand colors saved."),
+      onError: () => toast.error("Failed to save colors. Try again."),
+      onSettled: () => setPendingSection(null),
+    });
   }
 
   function handleSaveReportHeader() {
     setPendingSection("header");
-    updateOrg.mutate({ report_header: reportHeader }, { onSettled: () => setPendingSection(null) });
+    updateOrg.mutate({ report_header: reportHeader }, {
+      onSuccess: () => toast.success("Report header saved."),
+      onError: () => toast.error("Failed to save report header. Try again."),
+      onSettled: () => setPendingSection(null),
+    });
   }
 
   if (isLoading) return <p className="text-on-surface-medium">Loading…</p>;
@@ -121,8 +136,6 @@ export default function BrandingSettingsPage() {
         <Button variant="outline" onClick={() => logoInputRef.current?.click()} disabled={uploadLogo.isPending}>
           {uploadLogo.isPending ? "Uploading…" : "Upload Logo"}
         </Button>
-        {uploadLogo.isError && <p className="text-sm text-red-400">Upload failed. Try again.</p>}
-        {uploadLogo.isSuccess && <p className="text-sm text-green-400">Logo updated successfully.</p>}
       </section>
 
       {/* Banner */}
@@ -143,8 +156,6 @@ export default function BrandingSettingsPage() {
         <Button variant="outline" onClick={() => bannerInputRef.current?.click()} disabled={uploadBanner.isPending}>
           {uploadBanner.isPending ? "Uploading…" : "Upload Banner"}
         </Button>
-        {uploadBanner.isError && <p className="text-sm text-red-400">Upload failed. Try again.</p>}
-        {uploadBanner.isSuccess && <p className="text-sm text-green-400">Banner updated successfully.</p>}
       </section>
 
       {/* DLS Colors */}
@@ -223,8 +234,6 @@ export default function BrandingSettingsPage() {
           </div>
         </details>
 
-        {updateOrg.isError && <p className="text-sm text-red-400">Failed to save colors.</p>}
-        {updateOrg.isSuccess && <p className="text-sm text-green-400">Colors saved.</p>}
         <Button onClick={handleSaveColors} disabled={pendingSection === "colors"}>
           {pendingSection === "colors" ? "Saving…" : "Save Colors"}
         </Button>
