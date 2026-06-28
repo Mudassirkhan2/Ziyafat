@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Invoice {{ invoice.invoice_number }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #111; margin: 40px; font-size: 13px; }
+    .inv-number { font-size: 22px; font-weight: bold; margin-bottom: 4px; }
+    .meta { display: flex; justify-content: space-between; margin-bottom: 24px; }
+    .meta-left .sub { color: #555; font-size: 12px; }
+    .meta-right { text-align: right; font-size: 12px; color: #555; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    th { background: #f5f5f5; padding: 8px 10px; text-align: left; font-size: 12px; color: #333; border-bottom: 2px solid #ddd; }
+    td { padding: 7px 10px; border-bottom: 1px solid #eee; }
+    .text-right { text-align: right; }
+    .summary { margin-left: auto; width: 260px; }
+    .summary tr td { border: none; padding: 4px 10px; }
+    .summary .total-row td { font-weight: bold; border-top: 2px solid #333; font-size: 15px; padding-top: 8px; }
+    .notes { margin-top: 24px; font-size: 12px; color: #555; }
+    .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #888; }
+  </style>
+</head>
+<body>
+  {% include 'report_header.html' %}
+
+  <div class="meta">
+    <div class="meta-left">
+      <div class="inv-number">{{ invoice.invoice_number }}</div>
+      <div class="sub">Status: {{ invoice.status | capitalize }}</div>
+      <div class="sub">Booking: {{ booking.title }}</div>
+      {% if invoice.quotation_id %}
+        <div class="sub">Ref: Quotation v{{ quotation_version }}</div>
+      {% endif %}
+    </div>
+    <div class="meta-right">
+      <div>Date: {{ invoice.created_at.strftime('%d %b %Y') }}</div>
+      {% if invoice.due_date %}
+        <div>Due: {{ invoice.due_date.strftime('%d %b %Y') }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th class="text-right">Qty/Plate</th>
+        <th class="text-right">Guests</th>
+        <th class="text-right">Unit Price</th>
+        <th class="text-right">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in invoice.line_items %}
+        <tr>
+          <td>{{ item.label }}</td>
+          <td class="text-right">{{ item.qty_per_plate }}</td>
+          <td class="text-right">{{ item.guest_count }}</td>
+          <td class="text-right">&#8377;{{ "%.2f"|format(item.unit_price) }}</td>
+          <td class="text-right">&#8377;{{ "%.2f"|format(item.total) }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <table class="summary">
+    <tr><td>Subtotal</td><td class="text-right">&#8377;{{ "%.2f"|format(invoice.subtotal) }}</td></tr>
+    {% if invoice.discount > 0 %}
+      <tr><td>Discount</td><td class="text-right">- &#8377;{{ "%.2f"|format(invoice.discount) }}</td></tr>
+    {% endif %}
+    <tr class="total-row"><td>Total</td><td class="text-right">&#8377;{{ "%.2f"|format(invoice.total) }}</td></tr>
+  </table>
+
+  {% if invoice.notes %}
+    <div class="notes"><strong>Notes:</strong> {{ invoice.notes }}</div>
+  {% endif %}
+
+  <div class="footer">Thank you for your business!</div>
+</body>
+</html>

@@ -10,6 +10,9 @@ from models.lead import Lead
 from models.customer import Customer
 from models.booking import Booking
 from models.event import Event
+from models.dish import Dish
+from models.quotation import Quotation
+from models.invoice import Invoice
 
 
 @pytest_asyncio.fixture(autouse=True)
@@ -17,7 +20,7 @@ async def init_test_db():
     client = AsyncMongoMockClient()
     await init_beanie(
         database=client["test_ziyafat"],
-        document_models=[User, Organisation, Lead, Customer, Booking, Event],
+        document_models=[User, Organisation, Lead, Customer, Booking, Event, Dish, Quotation, Invoice],
     )
     yield
     await User.get_motor_collection().drop()
@@ -26,6 +29,9 @@ async def init_test_db():
     await Customer.get_motor_collection().drop()
     await Booking.get_motor_collection().drop()
     await Event.get_motor_collection().drop()
+    await Dish.get_motor_collection().drop()
+    await Quotation.get_motor_collection().drop()
+    await Invoice.get_motor_collection().drop()
 
 
 @pytest_asyncio.fixture

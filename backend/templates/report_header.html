@@ -1,0 +1,21 @@
+<div class="report-header" style="margin-bottom: 20px; padding-bottom: 12px; border-bottom: 3px solid {{ org.primary | default('#d97706') }};">
+  {% if org.logo_url %}
+    <div style="text-align: {{ org.report_header.logo_alignment | default('left') }}; margin-bottom: 8px;">
+      <img src="{{ org.logo_url }}" style="max-height: 60px; object-fit: contain;" />
+    </div>
+  {% endif %}
+  <div style="text-align: {{ org.report_header.logo_alignment | default('left') }};">
+    <div style="font-size: 18px; font-weight: bold; color: #111;">{{ org.name }}</div>
+    {% if org.report_header.show_address and org.address %}
+      <div style="font-size: 12px; color: #555; margin-top: 2px;">{{ org.address }}</div>
+    {% endif %}
+    {% if org.report_header.show_phone and org.phone %}
+      <div style="font-size: 12px; color: #555;">Phone: {{ org.phone }}{% if org.report_header.show_email and org.email %} &nbsp;·&nbsp; Email: {{ org.email }}{% endif %}</div>
+    {% elif org.report_header.show_email and org.email %}
+      <div style="font-size: 12px; color: #555;">Email: {{ org.email }}</div>
+    {% endif %}
+    {% if org.report_header.show_tagline and org.tagline %}
+      <div style="font-size: 11px; color: #888; font-style: italic; margin-top: 4px;">{{ org.tagline }}</div>
+    {% endif %}
+  </div>
+</div>

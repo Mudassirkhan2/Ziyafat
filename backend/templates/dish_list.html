@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Our Menu</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #111; margin: 40px; }
+    h1 { font-size: 22px; margin-bottom: 24px; }
+    h2 { font-size: 15px; font-weight: bold; margin: 20px 0 8px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+    .dish { display: flex; justify-content: space-between; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
+    .dish-name { font-size: 13px; font-weight: 600; }
+    .dish-desc { font-size: 11px; color: #666; margin-top: 2px; }
+    .dish-price { font-size: 13px; font-weight: bold; white-space: nowrap; margin-left: 16px; }
+    .veg-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+    .veg { background: #22c55e; }
+    .non-veg { background: #ef4444; }
+  </style>
+</head>
+<body>
+  {% include 'report_header.html' %}
+  <h1>Our Menu</h1>
+  {% for category, dishes in grouped_dishes.items() %}
+    <h2>{{ category }}</h2>
+    {% for dish in dishes %}
+      <div class="dish">
+        <div>
+          <div class="dish-name">
+            <span class="veg-dot {{ 'veg' if dish.is_veg else 'non-veg' }}"></span>
+            {{ dish.name }}
+          </div>
+          {% if dish.description %}
+            <div class="dish-desc">{{ dish.description }}</div>
+          {% endif %}
+        </div>
+        <div class="dish-price">&#8377;{{ "%.0f"|format(dish.selling_price) }}</div>
+      </div>
+    {% endfor %}
+  {% endfor %}
+</body>
+</html>
