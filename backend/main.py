@@ -14,6 +14,7 @@ from routers.dishes import router as dishes_router
 from routers.quotations import router as quotations_router
 from routers.invoices import router as invoices_router
 from routers.storefront import router as storefront_router
+from routers.ingredients import router as ingredients_router
 
 
 @asynccontextmanager
@@ -46,3 +47,4 @@ app.include_router(dishes_router)
 app.include_router(quotations_router)
 app.include_router(invoices_router)
 app.include_router(storefront_router)
+app.include_router(ingredients_router)

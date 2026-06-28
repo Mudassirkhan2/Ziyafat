@@ -1,11 +1,16 @@
+import asyncio
 from datetime import datetime, date, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from beanie import PydanticObjectId
 from dependencies import get_current_user, require_role
 from models.event import Event, CateringModel
 from models.booking import Booking
 from models.user import User, UserRole
+from services.procurement_service import generate_procurement_list
+from services.pdf_service import render_pdf
 
 router = APIRouter(prefix="/api/v1/bookings", tags=["events"])
 
@@ -19,6 +24,7 @@ class EventResponse(BaseModel):
     guest_count: int
     catering_model: str
     notes: Optional[str]
+    menu_dish_ids: list[str]
     created_at: datetime
     updated_at: datetime
 
@@ -39,6 +45,7 @@ class UpdateEventBody(BaseModel):
     guest_count: Optional[int] = None
     catering_model: Optional[CateringModel] = None
     notes: Optional[str] = None
+    menu_dish_ids: Optional[list[str]] = None
 
 
 def _event_response(event: Event) -> EventResponse:
@@ -57,6 +64,7 @@ def _event_response(event: Event) -> EventResponse:
         guest_count=event.guest_count,
         catering_model=event.catering_model,
         notes=event.notes,
+        menu_dish_ids=[str(d) for d in event.menu_dish_ids],
         created_at=event.created_at,
         updated_at=event.updated_at,
     )
@@ -151,6 +159,8 @@ async def update_event(
         event.catering_model = body.catering_model
     if body.notes is not None:
         event.notes = body.notes
+    if body.menu_dish_ids is not None:
+        event.menu_dish_ids = [PydanticObjectId(d) for d in body.menu_dish_ids]
 
     event.updated_at = datetime.now(timezone.utc)
     await event.save()
@@ -169,3 +179,81 @@ async def delete_event(
         raise HTTPException(status_code=404, detail="Event not found")
     _verify_event_belongs_to_booking(event, booking_id)
     await event.delete()
+
+
+class ProcurementItemResponse(BaseModel):
+    ingredient_id: str
+    name: str
+    quantity: float
+    unit: str
+    cost: float
+    supplier: Optional[str]
+
+
+@router.get("/{booking_id}/events/{event_id}/procurement", response_model=list[ProcurementItemResponse])
+async def get_event_procurement(
+    booking_id: str,
+    event_id: str,
+    wastage_pct: float = 0.0,
+    current_user: User = Depends(get_current_user),
+):
+    await _get_booking_or_404(booking_id)
+    event = await Event.get(event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    _verify_event_belongs_to_booking(event, booking_id)
+    items = await generate_procurement_list(
+        dish_ids=[str(d) for d in event.menu_dish_ids],
+        guest_count=event.guest_count,
+        wastage_pct=wastage_pct,
+    )
+    return [
+        ProcurementItemResponse(
+            ingredient_id=i.ingredient_id,
+            name=i.name,
+            quantity=i.quantity,
+            unit=i.unit,
+            cost=i.cost,
+            supplier=i.supplier,
+        )
+        for i in items
+    ]
+
+
+@router.get("/{booking_id}/events/{event_id}/procurement/pdf")
+async def get_event_procurement_pdf(
+    booking_id: str,
+    event_id: str,
+    wastage_pct: float = 0.0,
+    current_user: User = Depends(get_current_user),
+):
+    from models.organisation import Organisation
+    await _get_booking_or_404(booking_id)
+    event = await Event.get(event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    _verify_event_belongs_to_booking(event, booking_id)
+    items = await generate_procurement_list(
+        dish_ids=[str(d) for d in event.menu_dish_ids],
+        guest_count=event.guest_count,
+        wastage_pct=wastage_pct,
+    )
+    org = await Organisation.find_one()
+    by_supplier: dict[str, list] = {}
+    for item in items:
+        key = item.supplier or "Other"
+        by_supplier.setdefault(key, []).append(item)
+    context = {
+        "org": org,
+        "event": event,
+        "by_supplier": by_supplier,
+        "wastage_pct": wastage_pct,
+        "total_cost": sum(i.cost for i in items),
+    }
+    pdf_bytes = await asyncio.to_thread(render_pdf, "procurement.html", context)
+    filename = f"procurement-{event.name.replace(' ', '-').lower()}.pdf"
+    return StreamingResponse(
+        iter([pdf_bytes]),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"inline; filename={filename}"},
+    )
