@@ -194,6 +194,64 @@ function EventsSVG() {
   );
 }
 
+function ChartSVG() {
+  return (
+    <svg viewBox="0 0 80 80" width="100" height="100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Doughnut ring — dashed outline */}
+      <circle cx="40" cy="36" r="22" stroke="currentColor" strokeWidth="6" strokeOpacity="0.1" />
+      <circle cx="40" cy="36" r="22" stroke="currentColor" strokeWidth="6" strokeOpacity="0.18" strokeDasharray="10 8" strokeLinecap="round" />
+      {/* Hole */}
+      <circle cx="40" cy="36" r="12" fill="currentColor" fillOpacity="0.05" />
+      {/* Centre question mark */}
+      <text x="40" y="41" textAnchor="middle" fontSize="13" fontWeight="700" fill="currentColor" fillOpacity="0.25" fontFamily="sans-serif">?</text>
+      {/* Legend lines */}
+      <rect x="12" y="66" width="8" height="4" rx="2" fill="currentColor" fillOpacity="0.15" />
+      <line x1="24" y1="68" x2="36" y2="68" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.2" />
+      <rect x="42" y="66" width="8" height="4" rx="2" fill="currentColor" fillOpacity="0.1" />
+      <line x1="54" y1="68" x2="66" y2="68" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.15" />
+      {/* Amber accent: single coloured arc segment */}
+      <path
+        d="M40 14 A22 22 0 0 1 59 47"
+        stroke="currentColor"
+        strokeWidth="6"
+        strokeLinecap="round"
+        className="stroke-primary"
+        opacity="0.35"
+      />
+    </svg>
+  );
+}
+
+function RevenueSVG() {
+  return (
+    <svg viewBox="0 0 80 80" width="100" height="100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Y-axis */}
+      <line x1="14" y1="10" x2="14" y2="62" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.3" />
+      {/* X-axis */}
+      <line x1="14" y1="62" x2="72" y2="62" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.3" />
+      {/* ₹ on Y-axis */}
+      <text x="6" y="14" fontSize="8" fontWeight="600" fill="currentColor" fillOpacity="0.25" fontFamily="sans-serif">₹</text>
+      {/* Bars — dashed outlines, varying heights */}
+      <rect x="18" y="42" width="9" height="20" rx="2" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.2" strokeDasharray="3 2" />
+      <rect x="31" y="30" width="9" height="32" rx="2" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.2" strokeDasharray="3 2" />
+      <rect x="44" y="48" width="9" height="14" rx="2" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.2" strokeDasharray="3 2" />
+      <rect x="57" y="36" width="9" height="26" rx="2" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.2" strokeDasharray="3 2" />
+      {/* Amber accent: one solid bar */}
+      <rect x="31" y="30" width="9" height="32" rx="2" className="fill-primary" fillOpacity="0.18" />
+      {/* Trend line */}
+      <polyline
+        points="22,46 35,34 48,52 61,40"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeOpacity="0.2"
+        strokeDasharray="4 3"
+      />
+    </svg>
+  );
+}
+
 function LineItemsSVG() {
   return (
     <svg viewBox="0 0 80 80" width="80" height="80" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -229,22 +287,28 @@ export type EmptyStateVariant =
   | "customers"
   | "leads"
   | "dishes"
+  | "ingredients"
   | "quotations"
   | "invoices"
   | "users"
   | "events"
-  | "line-items";
+  | "line-items"
+  | "chart"
+  | "revenue";
 
 const ILLUSTRATIONS: Record<EmptyStateVariant, () => React.ReactElement> = {
   bookings: BookingsSVG,
   customers: CustomersSVG,
   leads: LeadsSVG,
   dishes: DishesSVG,
+  ingredients: DishesSVG,
   quotations: QuotationsSVG,
   invoices: InvoicesSVG,
   users: UsersSVG,
   events: EventsSVG,
   "line-items": LineItemsSVG,
+  chart: ChartSVG,
+  revenue: RevenueSVG,
 };
 
 // ---------------------------------------------------------------------------
