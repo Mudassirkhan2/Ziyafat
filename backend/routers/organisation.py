@@ -4,7 +4,7 @@ from typing import Literal
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from pydantic import BaseModel
 from dependencies import get_current_user, require_role
-from models.organisation import Organisation, ReportHeaderConfig
+from models.organisation import Organisation, ReportHeaderConfig, StorefrontSection
 from models.user import User, UserRole
 from services.cloudinary_service import upload_image
 
@@ -29,6 +29,7 @@ class OrgResponse(BaseModel):
     secondary_container: str
     on_secondary_container: str
     report_header: ReportHeaderConfig
+    storefront_sections: list[StorefrontSection]
 
 
 class ReportHeaderUpdateConfig(BaseModel):
@@ -55,6 +56,7 @@ class OrgUpdateRequest(BaseModel):
     secondary_container: str | None = None
     on_secondary_container: str | None = None
     report_header: ReportHeaderUpdateConfig | None = None
+    storefront_sections: list[StorefrontSection] | None = None
 
 
 async def _get_org() -> Organisation:

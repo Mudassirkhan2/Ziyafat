@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,6 +11,7 @@ import {
   useUpdateDish,
   useDeleteDish,
 } from "@/lib/dishes-api";
+import { useUploadDishImage } from "@/lib/organisation-api";
 import type { Dish } from "@/lib/types";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -91,6 +92,8 @@ function DishSheet({
 
   const createDish = useCreateDish();
   const updateDish = useUpdateDish(dish?.id ?? "");
+  const imageUpload = useUploadDishImage(dish?.id ?? "");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<DishFormValues>({
     resolver: zodResolver(dishSchema),
@@ -104,6 +107,13 @@ function DishSheet({
       is_active: dish?.is_active ?? true,
     },
   });
+
+  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    imageUpload.mutate(file);
+    e.target.value = "";
+  }
 
   function onSubmit(values: DishFormValues) {
     if (isEdit) {
@@ -252,6 +262,38 @@ function DishSheet({
                   </FormItem>
                 )}
               />
+            )}
+
+            {isEdit && dish && (
+              <div className="space-y-2 rounded-lg border border-outline p-3">
+                <p className="text-sm font-medium text-on-surface">Dish Image</p>
+                {dish.image_url && (
+                  <img
+                    src={dish.image_url}
+                    alt={dish.name}
+                    className="h-28 w-full rounded object-cover"
+                  />
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={imageUpload.isPending}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {imageUpload.isPending ? "Uploading…" : dish.image_url ? "Replace Image" : "Upload Image"}
+                </Button>
+                {imageUpload.isError && (
+                  <p className="text-xs text-red-400">Image upload failed. Try again.</p>
+                )}
+              </div>
             )}
 
             {(createDish.isError || updateDish.isError) && (

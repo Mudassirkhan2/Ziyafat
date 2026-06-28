@@ -10,6 +10,7 @@ from models.organisation import Organisation
 from models.user import User, UserRole
 from services.cloudinary_service import upload_image
 from services.pdf_service import render_pdf
+from services.cloudinary_service import upload_image
 
 
 def _org_fallback():

@@ -216,10 +216,12 @@ async def test_dishes_pdf(client: AsyncClient, owner_user: User):
     assert response.headers["content-type"].startswith("application/pdf")
 
 
-async def test_dish_image_stub(client: AsyncClient, owner_user: User):
+async def test_dish_image_requires_file(client: AsyncClient, owner_user: User):
     await login_as(client, "owner@test.com", "Password123!")
     created = await _create_dish(client, DISH_MAIN)
     dish_id = created["id"]
 
+    # Calling without a file should return 422 Unprocessable Entity now that the
+    # endpoint is implemented (no longer a 501 stub).
     response = await client.post(f"/api/v1/dishes/{dish_id}/image")
-    assert response.status_code == 501
+    assert response.status_code == 422
