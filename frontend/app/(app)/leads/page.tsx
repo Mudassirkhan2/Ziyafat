@@ -5,9 +5,13 @@ import { useRouter } from "next/navigation";
 import { useLeads } from "@/lib/leads-api";
 import type { Lead, LeadStatus } from "@/lib/types";
 
+import { FiEye, FiEdit2, FiPlus } from "react-icons/fi";
+
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { TableSkeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Table,
   TableBody,
@@ -75,7 +79,10 @@ export default function LeadsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-on-surface">Leads</h1>
-        <Button onClick={() => router.push("/leads/new")}>+ Add Lead</Button>
+        <Button onClick={() => router.push("/leads/new")}>
+          <FiPlus className="h-4 w-4" />
+          Add Lead
+        </Button>
       </div>
 
       {/* Status Tabs */}
@@ -97,7 +104,7 @@ export default function LeadsPage() {
       </Tabs>
 
       {/* Loading / Error */}
-      {isLoading && <p className="text-on-surface-medium">Loading leads…</p>}
+      {isLoading && <TableSkeleton cols={6} />}
       {isError && (
         <p className="text-red-400">Failed to load leads. Please try again.</p>
       )}
@@ -121,11 +128,12 @@ export default function LeadsPage() {
             <TableBody>
               {leads.length === 0 && (
                 <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center text-on-surface-low py-8"
-                  >
-                    No leads found.
+                  <TableCell colSpan={6} className="py-0">
+                    <EmptyState
+                      variant="leads"
+                      title="No leads found"
+                      description="Track enquiries and prospects by adding your first lead."
+                    />
                   </TableCell>
                 </TableRow>
               )}
@@ -151,16 +159,30 @@ export default function LeadsPage() {
                     <StatusBadge status={lead.status} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        router.push(`/leads/${lead.id}`);
-                      }}
-                    >
-                      Edit
-                    </Button>
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/leads/${lead.id}`);
+                        }}
+                        title="View"
+                      >
+                        <FiEye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/leads/${lead.id}`);
+                        }}
+                        title="Edit"
+                      >
+                        <FiEdit2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

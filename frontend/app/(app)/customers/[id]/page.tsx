@@ -16,6 +16,7 @@ import type { Customer, Booking } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Form,
   FormControl,
@@ -73,7 +74,7 @@ function BookingsSection({ customerId }: { customerId: string }) {
 
   if (!bookings || bookings.length === 0) {
     return (
-      <p className="text-on-surface-low text-sm">No bookings found for this customer.</p>
+      <EmptyState variant="bookings" title="No bookings yet" description="This customer has no bookings yet." />
     );
   }
 

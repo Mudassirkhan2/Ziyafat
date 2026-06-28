@@ -15,6 +15,7 @@ import type { InvoiceStatus } from "@/lib/types";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Dialog,
   DialogContent,
@@ -202,8 +203,8 @@ export default function InvoiceDetailPage({
           <TableBody>
             {invoice.line_items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-on-surface-low py-6">
-                  No line items.
+                <TableCell colSpan={5} className="py-0">
+                  <EmptyState variant="line-items" title="No line items" description="Line items will appear here once the invoice is populated." />
                 </TableCell>
               </TableRow>
             )}

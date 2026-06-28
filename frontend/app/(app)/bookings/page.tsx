@@ -1,12 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { FiEye, FiEdit2, FiPlus } from "react-icons/fi";
 
-import { useBookings, useCreateBooking } from "@/lib/bookings-api";
+import { useBookings } from "@/lib/bookings-api";
 import type { Booking, BookingStatus } from "@/lib/types";
 
 import {
@@ -17,24 +14,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
+import { TableSkeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -46,18 +29,6 @@ const STATUS_COLORS: Record<BookingStatus, string> = {
   completed: "bg-surface-highest text-on-surface-medium border-outline",
   cancelled: "bg-red-900/30 text-red-400 border-red-800",
 };
-
-// ---------------------------------------------------------------------------
-// Schema
-// ---------------------------------------------------------------------------
-
-const bookingSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  customer_id: z.string().min(1, "Customer ID is required"),
-  notes: z.string().optional(),
-});
-
-type BookingFormValues = z.infer<typeof bookingSchema>;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -84,118 +55,11 @@ function formatDate(dateStr: string) {
 }
 
 // ---------------------------------------------------------------------------
-// New Booking Sheet
-// ---------------------------------------------------------------------------
-
-function NewBookingSheet({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const createBooking = useCreateBooking();
-
-  const form = useForm<BookingFormValues>({
-    resolver: zodResolver(bookingSchema),
-    defaultValues: { title: "", customer_id: "", notes: "" },
-  });
-
-  function onSubmit(values: BookingFormValues) {
-    createBooking.mutate(
-      {
-        title: values.title,
-        customer_id: values.customer_id,
-        notes: values.notes || undefined,
-      },
-      {
-        onSuccess: () => {
-          form.reset();
-          onOpenChange(false);
-        },
-      }
-    );
-  }
-
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>New Booking</SheetTitle>
-        </SheetHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Title *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. Ahmed's Wedding" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="customer_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Customer ID *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Customer ID" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Any additional notes…" rows={3} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {createBooking.isError && (
-              <p className="text-sm text-red-400">Failed to create booking. Try again.</p>
-            )}
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={createBooking.isPending}>
-                {createBooking.isPending ? "Creating…" : "Create"}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
 
 export default function BookingsPage() {
   const router = useRouter();
-  const [sheetOpen, setSheetOpen] = useState(false);
 
   const { data: bookings, isLoading, isError } = useBookings();
 
@@ -204,11 +68,14 @@ export default function BookingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-on-surface">Bookings</h1>
-        <Button onClick={() => setSheetOpen(true)}>+ New Booking</Button>
+        <Button onClick={() => router.push("/bookings/new")}>
+          <FiPlus className="h-4 w-4" />
+          New Booking
+        </Button>
       </div>
 
       {/* Loading / Error */}
-      {isLoading && <p className="text-on-surface-medium">Loading bookings…</p>}
+      {isLoading && <TableSkeleton cols={5} />}
       {isError && (
         <p className="text-red-400">Failed to load bookings. Please try again.</p>
       )}
@@ -231,16 +98,21 @@ export default function BookingsPage() {
             <TableBody>
               {bookings.length === 0 && (
                 <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center text-on-surface-low py-8"
-                  >
-                    No bookings found.
+                  <TableCell colSpan={5} className="py-0">
+                    <EmptyState
+                      variant="bookings"
+                      title="No bookings found"
+                      description="Create your first booking to get started."
+                    />
                   </TableCell>
                 </TableRow>
               )}
               {bookings.map((booking: Booking) => (
-                <TableRow key={booking.id} className="border-outline-low">
+                <TableRow
+                  key={booking.id}
+                  className="border-outline-low cursor-pointer hover:bg-surface-high transition-colors"
+                  onClick={() => router.push(`/bookings/${booking.id}`)}
+                >
                   <TableCell className="text-on-surface font-medium">
                     {booking.title}
                   </TableCell>
@@ -254,13 +126,30 @@ export default function BookingsPage() {
                     {formatDate(booking.created_at)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => router.push(`/bookings/${booking.id}`)}
-                    >
-                      View
-                    </Button>
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/bookings/${booking.id}`);
+                        }}
+                        title="View"
+                      >
+                        <FiEye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/bookings/${booking.id}`);
+                        }}
+                        title="Edit"
+                      >
+                        <FiEdit2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -268,9 +157,6 @@ export default function BookingsPage() {
           </Table>
         </div>
       )}
-
-      {/* Sheet */}
-      <NewBookingSheet open={sheetOpen} onOpenChange={setSheetOpen} />
     </div>
   );
 }

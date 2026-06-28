@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { FiEye, FiEdit2, FiPlus, FiLoader, FiX, FiUserMinus } from "react-icons/fi";
 
 import { useCurrentUser } from "@/lib/auth";
 import {
@@ -38,6 +39,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { TableSkeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Form,
   FormControl,
@@ -113,7 +116,10 @@ function AddUserDialog() {
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>+ Add User</Button>
+      <Button onClick={() => setOpen(true)}>
+        <FiPlus className="h-4 w-4" />
+        Add User
+      </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -188,9 +194,15 @@ function AddUserDialog() {
               )}
               <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                  <FiX className="h-4 w-4" />
                   Cancel
                 </Button>
                 <Button type="submit" disabled={createUser.isPending}>
+                  {createUser.isPending ? (
+                    <FiLoader className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <FiPlus className="h-4 w-4" />
+                  )}
                   {createUser.isPending ? "Creating…" : "Create"}
                 </Button>
               </div>
@@ -203,11 +215,18 @@ function AddUserDialog() {
 }
 
 // ---------------------------------------------------------------------------
-// Edit User Dialog
+// Edit User Dialog (controlled)
 // ---------------------------------------------------------------------------
 
-function EditUserDialog({ user }: { user: StaffUser }) {
-  const [open, setOpen] = useState(false);
+function EditUserDialog({
+  user,
+  open,
+  onOpenChange,
+}: {
+  user: StaffUser;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const updateUser = useUpdateUser(user.id);
 
   const form = useForm<EditValues>({
@@ -218,75 +237,122 @@ function EditUserDialog({ user }: { user: StaffUser }) {
   function onSubmit(values: EditValues) {
     updateUser.mutate(values, {
       onSuccess: () => {
-        setOpen(false);
+        onOpenChange(false);
       },
     });
   }
 
   return (
-    <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        Edit
-      </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Full name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Role</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="owner">Owner</SelectItem>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="kitchen">Kitchen</SelectItem>
-                        <SelectItem value="viewer">Viewer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {updateUser.isError && (
-                <p className="text-sm text-red-400">Failed to update user. Try again.</p>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit User</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Full name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={updateUser.isPending}>
-                  {updateUser.isPending ? "Saving…" : "Save"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-    </>
+            />
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="owner">Owner</SelectItem>
+                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="kitchen">Kitchen</SelectItem>
+                      <SelectItem value="viewer">Viewer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {updateUser.isError && (
+              <p className="text-sm text-red-400">Failed to update user. Try again.</p>
+            )}
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                <FiX className="h-4 w-4" />
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateUser.isPending}>
+                {updateUser.isPending ? (
+                  <FiLoader className="h-4 w-4 animate-spin" />
+                ) : null}
+                {updateUser.isPending ? "Saving…" : "Save"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// View User Dialog
+// ---------------------------------------------------------------------------
+
+function ViewUserDialog({
+  user,
+  open,
+  onOpenChange,
+}: {
+  user: StaffUser;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>User Details</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3 text-sm">
+          <div className="flex justify-between">
+            <span className="text-on-surface-medium">Name</span>
+            <span className="text-on-surface font-medium">{user.name}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-on-surface-medium">Email</span>
+            <span className="text-on-surface">{user.email}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-on-surface-medium">Role</span>
+            <span className="text-on-surface">{capitalize(user.role)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-on-surface-medium">Status</span>
+            <StatusBadge isActive={user.is_active} />
+          </div>
+        </div>
+        <div className="flex justify-end pt-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <FiX className="h-4 w-4" />
+            Close
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -312,6 +378,7 @@ function DeactivateDialog({ user }: { user: StaffUser }) {
         className="text-red-400 border-red-800 hover:bg-red-900/20"
         onClick={() => setOpen(true)}
       >
+        <FiUserMinus className="h-4 w-4" />
         Deactivate
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -329,6 +396,7 @@ function DeactivateDialog({ user }: { user: StaffUser }) {
           )}
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setOpen(false)}>
+              <FiX className="h-4 w-4" />
               Cancel
             </Button>
             <Button
@@ -336,11 +404,66 @@ function DeactivateDialog({ user }: { user: StaffUser }) {
               onClick={handleDeactivate}
               disabled={deactivate.isPending}
             >
+              {deactivate.isPending ? (
+                <FiLoader className="h-4 w-4 animate-spin" />
+              ) : (
+                <FiUserMinus className="h-4 w-4" />
+              )}
               {deactivate.isPending ? "Deactivating…" : "Deactivate"}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Row actions with local dialog state
+// ---------------------------------------------------------------------------
+
+function UserRowActions({
+  user,
+  currentUserId,
+  isOwner,
+}: {
+  user: StaffUser;
+  currentUserId?: string;
+  isOwner: boolean;
+}) {
+  const [viewOpen, setViewOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+
+  return (
+    <>
+      <div className="flex items-center justify-end gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setViewOpen(true)}
+          title="View"
+        >
+          <FiEye className="h-4 w-4" />
+        </Button>
+        {isOwner && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setEditOpen(true)}
+            title="Edit"
+          >
+            <FiEdit2 className="h-4 w-4" />
+          </Button>
+        )}
+        {isOwner && user.id !== currentUserId && user.is_active && (
+          <DeactivateDialog user={user} />
+        )}
+      </div>
+
+      <ViewUserDialog user={user} open={viewOpen} onOpenChange={setViewOpen} />
+      {isOwner && (
+        <EditUserDialog user={user} open={editOpen} onOpenChange={setEditOpen} />
+      )}
     </>
   );
 }
@@ -361,9 +484,7 @@ export default function UsersPage() {
         {isOwner && <AddUserDialog />}
       </div>
 
-      {isLoading && (
-        <p className="text-on-surface-medium">Loading users…</p>
-      )}
+      {isLoading && <TableSkeleton cols={5} />}
 
       {isError && (
         <p className="text-red-400">Failed to load users. Please try again.</p>
@@ -378,21 +499,20 @@ export default function UsersPage() {
                 <TableHead className="text-on-surface-medium">Email</TableHead>
                 <TableHead className="text-on-surface-medium">Role</TableHead>
                 <TableHead className="text-on-surface-medium">Status</TableHead>
-                {isOwner && (
-                  <TableHead className="text-on-surface-medium text-right">
-                    Actions
-                  </TableHead>
-                )}
+                <TableHead className="text-on-surface-medium text-right">
+                  Actions
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.length === 0 && (
                 <TableRow>
-                  <TableCell
-                    colSpan={isOwner ? 5 : 4}
-                    className="text-center text-on-surface-low py-8"
-                  >
-                    No users found.
+                  <TableCell colSpan={5} className="py-0">
+                    <EmptyState
+                      variant="users"
+                      title="No users found"
+                      description="Add team members to manage access and roles."
+                    />
                   </TableCell>
                 </TableRow>
               )}
@@ -410,16 +530,13 @@ export default function UsersPage() {
                   <TableCell>
                     <StatusBadge isActive={user.is_active} />
                   </TableCell>
-                  {isOwner && (
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <EditUserDialog user={user} />
-                        {user.id !== currentUser?.id && user.is_active && (
-                          <DeactivateDialog user={user} />
-                        )}
-                      </div>
-                    </TableCell>
-                  )}
+                  <TableCell className="text-right">
+                    <UserRowActions
+                      user={user}
+                      currentUserId={currentUser?.id}
+                      isOwner={isOwner}
+                    />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

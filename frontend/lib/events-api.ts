@@ -36,6 +36,16 @@ export function useUpdateEvent(bookingId: string) {
   });
 }
 
+export function useUpdateEventById(bookingId: string, eventId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: Partial<BookingEvent>) =>
+      api.patch<BookingEvent>(`/bookings/${bookingId}/events/${eventId}`, body),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["bookings", bookingId, "events"] }),
+  });
+}
+
 export function useDeleteEvent(bookingId: string) {
   const queryClient = useQueryClient();
   return useMutation({

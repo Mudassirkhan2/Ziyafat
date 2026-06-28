@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -12,8 +12,10 @@ import {
   useBookingEvents,
   useCreateEvent,
   useUpdateEvent,
+  useUpdateEventById,
   useDeleteEvent,
 } from "@/lib/events-api";
+import { useDishes } from "@/lib/dishes-api";
 import type { BookingEvent, BookingStatus, CateringModel } from "@/lib/types";
 
 import {
@@ -33,12 +35,14 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Select,
   SelectContent,
@@ -303,6 +307,76 @@ function EventSheet({
 }
 
 // ---------------------------------------------------------------------------
+// Menu Dialog
+// ---------------------------------------------------------------------------
+
+function MenuDialog({
+  event,
+  open,
+  onOpenChange,
+  bookingId,
+}: {
+  event: BookingEvent;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  bookingId: string;
+}) {
+  const { data: dishes } = useDishes();
+  const updateEvent = useUpdateEventById(bookingId, event.id);
+  const [selected, setSelected] = useState<string[]>(event.menu_dish_ids);
+
+  useEffect(() => {
+    setSelected(event.menu_dish_ids);
+  }, [event.id, event.menu_dish_ids]);
+
+  function toggle(id: string) {
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }
+
+  function save() {
+    updateEvent.mutate(
+      { menu_dish_ids: selected },
+      { onSuccess: () => onOpenChange(false) }
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Set Menu — {event.name}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-2 max-h-80 overflow-y-auto py-2">
+          {(dishes ?? []).map((dish) => (
+            <label key={dish.id} className="flex items-center gap-3 cursor-pointer rounded-lg border border-outline p-2 hover:bg-surface-high">
+              <input
+                type="checkbox"
+                checked={selected.includes(dish.id)}
+                onChange={() => toggle(dish.id)}
+                className="h-4 w-4"
+              />
+              <span className="flex-1 text-sm text-on-surface">{dish.name}</span>
+              <span className="text-xs text-on-surface-medium">{dish.category}</span>
+              {dish.has_recipe && (
+                <span className="text-xs text-green-400">✓ recipe</span>
+              )}
+            </label>
+          ))}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={save} disabled={updateEvent.isPending}>
+            {updateEvent.isPending ? "Saving…" : "Save Menu"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Delete Event Dialog
 // ---------------------------------------------------------------------------
 
@@ -377,6 +451,7 @@ export default function BookingDetailPage() {
 
   const [eventSheetOpen, setEventSheetOpen] = useState(false);
   const [eventSheetMode, setEventSheetMode] = useState<EventSheetMode>({ mode: "add" });
+  const [menuTarget, setMenuTarget] = useState<BookingEvent | null>(null);
 
   function openAddEvent() {
     setEventSheetMode({ mode: "add" });
@@ -494,9 +569,13 @@ export default function BookingDetailPage() {
                 <TableRow>
                   <TableCell
                     colSpan={6}
-                    className="text-center text-on-surface-low py-8"
+                    className="py-0"
                   >
-                    No events yet. Add the first event for this booking.
+                    <EmptyState
+                      variant="events"
+                      title="No events yet"
+                      description="Add the first event to schedule catering for this booking."
+                    />
                   </TableCell>
                 </TableRow>
               )}
@@ -526,6 +605,12 @@ export default function BookingDetailPage() {
                       >
                         Edit
                       </Button>
+                      <Button variant="outline" size="sm" onClick={() => setMenuTarget(event)}>
+                        Set Menu{event.menu_dish_ids.length > 0 ? ` (${event.menu_dish_ids.length})` : ""}
+                      </Button>
+                      <Link href={`/bookings/${id}/procurement/${event.id}`}>
+                        <Button variant="outline" size="sm">Procurement</Button>
+                      </Link>
                       <DeleteEventDialog bookingId={id} event={event} />
                     </div>
                   </TableCell>
@@ -534,6 +619,16 @@ export default function BookingDetailPage() {
             </TableBody>
           </Table>
         </div>
+      )}
+
+      {/* Menu Dialog */}
+      {menuTarget && (
+        <MenuDialog
+          event={menuTarget}
+          open={!!menuTarget}
+          onOpenChange={(open) => { if (!open) setMenuTarget(null); }}
+          bookingId={id}
+        />
       )}
 
       {/* Event Sheet */}

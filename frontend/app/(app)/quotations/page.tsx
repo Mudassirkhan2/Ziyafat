@@ -23,6 +23,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { TableSkeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { FiPlus, FiLoader, FiX, FiEye } from "react-icons/fi";
 import {
   Form,
   FormControl,
@@ -340,7 +343,8 @@ function CreateQuotationSheet({
               ))}
 
               <Button type="button" variant="outline" size="sm" onClick={addRow}>
-                + Add Item
+                <FiPlus className="h-4 w-4" />
+                Add Item
               </Button>
 
               <div className="rounded-md bg-surface-high border border-outline-low px-4 py-2 text-sm text-on-surface-medium">
@@ -358,9 +362,15 @@ function CreateQuotationSheet({
                 variant="outline"
                 onClick={() => onOpenChange(false)}
               >
+                <FiX className="h-4 w-4" />
                 Cancel
               </Button>
               <Button type="submit" disabled={createQuotation.isPending}>
+                {createQuotation.isPending ? (
+                  <FiLoader className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FiPlus className="h-4 w-4" />
+                )}
                 {createQuotation.isPending ? "Creating…" : "Create"}
               </Button>
             </div>
@@ -391,7 +401,10 @@ export default function QuotationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-on-surface">Quotations</h1>
-        <Button onClick={() => setSheetOpen(true)}>+ New Quotation</Button>
+        <Button onClick={() => setSheetOpen(true)}>
+          <FiPlus className="h-4 w-4" />
+          New Quotation
+        </Button>
       </div>
 
       {/* Status Tabs */}
@@ -413,7 +426,7 @@ export default function QuotationsPage() {
       </Tabs>
 
       {/* Loading / Error */}
-      {isLoading && <p className="text-on-surface-medium">Loading quotations…</p>}
+      {isLoading && <TableSkeleton cols={7} />}
       {isError && (
         <p className="text-red-400">Failed to load quotations. Please try again.</p>
       )}
@@ -436,11 +449,12 @@ export default function QuotationsPage() {
             <TableBody>
               {quotations.length === 0 && (
                 <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    className="text-center text-on-surface-low py-8"
-                  >
-                    No quotations found.
+                  <TableCell colSpan={7} className="py-0">
+                    <EmptyState
+                      variant="quotations"
+                      title="No quotations found"
+                      description="Create a quotation for a booking to share with your customer."
+                    />
                   </TableCell>
                 </TableRow>
               )}
@@ -471,11 +485,12 @@ export default function QuotationsPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
-                        variant="outline"
-                        size="sm"
+                        variant="ghost"
+                        size="icon"
                         onClick={() => router.push(`/quotations/${q.id}`)}
+                        title="View"
                       >
-                        View
+                        <FiEye className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>

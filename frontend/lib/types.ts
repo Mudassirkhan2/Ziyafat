@@ -61,6 +61,7 @@ export interface BookingEvent {
   guest_count: number;
   catering_model: CateringModel;
   notes: string | null;
+  menu_dish_ids: string[];
   created_at: string;
   updated_at: string;
 }
@@ -87,6 +88,8 @@ export interface Dish {
   is_veg: boolean;
   is_active: boolean;
   image_url: string | null;
+  has_recipe: boolean;
+  recipe_cost_per_plate: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -157,4 +160,40 @@ export interface Organisation {
   on_secondary_container: string;
   report_header: ReportHeaderConfig;
   storefront_sections: StorefrontSection[];
+}
+
+export interface Ingredient {
+  id: string;
+  name: string;
+  base_unit: string;
+  cost_per_unit: number;
+  supplier: string | null;
+  stock_on_hand: number;
+  reorder_threshold: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecipeIngredient {
+  ingredient_id: string;
+  ingredient_name: string;
+  quantity_per_100_guests: number;
+  unit: string;
+  cost_per_plate: number;
+}
+
+export interface DishRecipe {
+  dish_id: string;
+  ingredients: RecipeIngredient[];
+  recipe_cost_per_plate: number;
+}
+
+export interface ProcurementItem {
+  ingredient_id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  cost: number;
+  supplier: string | null;
 }

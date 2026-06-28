@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,9 +12,11 @@ import {
   useDeleteDish,
 } from "@/lib/dishes-api";
 import { useUploadDishImage } from "@/lib/organisation-api";
+import { useIngredients, useDishRecipe, useReplaceDishRecipe, useClearDishRecipe } from "@/lib/ingredients-api";
 import type { Dish } from "@/lib/types";
 
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -34,6 +36,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { TableSkeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import {
+  FiPlus,
+  FiEdit2,
+  FiTrash2,
+  FiLoader,
+  FiX,
+  FiPrinter,
+  FiUpload,
+} from "react-icons/fi";
 import {
   Form,
   FormControl,
@@ -75,6 +88,110 @@ const dishSchema = z.object({
 type DishFormValues = z.infer<typeof dishSchema>;
 
 // ---------------------------------------------------------------------------
+// Recipe Editor
+// ---------------------------------------------------------------------------
+
+const DISH_UNITS = ["g", "kg", "ml", "L", "pcs", "tsp", "tbsp", "cup"] as const;
+
+function RecipeEditor({
+  dishId,
+  recipeRows,
+  onAdd,
+  onRemove,
+  onUpdate,
+  onSave,
+  onClear,
+  recipeCost,
+  isSaving,
+  isClearing,
+  isError,
+}: {
+  dishId: string;
+  recipeRows: Array<{ ingredient_id: string; quantity_per_100_guests: string; unit: string }>;
+  onAdd: () => void;
+  onRemove: (i: number) => void;
+  onUpdate: (i: number, field: string, value: string) => void;
+  onSave: () => void;
+  onClear: () => void;
+  recipeCost?: number;
+  isSaving: boolean;
+  isClearing: boolean;
+  isError: boolean;
+}) {
+  const { data: ingredients } = useIngredients();
+
+  return (
+    <div className="space-y-4 mt-4">
+      {recipeCost !== undefined && recipeCost > 0 && (
+        <p className="text-sm text-on-surface-medium">
+          Computed cost: <strong className="text-on-surface">₹{recipeCost.toFixed(2)} / plate</strong>
+        </p>
+      )}
+
+      <div className="space-y-2">
+        {recipeRows.map((row, idx) => (
+          <div key={idx} className="flex gap-2 items-center">
+            <Select
+              value={row.ingredient_id}
+              onValueChange={(v) => onUpdate(idx, "ingredient_id", v)}
+            >
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Select ingredient" />
+              </SelectTrigger>
+              <SelectContent>
+                {(ingredients ?? []).map((ing) => (
+                  <SelectItem key={ing.id} value={ing.id}>{ing.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              type="number"
+              step="0.001"
+              placeholder="Qty / 100 guests"
+              className="w-36"
+              value={row.quantity_per_100_guests}
+              onChange={(e) => onUpdate(idx, "quantity_per_100_guests", e.target.value)}
+            />
+            <Select
+              value={row.unit}
+              onValueChange={(v) => onUpdate(idx, "unit", v)}
+            >
+              <SelectTrigger className="w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DISH_UNITS.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Button type="button" variant="outline" size="sm" onClick={() => onRemove(idx)}>✕</Button>
+          </div>
+        ))}
+      </div>
+
+      <Button type="button" variant="outline" size="sm" onClick={onAdd}>
+        + Add Ingredient
+      </Button>
+
+      {isError && <p className="text-sm text-red-400">Failed to save recipe.</p>}
+
+      <div className="flex justify-between pt-2">
+        <Button
+          type="button" variant="outline" size="sm"
+          className="text-red-400 border-red-800"
+          onClick={onClear}
+          disabled={isClearing || recipeRows.length === 0}
+        >
+          {isClearing ? "Clearing…" : "Clear Recipe"}
+        </Button>
+        <Button type="button" onClick={onSave} disabled={isSaving}>
+          {isSaving ? "Saving…" : "Save Recipe"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Dish Sheet (Add / Edit)
 // ---------------------------------------------------------------------------
 
@@ -94,6 +211,46 @@ function DishSheet({
   const updateDish = useUpdateDish(dish?.id ?? "");
   const imageUpload = useUploadDishImage(dish?.id ?? "");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const recipe = useDishRecipe(isEdit ? (dish?.id ?? "") : "");
+  const replaceRecipe = useReplaceDishRecipe(dish?.id ?? "");
+  const clearRecipe = useClearDishRecipe(dish?.id ?? "");
+
+  const [recipeRows, setRecipeRows] = useState<
+    Array<{ ingredient_id: string; quantity_per_100_guests: string; unit: string }>
+  >([]);
+
+  useEffect(() => {
+    if (recipe.data) {
+      setRecipeRows(
+        recipe.data.ingredients.map((ri) => ({
+          ingredient_id: ri.ingredient_id,
+          quantity_per_100_guests: ri.quantity_per_100_guests.toString(),
+          unit: ri.unit,
+        }))
+      );
+    }
+  }, [recipe.data]);
+
+  function addRecipeRow() {
+    setRecipeRows((prev) => [...prev, { ingredient_id: "", quantity_per_100_guests: "", unit: "kg" }]);
+  }
+  function removeRecipeRow(idx: number) {
+    setRecipeRows((prev) => prev.filter((_, i) => i !== idx));
+  }
+  function updateRecipeRow(idx: number, field: string, value: string) {
+    setRecipeRows((prev) => prev.map((r, i) => i === idx ? { ...r, [field]: value } : r));
+  }
+  function saveRecipe() {
+    const valid = recipeRows.filter((r) => r.ingredient_id && r.quantity_per_100_guests);
+    replaceRecipe.mutate(
+      valid.map((r) => ({
+        ingredient_id: r.ingredient_id,
+        quantity_per_100_guests: parseFloat(r.quantity_per_100_guests),
+        unit: r.unit,
+      }))
+    );
+  }
 
   const form = useForm<DishFormValues>({
     resolver: zodResolver(dishSchema),
@@ -161,165 +318,290 @@ function DishSheet({
         </SheetHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. Mutton Biryani" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            {isEdit ? (
+              <Tabs defaultValue="details" className="mt-6">
+                <TabsList className="bg-surface-high">
+                  <TabsTrigger value="details">Details</TabsTrigger>
+                  <TabsTrigger value="recipe">Recipe</TabsTrigger>
+                </TabsList>
+                <TabsContent value="details">
+                  <div className="space-y-4 mt-4">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. Mutton Biryani" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. Main Course, Starters, Desserts" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Category *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g. Main Course, Starters, Desserts" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea rows={3} placeholder="Optional description" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Textarea rows={3} placeholder="Optional description" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-            <FormField
-              control={form.control}
-              name="per_plate_cost"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cost Per Plate (₹) *</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormField
+                      control={form.control}
+                      name="per_plate_cost"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cost Per Plate (₹) *</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-            <FormField
-              control={form.control}
-              name="selling_price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Selling Price (₹) *</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <FormField
+                      control={form.control}
+                      name="selling_price"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Selling Price (₹) *</FormLabel>
+                          <FormControl>
+                            <Input type="number" step="0.01" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-            <FormField
-              control={form.control}
-              name="is_veg"
-              render={({ field }) => (
-                <FormItem className="flex items-center justify-between rounded-lg border border-outline p-3">
-                  <div>
-                    <FormLabel>Vegetarian</FormLabel>
-                  </div>
-                  <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+                    <FormField
+                      control={form.control}
+                      name="is_veg"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between rounded-lg border border-outline p-3">
+                          <div>
+                            <FormLabel>Vegetarian</FormLabel>
+                          </div>
+                          <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
 
-            {isEdit && (
-              <FormField
-                control={form.control}
-                name="is_active"
-                render={({ field }) => (
-                  <FormItem className="flex items-center justify-between rounded-lg border border-outline p-3">
-                    <div>
-                      <FormLabel>Active</FormLabel>
+                    <FormField
+                      control={form.control}
+                      name="is_active"
+                      render={({ field }) => (
+                        <FormItem className="flex items-center justify-between rounded-lg border border-outline p-3">
+                          <div>
+                            <FormLabel>Active</FormLabel>
+                          </div>
+                          <FormControl>
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    {dish && (
+                      <div className="space-y-2 rounded-lg border border-outline p-3">
+                        <p className="text-sm font-medium text-on-surface">Dish Image</p>
+                        {dish.image_url && (
+                          <img
+                            src={dish.image_url}
+                            alt={dish.name}
+                            className="h-28 w-full rounded object-cover"
+                          />
+                        )}
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleImageUpload}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={imageUpload.isPending}
+                          onClick={() => fileInputRef.current?.click()}
+                        >
+                          {imageUpload.isPending ? "Uploading…" : dish.image_url ? "Replace Image" : "Upload Image"}
+                        </Button>
+                        {imageUpload.isError && (
+                          <p className="text-xs text-red-400">Image upload failed. Try again.</p>
+                        )}
+                      </div>
+                    )}
+
+                    {updateDish.isError && (
+                      <p className="text-sm text-red-400">
+                        Failed to update dish. Try again.
+                      </p>
+                    )}
+
+                    <div className="flex justify-end gap-2 pt-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => onOpenChange(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={isMutating}>
+                        {isMutating ? "Saving…" : "Save"}
+                      </Button>
                     </div>
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-            )}
-
-            {isEdit && dish && (
-              <div className="space-y-2 rounded-lg border border-outline p-3">
-                <p className="text-sm font-medium text-on-surface">Dish Image</p>
-                {dish.image_url && (
-                  <img
-                    src={dish.image_url}
-                    alt={dish.name}
-                    className="h-28 w-full rounded object-cover"
+                  </div>
+                </TabsContent>
+                <TabsContent value="recipe">
+                  <RecipeEditor
+                    dishId={dish?.id ?? ""}
+                    recipeRows={recipeRows}
+                    onAdd={addRecipeRow}
+                    onRemove={removeRecipeRow}
+                    onUpdate={updateRecipeRow}
+                    onSave={saveRecipe}
+                    onClear={() => clearRecipe.mutate()}
+                    recipeCost={recipe.data?.recipe_cost_per_plate}
+                    isSaving={replaceRecipe.isPending}
+                    isClearing={clearRecipe.isPending}
+                    isError={replaceRecipe.isError}
                   />
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageUpload}
+                </TabsContent>
+              </Tabs>
+            ) : (
+              <div className="mt-6 space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Mutton Biryani" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={imageUpload.isPending}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {imageUpload.isPending ? "Uploading…" : dish.image_url ? "Replace Image" : "Upload Image"}
-                </Button>
-                {imageUpload.isError && (
-                  <p className="text-xs text-red-400">Image upload failed. Try again.</p>
+
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Main Course, Starters, Desserts" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea rows={3} placeholder="Optional description" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="per_plate_cost"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cost Per Plate (₹) *</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="selling_price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Selling Price (₹) *</FormLabel>
+                      <FormControl>
+                        <Input type="number" step="0.01" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="is_veg"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center justify-between rounded-lg border border-outline p-3">
+                      <div>
+                        <FormLabel>Vegetarian</FormLabel>
+                      </div>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+
+                {createDish.isError && (
+                  <p className="text-sm text-red-400">
+                    Failed to create dish. Try again.
+                  </p>
                 )}
+
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isMutating}>
+                    {isMutating ? "Creating…" : "Create"}
+                  </Button>
+                </div>
               </div>
             )}
-
-            {(createDish.isError || updateDish.isError) && (
-              <p className="text-sm text-red-400">
-                Failed to {isEdit ? "update" : "create"} dish. Try again.
-              </p>
-            )}
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isMutating}>
-                {isMutating
-                  ? isEdit
-                    ? "Saving…"
-                    : "Creating…"
-                  : isEdit
-                  ? "Save"
-                  : "Create"}
-              </Button>
-            </div>
           </form>
         </Form>
       </SheetContent>
@@ -376,9 +658,13 @@ export default function DishesPage() {
             variant="outline"
             onClick={() => window.open("/api/v1/dishes/pdf")}
           >
+            <FiPrinter className="h-4 w-4" />
             Print Dish List
           </Button>
-          <Button onClick={openAdd}>+ Add Dish</Button>
+          <Button onClick={openAdd}>
+            <FiPlus className="h-4 w-4" />
+            Add Dish
+          </Button>
         </div>
       </div>
 
@@ -396,7 +682,7 @@ export default function DishesPage() {
       </Tabs>
 
       {/* Loading / Error */}
-      {isLoading && <p className="text-on-surface-medium">Loading dishes…</p>}
+      {isLoading && <TableSkeleton cols={6} />}
       {isError && (
         <p className="text-red-400">Failed to load dishes. Please try again.</p>
       )}
@@ -420,11 +706,12 @@ export default function DishesPage() {
             <TableBody>
               {dishes.length === 0 && (
                 <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center text-on-surface-low py-8"
-                  >
-                    No dishes found.
+                  <TableCell colSpan={6} className="py-0">
+                    <EmptyState
+                      variant="dishes"
+                      title="No dishes found"
+                      description="Add dishes to build your catering catalog."
+                    />
                   </TableCell>
                 </TableRow>
               )}
@@ -469,19 +756,21 @@ export default function DishesPage() {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                       <Button
-                        variant="outline"
-                        size="sm"
+                        variant="ghost"
+                        size="icon"
                         onClick={() => openEdit(dish)}
+                        title="Edit"
                       >
-                        Edit
+                        <FiEdit2 className="h-4 w-4" />
                       </Button>
                       <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-red-800 text-red-400 hover:bg-red-900/20"
+                        variant="ghost"
+                        size="icon"
+                        className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
                         onClick={() => setDeleteTarget(dish)}
+                        title="Delete"
                       >
-                        Delete
+                        <FiTrash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
@@ -516,6 +805,7 @@ export default function DishesPage() {
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              <FiX className="h-4 w-4" />
               Cancel
             </Button>
             <Button
@@ -523,6 +813,11 @@ export default function DishesPage() {
               onClick={handleDeleteConfirm}
               disabled={deleteDish.isPending}
             >
+              {deleteDish.isPending ? (
+                <FiLoader className="h-4 w-4 animate-spin" />
+              ) : (
+                <FiTrash2 className="h-4 w-4" />
+              )}
               {deleteDish.isPending ? "Deleting…" : "Delete"}
             </Button>
           </DialogFooter>
