@@ -4,6 +4,7 @@ import type { Booking, BookingStatus, Paginated } from "./types";
 
 export function useBookings(params?: {
   search?: string;
+  status?: BookingStatus;
   page?: number;
   pageSize?: number;
   sortBy?: string;
@@ -11,6 +12,7 @@ export function useBookings(params?: {
 }) {
   const q = new URLSearchParams();
   if (params?.search) q.set("search", params.search);
+  if (params?.status) q.set("status", params.status);
   if (params?.page) q.set("page", String(params.page));
   if (params?.pageSize) q.set("page_size", String(params.pageSize));
   if (params?.sortBy) q.set("sort_by", params.sortBy);

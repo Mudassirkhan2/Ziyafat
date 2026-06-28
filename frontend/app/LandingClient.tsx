@@ -1,4 +1,5 @@
 import s from "./landing.module.css";
+import ColdStartPing from "./_landing/ColdStartPing";
 import LandingNav from "./_landing/LandingNav";
 import LandingHero from "./_landing/LandingHero";
 import LandingLogos from "./_landing/LandingLogos";
@@ -15,6 +16,7 @@ import LandingFooter from "./_landing/LandingFooter";
 export default function LandingClient() {
   return (
     <div className={s.root}>
+      <ColdStartPing />
       <LandingNav />
       <div className={s.navSpacer} />
       <main>

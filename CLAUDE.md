@@ -29,6 +29,8 @@ Ziyafat/
 
 ## Git Commit Rules
 
+**NEVER commit changes automatically.** Only run `git commit` when the user explicitly says to commit — phrases like "commit this", "save this", or "make a commit" count. Completing a task does NOT mean commit it.
+
 **NEVER add `Co-Authored-By` or any Claude attribution to commit messages.**
 
 Commit messages must contain only:

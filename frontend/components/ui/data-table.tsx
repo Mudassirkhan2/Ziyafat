@@ -82,17 +82,17 @@ export function DataTable<TData>({
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((hg) => (
-              <TableRow key={hg.id} className="border-outline-low bg-surface-lowest">
+              <TableRow key={hg.id} className="border-b border-outline bg-surface-lowest">
                 {hg.headers.map((header) => {
                   const sortable = (
                     header.column.columnDef.meta as { sortable?: boolean } | undefined
                   )?.sortable;
                   return (
-                    <TableHead key={header.id} className="text-on-surface-medium">
+                    <TableHead key={header.id} className="text-on-surface font-semibold text-xs uppercase tracking-wider">
                       {sortable ? (
                         <button
                           onClick={() => handleSortClick(header.column.id)}
-                          className="flex items-center gap-1 cursor-pointer hover:text-on-surface transition-colors"
+                          className="flex items-center gap-1 cursor-pointer hover:text-primary transition-colors"
                         >
                           {flexRender(header.column.columnDef.header, header.getContext())}
                           {header.column.id === sortBy ? (

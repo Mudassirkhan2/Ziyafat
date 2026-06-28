@@ -22,7 +22,7 @@ interface KpiCardProps {
 
 export function KpiCard({ label, value, icon, accent }: KpiCardProps) {
   return (
-    <div className="rounded-lg border border-outline bg-surface-high p-4 flex flex-col gap-2">
+    <div className="rounded-lg border border-outline bg-surface-high p-4 flex flex-col gap-2" style={{ boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--secondary) 20%, transparent)" }}>
       <div className={`text-xl ${ACCENT_CLASSES[accent ?? "default"]}`}>{icon}</div>
       <div className="text-2xl font-bold text-on-surface">{value}</div>
       <div className="text-xs text-on-surface-low">{label}</div>

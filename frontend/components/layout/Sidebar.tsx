@@ -214,19 +214,18 @@ function SidebarContent({
         style={{ borderTop: "1px solid var(--sidebar-dark-line)" }}
       >
         <Popover>
-          <PopoverTrigger asChild>
-            <button
-              className="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-[11px] transition-all duration-150 group"
-              style={{ color: "var(--sidebar-dark-text)" }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background =
-                  "rgba(255,255,255,.05)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background =
-                  "transparent";
-              }}
-            >
+          <PopoverTrigger
+            className="flex items-center gap-2.5 w-full px-2.5 py-2 rounded-[11px] transition-all duration-150 group"
+            style={{ color: "var(--sidebar-dark-text)" }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "rgba(255,255,255,.05)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "transparent";
+            }}
+          >
               {currentUser?.avatar_url ? (
                 <img
                   src={currentUser.avatar_url}
@@ -263,7 +262,6 @@ function SidebarContent({
                 className="h-4 w-4 flex-shrink-0"
                 style={{ color: "var(--sidebar-dark-mute)" }}
               />
-            </button>
           </PopoverTrigger>
           <PopoverContent
             side="top"

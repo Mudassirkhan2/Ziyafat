@@ -107,7 +107,7 @@ async def list_ingredients(
     active_only: bool = True,
     search: Optional[str] = Query(default=None),
     page: int = Query(default=1, ge=1),
-    page_size: int = Query(default=20, ge=1, le=100),
+    page_size: int = Query(default=20, ge=1),
     sort_by: str = Query(default="name"),
     sort_dir: str = Query(default="asc", pattern="^(asc|desc)$"),
     current_user: User = Depends(get_current_user),

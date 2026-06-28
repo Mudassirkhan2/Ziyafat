@@ -9,11 +9,12 @@ import type { Dish } from "@/lib/types";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { DataTable } from "@/components/ui/data-table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -22,7 +23,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { FiPlus, FiTrash2, FiLoader, FiX, FiPrinter } from "react-icons/fi";
+import { FiPlus, FiTrash2, FiLoader, FiX, FiPrinter, FiList } from "react-icons/fi";
 
 type VegFilter = "all" | "veg" | "non-veg";
 
@@ -136,10 +137,13 @@ function DishesContent() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-on-surface">Dishes</h1>
+    <div className="p-4 md:p-6">
+      <div className="flex items-center justify-between mb-4 md:mb-6 gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-on-surface">Dishes</h1>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => router.push("/ingredients")}>
+            <FiList className="h-4 w-4 mr-1" /> Ingredients
+          </Button>
           <Button variant="outline" onClick={() => window.open(`${API_BASE}/api/v1/dishes/pdf`)}>
             <FiPrinter className="h-4 w-4 mr-1" /> Print Dish List
           </Button>
@@ -149,23 +153,28 @@ function DishesContent() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 mb-4">
         <Input
           placeholder="Search name, category…"
           value={ts.search}
           onChange={(e) => ts.setSearch(e.target.value)}
-          className="max-w-xs bg-surface border-outline text-on-surface"
+          className="w-full sm:max-w-xs bg-surface border-outline text-on-surface"
         />
-        <Tabs
-          value={vegFilter}
-          onValueChange={(v) => setVegFilter(v as VegFilter)}
-        >
-          <TabsList className="bg-surface-high">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="veg">Veg</TabsTrigger>
-            <TabsTrigger value="non-veg">Non-Veg</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="overflow-x-auto pb-0.5">
+          <ButtonGroup>
+            {(["all", "veg", "non-veg"] as VegFilter[]).map((v) => (
+              <Button
+                key={v}
+                size="sm"
+                variant="outline"
+                onClick={() => setVegFilter(v)}
+                className={cn(vegFilter === v && "bg-secondary text-secondary-foreground border-secondary z-10")}
+              >
+                {v === "all" ? "All" : v === "veg" ? "Veg" : "Non-Veg"}
+              </Button>
+            ))}
+          </ButtonGroup>
+        </div>
       </div>
 
       {isError && (

@@ -8,12 +8,13 @@ import type { Lead, LeadStatus } from "@/lib/types";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { DataTable } from "@/components/ui/data-table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FiPlus } from "react-icons/fi";
+import { cn } from "@/lib/utils";
 
 const ALL_STATUSES: LeadStatus[] = ["new", "quoted", "negotiating", "won", "lost"];
 
@@ -125,21 +126,27 @@ function LeadsContent() {
           className="w-full sm:max-w-xs bg-surface border-outline text-on-surface"
         />
         <div className="overflow-x-auto pb-0.5">
-          <Tabs
-            value={statusFilter ?? "all"}
-            onValueChange={(v) =>
-              setStatusFilter(v === "all" ? undefined : (v as LeadStatus))
-            }
-          >
-            <TabsList className="bg-surface-high whitespace-nowrap">
-              <TabsTrigger value="all">All</TabsTrigger>
-              {ALL_STATUSES.map((s) => (
-                <TabsTrigger key={s} value={s}>
-                  {capitalize(s)}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+          <ButtonGroup>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setStatusFilter(undefined)}
+              className={cn(statusFilter === undefined && "bg-secondary text-secondary-foreground border-secondary z-10")}
+            >
+              All
+            </Button>
+            {ALL_STATUSES.map((s) => (
+              <Button
+                key={s}
+                size="sm"
+                variant="outline"
+                onClick={() => setStatusFilter(s as LeadStatus)}
+                className={cn(statusFilter === s && "bg-secondary text-secondary-foreground border-secondary z-10")}
+              >
+                {capitalize(s)}
+              </Button>
+            ))}
+          </ButtonGroup>
         </div>
       </div>
 

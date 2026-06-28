@@ -9,11 +9,12 @@ import type { Booking, Quotation, QuotationStatus } from "@/lib/types";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { DataTable } from "@/components/ui/data-table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FiPlus } from "react-icons/fi";
+import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -142,32 +143,40 @@ function QuotationsContent() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-on-surface">Quotations</h1>
-        <Button onClick={() => router.push("/quotations/new")}>
-          <FiPlus className="h-4 w-4 mr-1" />
-          New Quotation
+    <div className="p-4 md:p-6">
+      <div className="flex items-center justify-between mb-4 md:mb-6 gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-on-surface">Quotations</h1>
+        <Button onClick={() => router.push("/quotations/new")} className="shrink-0">
+          <FiPlus className="h-4 w-4" />
+          <span className="hidden sm:inline ml-1">New Quotation</span>
         </Button>
       </div>
 
-      <Tabs
-        value={statusFilter ?? "all"}
-        onValueChange={(val) => {
-          setStatusFilter(val === "all" ? undefined : (val as QuotationStatus));
-          ts.setPage(1);
-        }}
-        className="mb-4"
-      >
-        <TabsList className="bg-surface-high">
-          <TabsTrigger value="all">All</TabsTrigger>
-          {ALL_STATUSES.map((s) => (
-            <TabsTrigger key={s} value={s}>
-              {capitalize(s)}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 mb-4">
+        <div className="overflow-x-auto pb-0.5">
+          <ButtonGroup>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => { setStatusFilter(undefined); ts.setPage(1); }}
+              className={cn(statusFilter === undefined && "bg-secondary text-secondary-foreground border-secondary z-10")}
+            >
+              All
+            </Button>
+            {ALL_STATUSES.map((s) => (
+              <Button
+                key={s}
+                size="sm"
+                variant="outline"
+                onClick={() => { setStatusFilter(s); ts.setPage(1); }}
+                className={cn(statusFilter === s && "bg-secondary text-secondary-foreground border-secondary z-10")}
+              >
+                {capitalize(s)}
+              </Button>
+            ))}
+          </ButtonGroup>
+        </div>
+      </div>
 
       {isError && (
         <p className="text-destructive text-sm mb-4">

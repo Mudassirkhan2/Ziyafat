@@ -260,9 +260,30 @@ async def get_dishes_pdf(current_user: User = Depends(get_current_user)):
     if org is None:
         org = _org_fallback()
 
+    # Collect all unique ingredient IDs across all dishes
+    all_ing_ids = {ri.ingredient_id for d in dishes for ri in d.recipe_ingredients}
+    ing_map: dict = {}
+    if all_ing_ids:
+        fetched = await Ingredient.find({"_id": {"$in": list(all_ing_ids)}}).to_list()
+        ing_map = {ing.id: ing.name for ing in fetched}
+
+    # Build enriched dish dicts so the template can access resolved ingredient names
+    def enrich(dish: Dish) -> dict:
+        d = dish.model_dump()
+        d["id"] = str(dish.id)
+        d["ingredients"] = [
+            {
+                "name": ing_map.get(ri.ingredient_id, str(ri.ingredient_id)),
+                "quantity": ri.quantity_per_100_guests,
+                "unit": ri.unit,
+            }
+            for ri in dish.recipe_ingredients
+        ]
+        return d
+
     grouped: dict[str, list] = {}
     for dish in dishes:
-        grouped.setdefault(dish.category, []).append(dish)
+        grouped.setdefault(dish.category, []).append(enrich(dish))
 
     context = {
         "org": org,

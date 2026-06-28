@@ -12,37 +12,21 @@ import { EmptyState } from "@/components/ui/empty-state";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const STATUS_COLORS: Record<string, string> = {
-  // Lead
-  new: "#64748b",
-  quoted: "#3b82f6",
-  negotiating: "#f59e0b",
-  won: "#22c55e",
-  lost: "#ef4444",
-  // Booking
-  confirmed: "#3b82f6",
-  in_progress: "#06b6d4",
-  completed: "#22c55e",
-  cancelled: "#ef4444",
-  // Event
-  enquiry: "#64748b",
-  deposit_received: "#8b5cf6",
-  event_day: "#f97316",
-  // Quotation
-  approved: "#22c55e",
-  rejected: "#ef4444",
-  sent: "#3b82f6",
-  draft: "#64748b",
-  superseded: "#f59e0b",
-  // Invoice
-  paid: "#22c55e",
-  // Customer type
-  individual: "#3b82f6",
-  corporate: "#8b5cf6",
-  wedding_planner: "#f59e0b",
-  venue: "#06b6d4",
-  ngo: "#22c55e",
-};
+const PALETTE = [
+  "#5b8fba", "#d4956a", "#6aaa7e", "#c4a55a", "#8b72b5", "#7abab5",
+  "#d47a7a", "#7aafcc", "#b5c45a", "#aa7ab5", "#7ac48f", "#d4a57a",
+  "#7a8fb5", "#c47a9a", "#8fb57a", "#b5957a", "#7ab5c4", "#c4b57a",
+  "#9a7ab5", "#7ab5a0", "#c4957a", "#7aaab5", "#b57a9a", "#8fc4aa",
+];
+
+function pickColors(keys: string[]): string[] {
+  const pool = [...PALETTE];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return keys.map((_, i) => pool[i % pool.length]);
+}
 
 interface StatusChartProps {
   title: string;
@@ -50,11 +34,10 @@ interface StatusChartProps {
 }
 
 export function StatusChart({ title, data }: StatusChartProps) {
-  const labels = Object.keys(data).map((k) => k.replace(/_/g, " "));
+  const keys = Object.keys(data);
+  const labels = keys.map((k) => k.replace(/_/g, " "));
   const values = Object.values(data);
-  const colors = Object.keys(data).map(
-    (k) => STATUS_COLORS[k] ?? "#94a3b8"
-  );
+  const colors = pickColors(keys);
 
   const chartData = {
     labels,
@@ -92,7 +75,7 @@ export function StatusChart({ title, data }: StatusChartProps) {
   const total = values.reduce((a, b) => a + b, 0);
 
   return (
-    <div className="rounded-lg border border-outline bg-surface-high p-4">
+    <div className="rounded-lg border border-outline bg-surface-high p-4" style={{ boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--secondary) 20%, transparent)" }}>
       <h3 className="text-base font-bold text-on-surface mb-1">{title}</h3>
       <p className="text-xs text-on-surface-low mb-3">Total: {total}</p>
       {total === 0 ? (

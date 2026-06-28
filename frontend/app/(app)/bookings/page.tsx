@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useBookings } from "@/lib/bookings-api";
 import { useDataTableState } from "@/lib/use-data-table-state";
@@ -9,10 +9,14 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FiPlus } from "react-icons/fi";
+import { cn } from "@/lib/utils";
+
+const ALL_BOOKING_STATUSES: BookingStatus[] = ["confirmed", "in_progress", "completed", "cancelled"];
 
 const STATUS_COLORS: Record<BookingStatus, string> = {
   confirmed: "bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
@@ -77,10 +81,12 @@ function getColumns(): ColumnDef<Booking>[] {
 
 function BookingsContent() {
   const router = useRouter();
+  const [statusFilter, setStatusFilter] = useState<BookingStatus | undefined>(undefined);
   const ts = useDataTableState({ defaultSortBy: "created_at", defaultSortDir: "desc" });
 
   const { data, isLoading, isError } = useBookings({
     search: ts.search || undefined,
+    status: statusFilter,
     page: ts.page,
     pageSize: ts.pageSize,
     sortBy: ts.sortBy,
@@ -93,21 +99,45 @@ function BookingsContent() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-on-surface">Bookings</h1>
-        <Button onClick={() => router.push("/bookings/new")}>
-          <FiPlus className="h-4 w-4 mr-1" /> New Booking
+    <div className="p-4 md:p-6">
+      <div className="flex items-center justify-between mb-4 md:mb-6 gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-on-surface">Bookings</h1>
+        <Button onClick={() => router.push("/bookings/new")} className="shrink-0">
+          <FiPlus className="h-4 w-4" />
+          <span className="hidden sm:inline ml-1">New Booking</span>
         </Button>
       </div>
 
-      <div className="mb-4">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 mb-4">
         <Input
           placeholder="Search by title…"
           value={ts.search}
           onChange={(e) => ts.setSearch(e.target.value)}
-          className="max-w-xs bg-surface border-outline text-on-surface"
+          className="w-full sm:max-w-xs bg-surface border-outline text-on-surface"
         />
+        <div className="overflow-x-auto pb-0.5">
+          <ButtonGroup>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setStatusFilter(undefined)}
+              className={cn(statusFilter === undefined && "bg-secondary text-secondary-foreground border-secondary z-10")}
+            >
+              All
+            </Button>
+            {ALL_BOOKING_STATUSES.map((s) => (
+              <Button
+                key={s}
+                size="sm"
+                variant="outline"
+                onClick={() => setStatusFilter(s)}
+                className={cn(statusFilter === s && "bg-secondary text-secondary-foreground border-secondary z-10")}
+              >
+                {statusLabel(s)}
+              </Button>
+            ))}
+          </ButtonGroup>
+        </div>
       </div>
 
       {isError && (

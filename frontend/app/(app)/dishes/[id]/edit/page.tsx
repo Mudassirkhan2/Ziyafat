@@ -58,7 +58,7 @@ export default function EditDishPage() {
   const clearRecipe = useClearDishRecipe(id);
 
   const { data: ingredientsData } = useIngredients({
-    pageSize: 200,
+    pageSize: 100,
     sortBy: "name",
     sortDir: "asc",
   });
@@ -316,19 +316,32 @@ export default function EditDishPage() {
             )}
 
             <div className="space-y-2">
+              {recipeRows.length > 0 && (
+                <div className="grid grid-cols-[1fr_120px_120px_40px] gap-2 px-1 pb-2 border-b border-outline">
+                  <span className="text-xs font-semibold text-on-surface-medium uppercase tracking-wider">Ingredient</span>
+                  <span className="text-xs font-semibold text-on-surface-medium uppercase tracking-wider">Qty / 100 guests</span>
+                  <span className="text-xs font-semibold text-on-surface-medium uppercase tracking-wider">Unit</span>
+                  <span />
+                </div>
+              )}
               {recipeRows.map((row, index) => (
                 <div
                   key={index}
                   className="grid grid-cols-[1fr_120px_120px_40px] gap-2 items-center"
                 >
                   <Select
-                    value={row.ingredient_id}
+                    value={row.ingredient_id || undefined}
                     onValueChange={(val) => val && updateRecipeRow(index, "ingredient_id", val)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select ingredient" />
+                      <span className={!row.ingredient_name ? "text-on-surface-low text-sm" : ""}>
+                        {row.ingredient_name || "Select ingredient"}
+                      </span>
                     </SelectTrigger>
                     <SelectContent>
+                      {allIngredients.length === 0 && (
+                        <div className="px-3 py-2 text-sm text-on-surface-low">No ingredients found</div>
+                      )}
                       {allIngredients.map((ing) => (
                         <SelectItem key={ing.id} value={ing.id}>
                           {ing.name}
@@ -361,9 +374,14 @@ export default function EditDishPage() {
               ))}
             </div>
 
-            <Button type="button" variant="outline" size="sm" onClick={addRecipeRow}>
-              <FiPlus className="h-4 w-4 mr-1" /> Add Ingredient
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={addRecipeRow}>
+                <FiPlus className="h-4 w-4 mr-1" /> Add Ingredient
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => router.push("/ingredients/new")}>
+                <FiPlus className="h-4 w-4 mr-1" /> Create Ingredient
+              </Button>
+            </div>
           </div>
 
           <div

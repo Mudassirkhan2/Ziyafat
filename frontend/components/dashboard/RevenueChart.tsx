@@ -63,7 +63,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
   const hasData = data.some((d) => d.revenue > 0);
 
   return (
-    <div className="rounded-lg border border-outline bg-surface-high p-4">
+    <div className="rounded-lg border border-outline bg-surface-high p-4" style={{ boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--secondary) 20%, transparent)" }}>
       <h3 className="text-base font-bold text-on-surface mb-1">
         Revenue — Last 6 Months
       </h3>

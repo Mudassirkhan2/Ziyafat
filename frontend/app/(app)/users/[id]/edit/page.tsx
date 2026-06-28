@@ -20,7 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { FiLoader, FiUserX } from "react-icons/fi";
+import { FiLoader, FiUser, FiUserX } from "react-icons/fi";
 
 const ROLES: { value: UserRole; label: string }[] = [
   { value: "owner", label: "Owner" },
@@ -108,14 +108,27 @@ export default function EditUserPage({
       </button>
 
       <div className="max-w-lg mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-on-surface">{user.name}</h1>
-          <p className="text-sm text-on-surface-medium">{user.email}</p>
-          {!user.is_active && (
-            <span className="inline-block mt-1 text-xs text-destructive border border-destructive/30 rounded px-2 py-0.5">
-              Deactivated
-            </span>
+        <div className="mb-6 flex items-center gap-4">
+          {user.avatar_url ? (
+            <img
+              src={user.avatar_url}
+              alt={user.name}
+              className="h-14 w-14 rounded-full object-cover border border-outline shrink-0"
+            />
+          ) : (
+            <div className="h-14 w-14 rounded-full bg-surface-high border border-outline flex items-center justify-center shrink-0">
+              <FiUser className="h-6 w-6 text-on-surface-low" />
+            </div>
           )}
+          <div>
+            <h1 className="text-2xl font-bold text-on-surface">{user.name}</h1>
+            <p className="text-sm text-on-surface-medium">{user.email}</p>
+            {!user.is_active && (
+              <span className="inline-block mt-1 text-xs text-destructive border border-destructive/30 rounded px-2 py-0.5">
+                Deactivated
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="rounded-lg border border-outline bg-surface-high p-6">
