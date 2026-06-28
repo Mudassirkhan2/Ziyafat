@@ -8,7 +8,6 @@ import {
   FormTextarea,
   FormSwitch,
   SectionLabel,
-  SectionDivider,
 } from "@/components/ui/form-fields"
 
 export const dishCreateSchema = z.object({
@@ -40,10 +39,10 @@ interface DishFormFieldsProps {
 
 export function DishFormFields({ showActiveToggle = false }: DishFormFieldsProps) {
   return (
-    <div className="space-y-0">
-      {/* Basics */}
-      <div className="space-y-4">
-        <SectionLabel>Basics</SectionLabel>
+    <>
+      {/* 1 · Basics */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={1}>Basics</SectionLabel>
         <div className="grid grid-cols-2 gap-4">
           <FormInput name="name" label="Name *" placeholder="Dish name" />
           <FormInput name="category" label="Category *" placeholder="e.g. Biryani, Starters" />
@@ -54,22 +53,18 @@ export function DishFormFields({ showActiveToggle = false }: DishFormFieldsProps
         </div>
       </div>
 
-      <SectionDivider />
-
-      {/* Pricing */}
-      <div className="space-y-4">
-        <SectionLabel>Pricing</SectionLabel>
+      {/* 2 · Pricing */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={2}>Pricing</SectionLabel>
         <div className="grid grid-cols-2 gap-4">
           <FormInput name="per_plate_cost" label="Cost per Plate (₹) *" type="number" step="0.01" placeholder="0.00" />
           <FormInput name="selling_price" label="Selling Price (₹) *" type="number" step="0.01" placeholder="0.00" />
         </div>
       </div>
 
-      <SectionDivider />
-
-      {/* Production */}
-      <div className="space-y-4">
-        <SectionLabel>Production</SectionLabel>
+      {/* 3 · Production */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={3}>Production</SectionLabel>
         <div className="grid grid-cols-3 gap-4">
           <FormInput name="portion_size" label="Portion Size" placeholder="e.g. 250g" />
           <FormInput name="minimum_order_quantity" label="Min. Order Qty" type="number" placeholder="Min plates" />
@@ -77,26 +72,22 @@ export function DishFormFields({ showActiveToggle = false }: DishFormFieldsProps
         </div>
       </div>
 
-      <SectionDivider />
-
-      {/* Details */}
-      <div className="space-y-4">
-        <SectionLabel>Details</SectionLabel>
+      {/* 4 · Details */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={4}>Details</SectionLabel>
         <FormTextarea name="description" label="Description" placeholder="Dish description" rows={2} />
         <FormTextarea name="notes_for_kitchen" label="Kitchen Notes" placeholder="Preparation notes for kitchen staff" rows={2} />
       </div>
 
-      <SectionDivider />
-
-      {/* Settings */}
-      <div className="space-y-3">
-        <SectionLabel>Settings</SectionLabel>
+      {/* 5 · Settings */}
+      <div className="space-y-3 px-[30px] py-[26px]">
+        <SectionLabel number={5}>Settings</SectionLabel>
         <div className="flex gap-6">
           <FormSwitch name="is_veg" label="Vegetarian" />
           {showActiveToggle && <FormSwitch name="is_active" label="Active" />}
           <FormSwitch name="is_available_for_storefront" label="Show on Storefront" />
         </div>
       </div>
-    </div>
+    </>
   )
 }

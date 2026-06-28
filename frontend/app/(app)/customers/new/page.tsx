@@ -3,11 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
+import { Users } from "lucide-react";
 import { useCreateCustomer } from "@/lib/customers-api";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
+import { FormPageShell, FormStickyFooter } from "@/components/layout/FormPageShell";
 import {
   customerSchema,
   type CustomerFormValues,
@@ -21,19 +21,10 @@ export default function NewCustomerPage() {
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
-      name: "",
-      phone: "",
-      email: "",
-      address: "",
-      notes: "",
-      company_name: "",
-      contact_type: "",
-      billing_address: "",
-      dietary_restrictions: "",
-      referral_source: "",
-      gstin: "",
-      preferred_payment_method: "",
-      communication_preference: "",
+      name: "", phone: "", email: "", address: "", notes: "",
+      company_name: "", contact_type: "", billing_address: "",
+      dietary_restrictions: "", referral_source: "", gstin: "",
+      preferred_payment_method: "", communication_preference: "",
     },
   });
 
@@ -62,35 +53,25 @@ export default function NewCustomerPage() {
   }
 
   return (
-    <div className="p-6">
-      <button
-        type="button"
-        onClick={() => router.push("/customers")}
-        className="text-on-surface-medium hover:text-on-surface text-sm mb-6 flex items-center gap-1"
-      >
-        ← Back to Customers
-      </button>
-
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-on-surface mb-6">New Customer</h1>
-
-        <div className="rounded-lg border border-outline bg-surface-high p-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <CustomerFormFields />
-
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => router.push("/customers")}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createCustomer.isPending}>
-                  {createCustomer.isPending ? "Saving…" : "Save Customer"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </div>
-      </div>
-    </div>
+    <FormPageShell
+      backHref="/customers"
+      backLabel="Back to Customers"
+      icon={<Users className="h-5 w-5" />}
+      title="New Customer"
+      subtitle="Add a new customer to your contacts."
+    >
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <div className="rounded-[20px] border border-outline-low overflow-hidden divide-y divide-outline-low shadow-[0_1px_2px_rgba(0,0,0,0.04),0_18px_40px_-28px_rgba(0,0,0,0.15)] bg-surface-high">
+            <CustomerFormFields />
+          </div>
+          <FormStickyFooter
+            cancelHref="/customers"
+            isPending={createCustomer.isPending}
+            saveLabel="Save Customer"
+          />
+        </form>
+      </Form>
+    </FormPageShell>
   );
 }

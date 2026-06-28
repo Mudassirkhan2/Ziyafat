@@ -11,6 +11,7 @@ import {
   FormInput,
   FormSelect,
   FormTextarea,
+  SectionLabel,
 } from "@/components/ui/form-fields"
 
 export const customerSchema = z.object({
@@ -34,35 +35,46 @@ export type CustomerFormValues = z.infer<typeof customerSchema>
 export function CustomerFormFields() {
   return (
     <>
-      <div className="grid grid-cols-2 gap-4">
-        <FormInput name="name" label="Name *" placeholder="Full name" />
-        <FormInput name="company_name" label="Company Name" placeholder="Company (optional)" />
+      {/* 1 · Identity */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={1}>Identity</SectionLabel>
+        <div className="grid grid-cols-2 gap-4">
+          <FormInput name="name" label="Name *" placeholder="Full name" />
+          <FormInput name="company_name" label="Company Name" placeholder="Company (optional)" />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <FormInput name="phone" label="Phone *" placeholder="Phone number" />
+          <FormInput name="email" label="Email" type="email" placeholder="Email (optional)" />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <FormSelect name="contact_type" label="Contact Type" placeholder="Select type" options={CONTACT_TYPE_OPTIONS} />
+          <FormSelect name="referral_source" label="Referral Source" placeholder="How did they find us?" options={REFERRAL_SOURCE_OPTIONS} />
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <FormInput name="phone" label="Phone *" placeholder="Phone number" />
-        <FormInput name="email" label="Email" type="email" placeholder="Email (optional)" />
+      {/* 2 · Address */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={2}>Address</SectionLabel>
+        <FormInput name="address" label="Address" placeholder="Address (optional)" />
+        <FormInput name="billing_address" label="Billing Address" placeholder="Billing address (if different)" />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <FormSelect name="contact_type" label="Contact Type" placeholder="Select type" options={CONTACT_TYPE_OPTIONS} />
-        <FormSelect name="referral_source" label="Referral Source" placeholder="How did they find us?" options={REFERRAL_SOURCE_OPTIONS} />
+      {/* 3 · Preferences */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={3}>Preferences</SectionLabel>
+        <div className="grid grid-cols-2 gap-4">
+          <FormSelect name="preferred_payment_method" label="Preferred Payment" placeholder="Payment method" options={PAYMENT_METHOD_OPTIONS} />
+          <FormSelect name="communication_preference" label="Communication Preference" placeholder="Preferred channel" options={COMMUNICATION_PREFERENCE_OPTIONS} />
+        </div>
+        <FormInput name="dietary_restrictions" label="Dietary Restrictions" placeholder="e.g. No pork, nut allergy" />
       </div>
 
-      <FormInput name="address" label="Address" placeholder="Address (optional)" />
-
-      <FormInput name="billing_address" label="Billing Address" placeholder="Billing address (if different)" />
-
-      <div className="grid grid-cols-2 gap-4">
-        <FormSelect name="preferred_payment_method" label="Preferred Payment" placeholder="Payment method" options={PAYMENT_METHOD_OPTIONS} />
-        <FormSelect name="communication_preference" label="Communication Preference" placeholder="Preferred channel" options={COMMUNICATION_PREFERENCE_OPTIONS} />
+      {/* 4 · Notes */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={4}>Notes</SectionLabel>
+        <FormInput name="gstin" label="GSTIN" placeholder="GST number (optional)" />
+        <FormTextarea name="notes" label="Notes" placeholder="Any additional notes…" rows={3} />
       </div>
-
-      <FormInput name="gstin" label="GSTIN" placeholder="GST number (optional)" />
-
-      <FormInput name="dietary_restrictions" label="Dietary Restrictions" placeholder="e.g. No pork, nut allergy" />
-
-      <FormTextarea name="notes" label="Notes" placeholder="Any additional notes…" rows={3} />
     </>
   )
 }

@@ -8,7 +8,6 @@ import {
   FormTextarea,
   FormSwitch,
   SectionLabel,
-  SectionDivider,
 } from "@/components/ui/form-fields"
 
 export const INGREDIENT_UNITS = ["kg", "g", "L", "ml", "pcs", "dozen", "box", "bag"]
@@ -48,47 +47,63 @@ interface IngredientFormFieldsProps {
 export function IngredientFormFields({ showActiveToggle = false }: IngredientFormFieldsProps) {
   return (
     <>
-      <div className="grid grid-cols-2 gap-4">
-        <FormInput name="name" label="Name *" placeholder="Ingredient name" />
-        <FormSelect name="category" label="Category" placeholder="Select category" options={INGREDIENT_CATEGORY_OPTIONS} />
+      {/* 1 · Basics */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={1}>Basics</SectionLabel>
+        <div className="grid grid-cols-2 gap-4">
+          <FormInput name="name" label="Name *" placeholder="Ingredient name" />
+          <FormSelect name="category" label="Category" placeholder="Select category" options={INGREDIENT_CATEGORY_OPTIONS} />
+        </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <FormSelect name="base_unit" label="Base Unit *" placeholder="Unit" options={UNIT_OPTIONS} />
-        <FormInput name="cost_per_unit" label="Cost per Unit (₹) *" type="number" step="0.01" placeholder="0.00" />
-        <FormInput name="purchase_unit" label="Purchase Unit" placeholder="e.g. 50kg bag" />
+      {/* 2 · Units & Cost */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={2}>Units & Cost</SectionLabel>
+        <div className="grid grid-cols-3 gap-4">
+          <FormSelect name="base_unit" label="Base Unit *" placeholder="Unit" options={UNIT_OPTIONS} />
+          <FormInput name="cost_per_unit" label="Cost per Unit (₹) *" type="number" step="0.01" placeholder="0.00" />
+          <FormInput name="purchase_unit" label="Purchase Unit" placeholder="e.g. 50kg bag" />
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <FormInput name="stock_on_hand" label="Stock on Hand" type="number" step="0.01" />
-        <FormInput name="reorder_threshold" label="Reorder Threshold" type="number" step="0.01" />
+      {/* 3 · Stock */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={3}>Stock</SectionLabel>
+        <div className="grid grid-cols-3 gap-4">
+          <FormInput name="stock_on_hand" label="Stock on Hand" type="number" step="0.01" />
+          <FormInput name="reorder_threshold" label="Reorder Threshold" type="number" step="0.01" />
+          <FormInput name="par_level" label="PAR Level" type="number" step="0.01" placeholder="Auto-replenishment" />
+        </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <FormInput name="yield_percentage" label="Yield (%)" type="number" step="0.1" />
-        <FormInput name="waste_percentage" label="Waste (%)" type="number" step="0.1" />
-        <FormInput name="shelf_life_days" label="Shelf Life (days)" type="number" placeholder="Days" />
+      {/* 4 · Quality */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={4}>Quality</SectionLabel>
+        <div className="grid grid-cols-3 gap-4">
+          <FormInput name="yield_percentage" label="Yield (%)" type="number" step="0.1" />
+          <FormInput name="waste_percentage" label="Waste (%)" type="number" step="0.1" />
+          <FormInput name="shelf_life_days" label="Shelf Life (days)" type="number" placeholder="Days" />
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <FormInput name="supplier" label="Supplier" placeholder="Supplier name" />
-        <FormInput name="storage_location" label="Storage Location" placeholder="e.g. Cold storage A" />
+      {/* 5 · Storage & Supplier */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={5}>Storage & Supplier</SectionLabel>
+        <div className="grid grid-cols-2 gap-4">
+          <FormInput name="supplier" label="Supplier" placeholder="Supplier name" />
+          <FormInput name="storage_location" label="Storage Location" placeholder="e.g. Cold storage A" />
+        </div>
       </div>
 
-      <FormInput
-        name="par_level"
-        label="PAR Level"
-        type="number"
-        step="0.01"
-        placeholder="Periodic Automatic Replenishment level"
-      />
-
-      <div className="flex gap-6">
-        <FormSwitch name="allergen_flag" label="Contains Allergen" />
-        {showActiveToggle && <FormSwitch name="is_active" label="Active" />}
+      {/* 6 · Settings & Notes */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={6}>Settings & Notes</SectionLabel>
+        <div className="flex gap-6">
+          <FormSwitch name="allergen_flag" label="Contains Allergen" />
+          {showActiveToggle && <FormSwitch name="is_active" label="Active" />}
+        </div>
+        <FormTextarea name="notes" label="Notes" placeholder="Any additional notes" rows={2} />
       </div>
-
-      <FormTextarea name="notes" label="Notes" placeholder="Any additional notes" rows={2} />
     </>
   )
 }

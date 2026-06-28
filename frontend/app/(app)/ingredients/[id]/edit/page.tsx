@@ -4,12 +4,13 @@ import { use, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
+import { FlaskConical } from "lucide-react";
 import { useIngredient, useUpdateIngredient } from "@/lib/ingredients-api";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { FiLoader } from "react-icons/fi";
+import { FormPageShell, FormStickyFooter } from "@/components/layout/FormPageShell";
 import {
   ingredientEditSchema,
   type IngredientEditValues,
@@ -30,23 +31,11 @@ export default function EditIngredientPage({
   const form = useForm<IngredientEditValues>({
     resolver: zodResolver(ingredientEditSchema),
     defaultValues: {
-      name: "",
-      base_unit: "",
-      cost_per_unit: "",
-      supplier: "",
-      stock_on_hand: "0",
-      reorder_threshold: "0",
-      category: "",
-      yield_percentage: "100",
-      purchase_unit: "",
-      unit_conversion_factor: "",
-      allergen_flag: false,
-      waste_percentage: "0",
-      storage_location: "",
-      shelf_life_days: "",
-      par_level: "",
-      notes: "",
-      is_active: true,
+      name: "", base_unit: "", cost_per_unit: "", supplier: "",
+      stock_on_hand: "0", reorder_threshold: "0", category: "",
+      yield_percentage: "100", purchase_unit: "", unit_conversion_factor: "",
+      allergen_flag: false, waste_percentage: "0", storage_location: "",
+      shelf_life_days: "", par_level: "", notes: "", is_active: true,
     },
   });
 
@@ -128,36 +117,25 @@ export default function EditIngredientPage({
   }
 
   return (
-    <div className="p-6">
-      <button
-        type="button"
-        onClick={() => router.push("/ingredients")}
-        className="text-on-surface-medium hover:text-on-surface text-sm mb-6 flex items-center gap-1"
-      >
-        ← Back to Ingredients
-      </button>
-
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-on-surface mb-6">Edit Ingredient</h1>
-
-        <div className="rounded-lg border border-outline bg-surface-high p-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <IngredientFormFields showActiveToggle />
-
-
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => router.push("/ingredients")}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={updateIngredient.isPending}>
-                  {updateIngredient.isPending ? "Saving…" : "Save Changes"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </div>
-      </div>
-    </div>
+    <FormPageShell
+      backHref="/ingredients"
+      backLabel="Back to Ingredients"
+      icon={<FlaskConical className="h-5 w-5" />}
+      title="Edit Ingredient"
+      subtitle={`Editing ${ingredient.name}`}
+    >
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <div className="rounded-[20px] border border-outline-low overflow-hidden divide-y divide-outline-low shadow-[0_1px_2px_rgba(0,0,0,0.04),0_18px_40px_-28px_rgba(0,0,0,0.15)] bg-surface-high">
+            <IngredientFormFields showActiveToggle />
+          </div>
+          <FormStickyFooter
+            cancelHref="/ingredients"
+            isPending={updateIngredient.isPending}
+            saveLabel="Save Changes"
+          />
+        </form>
+      </Form>
+    </FormPageShell>
   );
 }

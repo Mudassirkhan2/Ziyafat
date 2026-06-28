@@ -24,16 +24,38 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 
-export function SectionLabel({ children }: { children: React.ReactNode }) {
+export function SectionLabel({
+  children,
+  number,
+}: {
+  children: React.ReactNode;
+  number?: number;
+}) {
   return (
-    <p className="text-[10px] font-semibold uppercase tracking-widest text-on-surface-low mb-3">
-      {children}
-    </p>
-  )
+    <div className="flex items-center gap-3 mb-5">
+      {number != null && (
+        <span
+          className="inline-flex w-6 h-6 items-center justify-center rounded-[7px] text-[11px] font-bold flex-shrink-0"
+          style={{
+            fontFamily: "var(--font-serif)",
+            color: "var(--secondary)",
+            background: "color-mix(in oklab, var(--secondary), #fff 86%)",
+          }}
+        >
+          {number}
+        </span>
+      )}
+      <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-on-surface-medium">
+        {children}
+      </span>
+      <span className="flex-1 h-px bg-outline-low" />
+    </div>
+  );
 }
 
+/** @deprecated sections are now separated by divide-y on the card wrapper */
 export function SectionDivider() {
-  return <div className="border-t border-outline-low my-5" />
+  return null;
 }
 
 export interface SelectOption {
@@ -200,7 +222,7 @@ export function FormDatePicker({
           <Popover>
             <PopoverTrigger
               className={cn(
-                "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors hover:bg-accent",
+                "flex h-[44px] w-full items-center justify-between rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors hover:bg-accent",
                 !field.value && "text-muted-foreground"
               )}
             >

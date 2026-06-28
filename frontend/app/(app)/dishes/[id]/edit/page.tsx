@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { UtensilsCrossed } from "lucide-react";
 
 import { useDish, useUpdateDish } from "@/lib/dishes-api";
 import { toast } from "sonner";
@@ -26,15 +27,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FiPlus, FiTrash2, FiLoader } from "react-icons/fi";
+import { FormPageShell, FormStickyFooter } from "@/components/layout/FormPageShell";
 import {
   dishEditSchema,
   type DishEditValues,
   DishFormFields,
 } from "@/components/forms/DishFormFields";
-
-// ---------------------------------------------------------------------------
-// Recipe row
-// ---------------------------------------------------------------------------
 
 interface RecipeRow {
   ingredient_id: string;
@@ -42,10 +40,6 @@ interface RecipeRow {
   qty_per_100_guests: string;
   unit: string;
 }
-
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
 
 export default function EditDishPage() {
   const params = useParams();
@@ -71,19 +65,11 @@ export default function EditDishPage() {
   const form = useForm<DishEditValues>({
     resolver: zodResolver(dishEditSchema),
     defaultValues: {
-      name: "",
-      category: "",
-      description: "",
-      per_plate_cost: "",
-      selling_price: "",
-      is_veg: true,
-      is_active: true,
-      course: "",
-      cuisine_type: "",
-      portion_size: "",
-      minimum_order_quantity: "",
-      preparation_time_minutes: "",
-      notes_for_kitchen: "",
+      name: "", category: "", description: "",
+      per_plate_cost: "", selling_price: "",
+      is_veg: true, is_active: true, course: "", cuisine_type: "",
+      portion_size: "", minimum_order_quantity: "",
+      preparation_time_minutes: "", notes_for_kitchen: "",
       is_available_for_storefront: true,
     },
   });
@@ -217,143 +203,147 @@ export default function EditDishPage() {
   }
 
   return (
-    <div className="p-6">
-      <button
-        type="button"
-        onClick={() => router.push("/dishes")}
-        className="text-on-surface-medium hover:text-on-surface text-sm mb-6 flex items-center gap-1"
-      >
-        ← Back to Dishes
-      </button>
+    <FormPageShell
+      backHref="/dishes"
+      backLabel="Back to Dishes"
+      icon={<UtensilsCrossed className="h-5 w-5" />}
+      title="Edit Dish"
+      subtitle={`Editing ${dish.name}`}
+    >
+      <Tabs defaultValue="details">
+        <TabsList className="bg-surface-high mb-6">
+          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="recipe">Recipe</TabsTrigger>
+        </TabsList>
 
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-on-surface mb-6">Edit Dish</h1>
-
-        <Tabs defaultValue="details">
-          <TabsList className="bg-surface-high mb-6">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="recipe">Recipe</TabsTrigger>
-          </TabsList>
-
-          {/* ── Details Tab ── */}
-          <TabsContent value="details">
-            <div className="rounded-lg border border-outline bg-surface-high p-6">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <DishFormFields showActiveToggle />
-
-
-                  <div className="flex justify-end gap-2 pt-2">
-                    <Button type="button" variant="outline" onClick={() => router.push("/dishes")}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" disabled={updateDish.isPending}>
-                      {updateDish.isPending ? "Saving…" : "Save Changes"}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
-            </div>
-          </TabsContent>
-
-          {/* ── Recipe Tab ── */}
-          <TabsContent value="recipe">
-            <div className="rounded-lg border border-outline bg-surface-high p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-on-surface-medium">
-                  Quantities are per 100 guests.
-                  {recipe && (
-                    <span className="ml-2 font-medium text-on-surface">
-                      Recipe cost: ₹{recipe.recipe_cost_per_plate.toFixed(2)}/plate
-                    </span>
-                  )}
-                </p>
+        {/* ── Details Tab ── */}
+        <TabsContent value="details">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <div className="rounded-[20px] border border-outline-low overflow-hidden divide-y divide-outline-low shadow-[0_1px_2px_rgba(0,0,0,0.04),0_18px_40px_-28px_rgba(0,0,0,0.15)] bg-surface-high">
+                <DishFormFields showActiveToggle />
               </div>
+              <FormStickyFooter
+                cancelHref="/dishes"
+                isPending={updateDish.isPending}
+                saveLabel="Save Changes"
+              />
+            </form>
+          </Form>
+        </TabsContent>
 
-              {recipeRows.length === 0 && (
-                <p className="text-sm text-on-surface-low py-4 text-center">
-                  No recipe yet. Add ingredients below.
-                </p>
-              )}
+        {/* ── Recipe Tab ── */}
+        <TabsContent value="recipe">
+          <div className="rounded-[20px] border border-outline-low overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_18px_40px_-28px_rgba(0,0,0,0.15)] bg-surface-high p-[30px] space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-on-surface-medium">
+                Quantities are per 100 guests.
+                {recipe && (
+                  <span className="ml-2 font-medium text-on-surface">
+                    Recipe cost: ₹{recipe.recipe_cost_per_plate.toFixed(2)}/plate
+                  </span>
+                )}
+              </p>
+            </div>
 
-              <div className="space-y-2">
-                {recipeRows.map((row, index) => (
-                  <div
-                    key={index}
-                    className="grid grid-cols-[1fr_120px_120px_40px] gap-2 items-center"
+            {recipeRows.length === 0 && (
+              <p className="text-sm text-on-surface-low py-4 text-center">
+                No recipe yet. Add ingredients below.
+              </p>
+            )}
+
+            <div className="space-y-2">
+              {recipeRows.map((row, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-[1fr_120px_120px_40px] gap-2 items-center"
+                >
+                  <Select
+                    value={row.ingredient_id}
+                    onValueChange={(val) => val && updateRecipeRow(index, "ingredient_id", val)}
                   >
-                    <Select
-                      value={row.ingredient_id}
-                      onValueChange={(val) => val && updateRecipeRow(index, "ingredient_id", val)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select ingredient" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {allIngredients.map((ing) => (
-                          <SelectItem key={ing.id} value={ing.id}>
-                            {ing.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="Qty"
-                      value={row.qty_per_100_guests}
-                      onChange={(e) => updateRecipeRow(index, "qty_per_100_guests", e.target.value)}
-                    />
-                    <Input
-                      placeholder="Unit"
-                      value={row.unit}
-                      onChange={(e) => updateRecipeRow(index, "unit", e.target.value)}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => removeRecipeRow(index)}
-                    >
-                      <FiTrash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-
-              <Button type="button" variant="outline" size="sm" onClick={addRecipeRow}>
-                <FiPlus className="h-4 w-4 mr-1" /> Add Ingredient
-              </Button>
-
-
-              <div className="flex justify-end gap-2 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => clearRecipe.mutate(undefined, {
-                    onSuccess: () => toast.success("Recipe cleared."),
-                    onError: () => toast.error("Failed to clear recipe."),
-                  })}
-                  disabled={clearRecipe.isPending || recipeRows.length === 0}
-                >
-                  {clearRecipe.isPending ? "Clearing…" : "Clear Recipe"}
-                </Button>
-                <Button
-                  type="button"
-                  onClick={onSaveRecipe}
-                  disabled={replaceRecipe.isPending}
-                >
-                  {replaceRecipe.isPending ? (
-                    <><FiLoader className="h-4 w-4 mr-1 animate-spin" /> Saving…</>
-                  ) : (
-                    "Save Recipe"
-                  )}
-                </Button>
-              </div>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select ingredient" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allIngredients.map((ing) => (
+                        <SelectItem key={ing.id} value={ing.id}>
+                          {ing.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="Qty"
+                    value={row.qty_per_100_guests}
+                    onChange={(e) => updateRecipeRow(index, "qty_per_100_guests", e.target.value)}
+                  />
+                  <Input
+                    placeholder="Unit"
+                    value={row.unit}
+                    onChange={(e) => updateRecipeRow(index, "unit", e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => removeRecipeRow(index)}
+                  >
+                    <FiTrash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
             </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
+
+            <Button type="button" variant="outline" size="sm" onClick={addRecipeRow}>
+              <FiPlus className="h-4 w-4 mr-1" /> Add Ingredient
+            </Button>
+          </div>
+
+          <div
+            className="sticky bottom-0 border-t border-outline-low px-8 py-4 mt-0"
+            style={{
+              background: "color-mix(in srgb, var(--surface), transparent 12%)",
+              backdropFilter: "blur(12px)",
+            }}
+          >
+            <div className="max-w-[880px] mx-auto flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => clearRecipe.mutate(undefined, {
+                  onSuccess: () => toast.success("Recipe cleared."),
+                  onError: () => toast.error("Failed to clear recipe."),
+                })}
+                disabled={clearRecipe.isPending || recipeRows.length === 0}
+                className="inline-flex items-center justify-center h-[44px] px-5 rounded-[11px] text-sm font-semibold border border-outline text-on-surface-medium hover:bg-surface-high hover:text-on-surface transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {clearRecipe.isPending ? "Clearing…" : "Clear Recipe"}
+              </button>
+              <button
+                type="button"
+                onClick={onSaveRecipe}
+                disabled={replaceRecipe.isPending}
+                className="inline-flex items-center justify-center h-[44px] px-6 rounded-[11px] text-sm font-bold transition-all disabled:opacity-60 disabled:cursor-not-allowed hover:-translate-y-px"
+                style={{
+                  background:
+                    "linear-gradient(180deg, color-mix(in oklab, var(--secondary), #fff 12%), var(--secondary))",
+                  color: "var(--secondary-foreground)",
+                  boxShadow: "0 8px 22px -10px var(--secondary)",
+                }}
+              >
+                {replaceRecipe.isPending ? (
+                  <><FiLoader className="h-4 w-4 mr-1 animate-spin" /> Saving…</>
+                ) : (
+                  "Save Recipe"
+                )}
+              </button>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </FormPageShell>
   );
 }

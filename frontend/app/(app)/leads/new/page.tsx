@@ -3,13 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 import { format } from "date-fns";
-import { ArrowLeft } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { useCreateLead } from "@/lib/leads-api";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
+import { FormPageShell, FormStickyFooter } from "@/components/layout/FormPageShell";
 import {
   leadSchema,
   type LeadFormValues,
@@ -23,26 +22,12 @@ export default function NewLeadPage() {
   const form = useForm<LeadFormValues>({
     resolver: zodResolver(leadSchema),
     defaultValues: {
-      name: "",
-      phone: "",
-      email: "",
-      event_type: "",
-      approx_date: undefined,
-      approx_guest_count: "",
-      source: "",
-      notes: "",
-      budget: "",
-      budget_per_person: "",
-      ceremony_type: "",
-      food_preference: "",
-      service_style: "",
-      venue_type: "",
-      meal_type: "",
-      tentative_venue: "",
-      preferred_contact_time: "",
-      dietary_notes: "",
-      follow_up_date: undefined,
-      number_of_events: "",
+      name: "", phone: "", email: "", event_type: "",
+      approx_date: undefined, approx_guest_count: "", source: "",
+      notes: "", budget: "", budget_per_person: "", ceremony_type: "",
+      food_preference: "", service_style: "", venue_type: "", meal_type: "",
+      tentative_venue: "", preferred_contact_time: "", dietary_notes: "",
+      follow_up_date: undefined, number_of_events: "",
     },
   });
 
@@ -78,39 +63,25 @@ export default function NewLeadPage() {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <button
-        type="button"
-        onClick={() => router.push("/leads")}
-        className="inline-flex items-center gap-1.5 text-sm text-on-surface-medium hover:text-on-surface mb-8 transition-colors"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Leads
-      </button>
-
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-on-surface">New Lead</h1>
-        <p className="text-sm text-on-surface-medium mt-1">Capture a new enquiry or prospect.</p>
-      </div>
-
-      <div className="rounded-xl border border-outline-low bg-surface-high overflow-hidden">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <div className="p-6">
-              <LeadFormFields />
-            </div>
-
-            <div className="flex justify-end gap-2 px-6 py-4 bg-surface border-t border-outline-low">
-              <Button type="button" variant="outline" onClick={() => router.push("/leads")}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={createLead.isPending}>
-                {createLead.isPending ? "Saving…" : "Save Lead"}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </div>
-    </div>
+    <FormPageShell
+      backHref="/leads"
+      backLabel="Back to Leads"
+      icon={<TrendingUp className="h-5 w-5" />}
+      title="New Lead"
+      subtitle="Capture a new enquiry or prospect."
+    >
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <div className="rounded-[20px] border border-outline-low overflow-hidden divide-y divide-outline-low shadow-[0_1px_2px_rgba(0,0,0,0.04),0_18px_40px_-28px_rgba(0,0,0,0.15)] bg-surface-high">
+            <LeadFormFields />
+          </div>
+          <FormStickyFooter
+            cancelHref="/leads"
+            isPending={createLead.isPending}
+            saveLabel="Save Lead"
+          />
+        </form>
+      </Form>
+    </FormPageShell>
   );
 }

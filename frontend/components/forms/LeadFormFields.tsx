@@ -12,7 +12,6 @@ import {
   FormTextarea,
   FormDatePicker,
   SectionLabel,
-  SectionDivider,
 } from "@/components/ui/form-fields"
 
 const STATUS_OPTIONS = [
@@ -59,10 +58,10 @@ interface LeadFormFieldsProps {
 
 export function LeadFormFields({ showStatusField = false }: LeadFormFieldsProps) {
   return (
-    <div className="space-y-0">
-      {/* Contact */}
-      <div className="space-y-4">
-        <SectionLabel>Contact</SectionLabel>
+    <>
+      {/* 1 · Contact */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={1}>Contact</SectionLabel>
         <div className="grid grid-cols-2 gap-4">
           <FormInput name="name" label="Name *" placeholder="Contact name" />
           <FormInput name="phone" label="Phone *" placeholder="Phone number" />
@@ -77,11 +76,9 @@ export function LeadFormFields({ showStatusField = false }: LeadFormFieldsProps)
         )}
       </div>
 
-      <SectionDivider />
-
-      {/* Event Details */}
-      <div className="space-y-4">
-        <SectionLabel>Event Details</SectionLabel>
+      {/* 2 · Event Details */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={2}>Event Details</SectionLabel>
         <div className="grid grid-cols-2 gap-4">
           <FormInput name="event_type" label="Event Type *" placeholder="e.g. Wedding, Birthday" />
           <FormSelect name="ceremony_type" label="Ceremony Type" placeholder="Select ceremony" options={CEREMONY_TYPE_OPTIONS} />
@@ -93,11 +90,9 @@ export function LeadFormFields({ showStatusField = false }: LeadFormFieldsProps)
         <FormInput name="number_of_events" label="No. of Events" type="number" placeholder="1" />
       </div>
 
-      <SectionDivider />
-
-      {/* Catering Preferences */}
-      <div className="space-y-4">
-        <SectionLabel>Catering Preferences</SectionLabel>
+      {/* 3 · Catering Preferences */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={3}>Catering Preferences</SectionLabel>
         <div className="grid grid-cols-2 gap-4">
           <FormSelect name="food_preference" label="Food Preference" placeholder="Veg / Non-veg" options={FOOD_PREFERENCE_OPTIONS} />
           <FormSelect name="service_style" label="Service Style" placeholder="Buffet / Plated…" options={SERVICE_STYLE_OPTIONS} />
@@ -105,22 +100,18 @@ export function LeadFormFields({ showStatusField = false }: LeadFormFieldsProps)
         <FormInput name="meal_type" label="Meal Type" placeholder="e.g. Lunch, Dinner" />
       </div>
 
-      <SectionDivider />
-
-      {/* Budget */}
-      <div className="space-y-4">
-        <SectionLabel>Budget</SectionLabel>
+      {/* 4 · Budget */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={4}>Budget</SectionLabel>
         <div className="grid grid-cols-2 gap-4">
           <FormInput name="budget" label="Budget (₹)" type="number" placeholder="Total budget" />
           <FormInput name="budget_per_person" label="Per Person (₹)" type="number" placeholder="Per head" />
         </div>
       </div>
 
-      <SectionDivider />
-
-      {/* Venue & Logistics */}
-      <div className="space-y-4">
-        <SectionLabel>Venue & Logistics</SectionLabel>
+      {/* 5 · Venue & Logistics */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={5}>Venue & Logistics</SectionLabel>
         <div className="grid grid-cols-2 gap-4">
           <FormInput name="tentative_venue" label="Tentative Venue" placeholder="Venue name or area" />
           <FormInput name="venue_type" label="Venue Type" placeholder="e.g. Banquet hall, Outdoor" />
@@ -132,14 +123,12 @@ export function LeadFormFields({ showStatusField = false }: LeadFormFieldsProps)
         <FormDatePicker name="follow_up_date" label="Follow-up Date" />
       </div>
 
-      <SectionDivider />
-
-      {/* Notes */}
-      <div className="space-y-4">
-        <SectionLabel>Notes</SectionLabel>
+      {/* 6 · Notes */}
+      <div className="space-y-4 px-[30px] py-[26px]">
+        <SectionLabel number={6}>Notes</SectionLabel>
         <FormInput name="dietary_notes" label="Dietary Notes" placeholder="Any dietary requirements" />
         <FormTextarea name="notes" label="Notes" placeholder="Any additional notes…" rows={3} />
       </div>
-    </div>
+    </>
   )
 }
