@@ -122,3 +122,39 @@ export interface Invoice {
   created_at: string;
   updated_at: string;
 }
+
+export interface ReportHeaderConfig {
+  logo_alignment: "left" | "center" | "right";
+  show_address: boolean;
+  show_phone: boolean;
+  show_email: boolean;
+  show_tagline: boolean;
+}
+
+export interface StorefrontSection {
+  type: "hero" | "dish_grid" | "about" | "contact";
+  enabled: boolean;
+  order: number;
+  config: Record<string, unknown>;
+}
+
+export interface Organisation {
+  name: string;
+  slug: string;
+  logo_url: string | null;
+  banner_url: string | null;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  tagline: string | null;
+  primary: string;
+  on_primary: string;
+  primary_container: string;
+  on_primary_container: string;
+  secondary: string;
+  on_secondary: string;
+  secondary_container: string;
+  on_secondary_container: string;
+  report_header: ReportHeaderConfig;
+  storefront_sections: StorefrontSection[];
+}

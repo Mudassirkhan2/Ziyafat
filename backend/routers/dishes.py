@@ -1,13 +1,14 @@
 import asyncio
 from datetime import datetime, timezone
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from dependencies import get_current_user, require_role
 from models.dish import Dish
 from models.organisation import Organisation
 from models.user import User, UserRole
+from services.cloudinary_service import upload_image
 from services.pdf_service import render_pdf
 
 
@@ -199,9 +200,18 @@ async def delete_dish(
     await dish.save()
 
 
-@router.post("/{dish_id}/image", status_code=status.HTTP_501_NOT_IMPLEMENTED)
+@router.post("/{dish_id}/image", response_model=DishResponse)
 async def upload_dish_image(
     dish_id: str,
+    file: UploadFile = File(...),
     current_user: User = Depends(require_role(UserRole.owner, UserRole.manager)),
 ):
-    raise HTTPException(status_code=501, detail="Image upload available in Plan 5")
+    dish = await Dish.get(dish_id)
+    if not dish:
+        raise HTTPException(status_code=404, detail="Dish not found")
+    file_bytes = await file.read()
+    url = await asyncio.to_thread(upload_image, file_bytes, "ziyafat/dishes", dish_id)
+    dish.image_url = url
+    dish.updated_at = datetime.now(timezone.utc)
+    await dish.save()
+    return _dish_response(dish)
