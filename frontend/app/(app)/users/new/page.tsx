@@ -6,24 +6,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { useCreateUser } from "@/lib/users-api";
+import { toast } from "sonner";
 import type { UserRole } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Form } from "@/components/ui/form";
+import { FormInput, FormSelect } from "@/components/ui/form-fields";
 
 const ROLES: { value: UserRole; label: string }[] = [
   { value: "owner", label: "Owner" },
@@ -57,7 +44,8 @@ export default function NewUserPage() {
 
   function onSubmit(values: FormValues) {
     createUser.mutate(values, {
-      onSuccess: () => router.push("/users"),
+      onSuccess: () => { toast.success("User created."); router.push("/users"); },
+      onError: () => toast.error("Failed to create user. Please try again."),
     });
   }
 
@@ -77,85 +65,13 @@ export default function NewUserPage() {
         <div className="rounded-lg border border-outline bg-surface-high p-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Full name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email *</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="user@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password *</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="Min. 8 characters" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Role *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {ROLES.map((r) => (
-                          <SelectItem key={r.value} value={r.value}>
-                            {r.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {createUser.isError && (
-                <p className="text-sm text-destructive">
-                  Failed to create user. Please try again.
-                </p>
-              )}
+              <FormInput name="name" label="Name *" placeholder="Full name" />
+              <FormInput name="email" label="Email *" type="email" placeholder="user@example.com" />
+              <FormInput name="password" label="Password *" type="password" placeholder="Min. 8 characters" />
+              <FormSelect name="role" label="Role *" placeholder="Select role" options={ROLES} />
 
               <div className="flex justify-end gap-2 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.push("/users")}
-                >
+                <Button type="button" variant="outline" onClick={() => router.push("/users")}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={createUser.isPending}>

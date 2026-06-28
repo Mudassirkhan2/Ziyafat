@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 
 import { useDish, useUpdateDish } from "@/lib/dishes-api";
 import {
@@ -13,24 +12,11 @@ import {
   useReplaceDishRecipe,
   useClearDishRecipe,
 } from "@/lib/ingredients-api";
-import {
-  DISH_COURSE_OPTIONS,
-  CUISINE_TYPE_OPTIONS,
-} from "@/lib/constants";
 
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -39,29 +25,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FiPlus, FiTrash2, FiLoader } from "react-icons/fi";
-
-// ---------------------------------------------------------------------------
-// Details schema
-// ---------------------------------------------------------------------------
-
-const schema = z.object({
-  name: z.string().min(1, "Name is required"),
-  category: z.string().min(1, "Category is required"),
-  description: z.string().optional(),
-  per_plate_cost: z.string().min(1, "Cost is required"),
-  selling_price: z.string().min(1, "Selling price is required"),
-  is_veg: z.boolean(),
-  is_active: z.boolean(),
-  course: z.string().optional(),
-  cuisine_type: z.string().optional(),
-  portion_size: z.string().optional(),
-  minimum_order_quantity: z.string().optional(),
-  preparation_time_minutes: z.string().optional(),
-  notes_for_kitchen: z.string().optional(),
-  is_available_for_storefront: z.boolean(),
-});
-
-type FormValues = z.infer<typeof schema>;
+import {
+  dishEditSchema,
+  type DishEditValues,
+  DishFormFields,
+} from "@/components/forms/DishFormFields";
 
 // ---------------------------------------------------------------------------
 // Recipe row
@@ -99,8 +67,8 @@ export default function EditDishPage() {
 
   const [recipeRows, setRecipeRows] = useState<RecipeRow[]>([]);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<DishEditValues>({
+    resolver: zodResolver(dishEditSchema),
     defaultValues: {
       name: "",
       category: "",
@@ -153,7 +121,7 @@ export default function EditDishPage() {
     }
   }, [recipe]);
 
-  function onSubmit(values: FormValues) {
+  function onSubmit(values: DishEditValues) {
     updateDish.mutate(
       {
         name: values.name,
@@ -264,197 +232,7 @@ export default function EditDishPage() {
             <div className="rounded-lg border border-outline bg-surface-high p-6">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Name *</FormLabel>
-                          <FormControl><Input placeholder="Dish name" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="category"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category *</FormLabel>
-                          <FormControl><Input placeholder="e.g. Biryani, Starters" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="course"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Course</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger><SelectValue placeholder="Select course" /></SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {DISH_COURSE_OPTIONS.map((opt) => (
-                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="cuisine_type"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Cuisine</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger><SelectValue placeholder="Select cuisine" /></SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {CUISINE_TYPE_OPTIONS.map((opt) => (
-                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="per_plate_cost"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Cost per Plate (₹) *</FormLabel>
-                          <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="selling_price"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Selling Price (₹) *</FormLabel>
-                          <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="portion_size"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Portion Size</FormLabel>
-                          <FormControl><Input placeholder="e.g. 250g" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="minimum_order_quantity"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Min. Order Qty</FormLabel>
-                          <FormControl><Input type="number" placeholder="Min plates" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="preparation_time_minutes"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Prep Time (mins)</FormLabel>
-                          <FormControl><Input type="number" placeholder="Minutes" {...field} /></FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl><Textarea placeholder="Dish description" rows={2} {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="notes_for_kitchen"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Kitchen Notes</FormLabel>
-                        <FormControl><Textarea placeholder="Preparation notes for kitchen staff" rows={2} {...field} /></FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="flex gap-6">
-                    <FormField
-                      control={form.control}
-                      name="is_veg"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center gap-2">
-                          <FormControl>
-                            <Switch checked={field.value} onCheckedChange={field.onChange} />
-                          </FormControl>
-                          <FormLabel className="!mt-0">Vegetarian</FormLabel>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="is_active"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center gap-2">
-                          <FormControl>
-                            <Switch checked={field.value} onCheckedChange={field.onChange} />
-                          </FormControl>
-                          <FormLabel className="!mt-0">Active</FormLabel>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="is_available_for_storefront"
-                      render={({ field }) => (
-                        <FormItem className="flex items-center gap-2">
-                          <FormControl>
-                            <Switch checked={field.value} onCheckedChange={field.onChange} />
-                          </FormControl>
-                          <FormLabel className="!mt-0">Show on Storefront</FormLabel>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  <DishFormFields showActiveToggle />
 
                   {updateDish.isError && (
                     <p className="text-sm text-destructive">Failed to save dish. Please try again.</p>

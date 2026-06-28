@@ -1,0 +1,80 @@
+.fieldWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: #9bb1a5;
+}
+
+.inputWrap {
+  position: relative;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9bb1a5;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  padding: 13px 14px 13px 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.04);
+  color: #eef3ee;
+  font-family: inherit;
+  font-size: 15px;
+  box-sizing: border-box;
+  transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
+  -webkit-appearance: none;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #74d6cf;
+  box-shadow: 0 0 0 3px rgba(14, 110, 110, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.input::placeholder {
+  color: #9bb1a5;
+  opacity: 0.7;
+}
+
+.inputWithToggle {
+  padding-right: 44px;
+}
+
+.inputToggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #9bb1a5;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.inputToggle:hover {
+  color: #eef3ee;
+}
+
+.fieldError {
+  font-size: 12px;
+  color: #f87171;
+}

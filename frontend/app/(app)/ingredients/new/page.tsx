@@ -3,60 +3,22 @@
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 
 import { useCreateIngredient } from "@/lib/ingredients-api";
-import { INGREDIENT_CATEGORY_OPTIONS } from "@/lib/constants";
-
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
+import { Form } from "@/components/ui/form";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-const UNITS = ["kg", "g", "L", "ml", "pcs", "dozen", "box", "bag"];
-
-const schema = z.object({
-  name: z.string().min(1, "Name is required"),
-  base_unit: z.string().min(1, "Unit is required"),
-  cost_per_unit: z.string().min(1, "Cost is required"),
-  supplier: z.string().optional(),
-  stock_on_hand: z.string().optional(),
-  reorder_threshold: z.string().optional(),
-  category: z.string().optional(),
-  yield_percentage: z.string().optional(),
-  purchase_unit: z.string().optional(),
-  unit_conversion_factor: z.string().optional(),
-  allergen_flag: z.boolean(),
-  waste_percentage: z.string().optional(),
-  storage_location: z.string().optional(),
-  shelf_life_days: z.string().optional(),
-  par_level: z.string().optional(),
-  notes: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof schema>;
+  ingredientCreateSchema,
+  type IngredientCreateValues,
+  IngredientFormFields,
+} from "@/components/forms/IngredientFormFields";
 
 export default function NewIngredientPage() {
   const router = useRouter();
   const createIngredient = useCreateIngredient();
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(schema),
+  const form = useForm<IngredientCreateValues>({
+    resolver: zodResolver(ingredientCreateSchema),
     defaultValues: {
       name: "", base_unit: "", cost_per_unit: "", supplier: "",
       stock_on_hand: "0", reorder_threshold: "0", category: "",
@@ -66,7 +28,7 @@ export default function NewIngredientPage() {
     },
   });
 
-  function onSubmit(values: FormValues) {
+  function onSubmit(values: IngredientCreateValues) {
     createIngredient.mutate(
       {
         name: values.name,
@@ -108,207 +70,7 @@ export default function NewIngredientPage() {
         <div className="rounded-lg border border-outline bg-surface-high p-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name *</FormLabel>
-                      <FormControl><Input placeholder="Ingredient name" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {INGREDIENT_CATEGORY_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="base_unit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Base Unit *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger><SelectValue placeholder="Unit" /></SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {UNITS.map((u) => (
-                            <SelectItem key={u} value={u}>{u}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="cost_per_unit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cost per Unit (₹) *</FormLabel>
-                      <FormControl><Input type="number" step="0.01" placeholder="0.00" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="purchase_unit"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Purchase Unit</FormLabel>
-                      <FormControl><Input placeholder="e.g. 50kg bag" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="stock_on_hand"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Stock on Hand</FormLabel>
-                      <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="reorder_threshold"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Reorder Threshold</FormLabel>
-                      <FormControl><Input type="number" step="0.01" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="yield_percentage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Yield (%)</FormLabel>
-                      <FormControl><Input type="number" step="0.1" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="waste_percentage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Waste (%)</FormLabel>
-                      <FormControl><Input type="number" step="0.1" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="shelf_life_days"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Shelf Life (days)</FormLabel>
-                      <FormControl><Input type="number" placeholder="Days" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="supplier"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Supplier</FormLabel>
-                      <FormControl><Input placeholder="Supplier name" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="storage_location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Storage Location</FormLabel>
-                      <FormControl><Input placeholder="e.g. Cold storage A" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="par_level"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>PAR Level</FormLabel>
-                    <FormControl><Input type="number" step="0.01" placeholder="Periodic Automatic Replenishment level" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="allergen_flag"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-2">
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                    <FormLabel className="!mt-0">Contains Allergen</FormLabel>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Notes</FormLabel>
-                    <FormControl><Textarea placeholder="Any additional notes" rows={2} {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <IngredientFormFields />
 
               {createIngredient.isError && (
                 <p className="text-sm text-red-400">Failed to create ingredient. Please try again.</p>

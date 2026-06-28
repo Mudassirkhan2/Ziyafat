@@ -7,24 +7,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { useUser, useUpdateUser, useDeactivateUser } from "@/lib/users-api";
+import { toast } from "sonner";
 import type { UserRole } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Form } from "@/components/ui/form";
+import { FormInput, FormSelect } from "@/components/ui/form-fields";
 import {
   Dialog,
   DialogContent,
@@ -75,16 +62,19 @@ export default function EditUserPage({
 
   function onSubmit(values: FormValues) {
     updateUser.mutate(values, {
-      onSuccess: () => router.push("/users"),
+      onSuccess: () => { toast.success("User updated."); router.push("/users"); },
+      onError: () => toast.error("Failed to save changes. Please try again."),
     });
   }
 
   function handleDeactivate() {
     deactivateUser.mutate(id, {
       onSuccess: () => {
+        toast.success("User deactivated.");
         setDeactivateOpen(false);
         router.push("/users");
       },
+      onError: () => toast.error("Failed to deactivate user. Please try again."),
     });
   }
 
@@ -131,50 +121,8 @@ export default function EditUserPage({
         <div className="rounded-lg border border-outline bg-surface-high p-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name *</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Role *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {ROLES.map((r) => (
-                          <SelectItem key={r.value} value={r.value}>
-                            {r.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {updateUser.isError && (
-                <p className="text-sm text-destructive">
-                  Failed to save changes. Please try again.
-                </p>
-              )}
+              <FormInput name="name" label="Name *" />
+              <FormSelect name="role" label="Role *" options={ROLES} />
 
               <div className="flex items-center justify-between pt-2">
                 <Button
@@ -189,11 +137,7 @@ export default function EditUserPage({
                 </Button>
 
                 <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => router.push("/users")}
-                  >
+                  <Button type="button" variant="outline" onClick={() => router.push("/users")}>
                     Cancel
                   </Button>
                   <Button type="submit" disabled={updateUser.isPending}>
