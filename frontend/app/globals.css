@@ -47,26 +47,26 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* ── Surfaces (M3-style naming) ── */
-  --color-surface-lowest:   #0a0a0a;
-  --color-surface-low:      #0d0d0d;
-  --color-surface:          #171717;
-  --color-surface-high:     #222222;
-  --color-surface-highest:  #383838;
-  --color-surface-dim:      #060606;
-  --color-surface-bright:   #2d2d2d;
+  /* ── Surfaces — var() refs so utilities are runtime-switchable ── */
+  --color-surface-lowest:   var(--surface-lowest);
+  --color-surface-low:      var(--surface-low);
+  --color-surface:          var(--surface);
+  --color-surface-high:     var(--surface-high);
+  --color-surface-highest:  var(--surface-highest);
+  --color-surface-dim:      var(--surface-dim);
+  --color-surface-bright:   var(--surface-bright);
 
   /* ── On Surface / Text ── */
-  --color-on-surface:         #f5f5f5;
-  --color-on-surface-medium:  #a3a3a3;
-  --color-on-surface-low:     #737373;
-  --color-on-surface-lowest:  #404040;
+  --color-on-surface:         var(--on-surface);
+  --color-on-surface-medium:  var(--on-surface-medium);
+  --color-on-surface-low:     var(--on-surface-low);
+  --color-on-surface-lowest:  var(--on-surface-lowest);
 
   /* ── Outline / Borders ── */
-  --color-outline-lowest:  #1a1a1a;
-  --color-outline-low:     #262626;
-  --color-outline:         #404040;
-  --color-outline-high:    #525252;
+  --color-outline-lowest:  var(--outline-lowest);
+  --color-outline-low:     var(--outline-low);
+  --color-outline:         var(--outline);
+  --color-outline-high:    var(--outline-high);
 
   /* ── Ziyafat brand (landing page only, never changes) ── */
   --color-brand-surface:    #1c1917;
@@ -115,6 +115,48 @@
   --sidebar-ring:         var(--color-primary);
 }
 
+/* ── DLS raw tokens: Light (Cool Neutral) ── */
+:root {
+  --surface-lowest:  #f0f0f0;
+  --surface-low:     #f5f5f5;
+  --surface:         #fafafa;
+  --surface-high:    #ffffff;
+  --surface-highest: #ffffff;
+  --surface-dim:     #e5e5e5;
+  --surface-bright:  #ffffff;
+
+  --on-surface:        #171717;
+  --on-surface-medium: #525252;
+  --on-surface-low:    #737373;
+  --on-surface-lowest: #a3a3a3;
+
+  --outline-lowest: #f0f0f0;
+  --outline-low:    #e5e5e5;
+  --outline:        #d4d4d4;
+  --outline-high:   #a3a3a3;
+}
+
+/* ── DLS raw tokens: Dark ── */
+html.dark {
+  --surface-lowest:  #0a0a0a;
+  --surface-low:     #0d0d0d;
+  --surface:         #171717;
+  --surface-high:    #222222;
+  --surface-highest: #383838;
+  --surface-dim:     #060606;
+  --surface-bright:  #2d2d2d;
+
+  --on-surface:        #f5f5f5;
+  --on-surface-medium: #a3a3a3;
+  --on-surface-low:    #737373;
+  --on-surface-lowest: #404040;
+
+  --outline-lowest: #1a1a1a;
+  --outline-low:    #262626;
+  --outline:        #404040;
+  --outline-high:   #525252;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -135,3 +177,24 @@
 }
 
 .print-only { display: none; }
+
+/* ── View Transitions: slide-up theme switch ── */
+::view-transition-old(root) {
+  animation: 250ms ease-in forwards vt-slide-out;
+}
+::view-transition-new(root) {
+  animation: 380ms ease-out forwards vt-slide-in;
+}
+
+@keyframes vt-slide-out {
+  to { opacity: 0; transform: translateY(-6%); }
+}
+@keyframes vt-slide-in {
+  from { transform: translateY(100vh); }
+  to   { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation: none; }
+}

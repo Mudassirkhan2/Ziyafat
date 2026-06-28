@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import {
   FiHome,
   FiTrendingUp,
@@ -20,14 +21,13 @@ import {
 type OrgInfo = { name: string; logo_url: string | null };
 
 const NAV_ITEMS = [
-  { href: "/dashboard",   label: "Dashboard",   icon: FiHome       },
-  { href: "/leads",       label: "Leads",       icon: FiTrendingUp },
-  { href: "/customers",   label: "Customers",   icon: FiUsers      },
-  { href: "/bookings",    label: "Bookings",    icon: FiCalendar   },
-  { href: "/dishes",      label: "Dishes",      icon: FiBook       },
-  { href: "/ingredients", label: "Ingredients", icon: FiBook       },
-  { href: "/quotations",  label: "Quotations",  icon: FiFileText   },
-  { href: "/invoices",    label: "Invoices",    icon: FiDollarSign },
+  { href: "/dashboard",  label: "Dashboard",  icon: FiHome       },
+  { href: "/leads",      label: "Leads",      icon: FiTrendingUp },
+  { href: "/customers",  label: "Customers",  icon: FiUsers      },
+  { href: "/bookings",   label: "Bookings",   icon: FiCalendar   },
+  { href: "/dishes",     label: "Dishes",     icon: FiBook       },
+  { href: "/quotations", label: "Quotations", icon: FiFileText   },
+  { href: "/invoices",   label: "Invoices",   icon: FiDollarSign },
 ];
 
 const BOTTOM_NAV = [
@@ -81,6 +81,7 @@ export function Sidebar() {
       </nav>
 
       <div className="p-2 border-t border-outline-lowest space-y-0.5">
+        <ThemeToggle />
         {BOTTOM_NAV.map((item) => {
           const Icon = item.icon;
           const active = pathname === item.href || pathname.startsWith(item.href + "/");
