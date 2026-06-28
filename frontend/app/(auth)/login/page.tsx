@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -103,6 +104,12 @@ export default function LoginPage() {
             </Button>
           </form>
         </Form>
+        <p className="mt-4 text-center text-sm text-on-surface-low">
+          First time?{" "}
+          <Link href="/setup" className="text-primary hover:underline">
+            Set up your account
+          </Link>
+        </p>
       </CardContent>
     </Card>
   );

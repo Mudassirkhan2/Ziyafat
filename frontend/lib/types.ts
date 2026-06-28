@@ -64,3 +64,61 @@ export interface BookingEvent {
   created_at: string;
   updated_at: string;
 }
+
+export type QuotationStatus = "draft" | "sent" | "approved" | "rejected" | "superseded";
+export type InvoiceStatus = "draft" | "sent" | "paid";
+
+export interface QuotationLineItem {
+  dish_id: string | null;
+  label: string;
+  qty_per_plate: number;
+  guest_count: number;
+  unit_price: number;
+  total: number;
+}
+
+export interface Dish {
+  id: string;
+  name: string;
+  category: string;
+  description: string | null;
+  per_plate_cost: number;
+  selling_price: number;
+  is_veg: boolean;
+  is_active: boolean;
+  image_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Quotation {
+  id: string;
+  booking_id: string;
+  event_id: string | null;
+  version: number;
+  status: QuotationStatus;
+  line_items: QuotationLineItem[];
+  subtotal: number;
+  discount: number;
+  total: number;
+  notes: string | null;
+  valid_until: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Invoice {
+  id: string;
+  booking_id: string;
+  quotation_id: string | null;
+  invoice_number: string;
+  status: InvoiceStatus;
+  line_items: QuotationLineItem[];
+  subtotal: number;
+  discount: number;
+  total: number;
+  due_date: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
