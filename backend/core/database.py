@@ -9,11 +9,15 @@ async def init_db() -> None:
     global _client
     from models.user import User
     from models.organisation import Organisation
+    from models.lead import Lead
+    from models.customer import Customer
+    from models.booking import Booking
+    from models.event import Event
 
     _client = AsyncIOMotorClient(settings.mongodb_url)
     await init_beanie(
         database=_client[settings.mongodb_db],
-        document_models=[User, Organisation],
+        document_models=[User, Organisation, Lead, Customer, Booking, Event],
     )
 
 

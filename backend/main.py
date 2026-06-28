@@ -5,6 +5,11 @@ from core.database import init_db, close_db
 from routers.auth import router as auth_router
 from routers.setup import router as setup_router
 from routers.organisation import router as organisation_router
+from routers.users import router as users_router
+from routers.leads import router as leads_router
+from routers.customers import router as customers_router
+from routers.bookings import router as bookings_router
+from routers.events import router as events_router
 
 
 @asynccontextmanager
@@ -28,3 +33,8 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(setup_router)
 app.include_router(organisation_router)
+app.include_router(users_router)
+app.include_router(leads_router)
+app.include_router(customers_router)
+app.include_router(bookings_router)
+app.include_router(events_router)
