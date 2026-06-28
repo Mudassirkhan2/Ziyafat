@@ -1,11 +1,13 @@
+import asyncio
 from datetime import datetime, timezone
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from pydantic import BaseModel
 from dependencies import get_current_user, require_role
 from models.user import User, UserRole
 from core.security import hash_password, verify_password
 from schemas.pagination import PaginatedResponse
+from services.cloudinary_service import upload_image, extract_public_id, delete_image
 
 router = APIRouter(prefix="/api/v1/users", tags=["users"])
 
@@ -106,6 +108,33 @@ async def create_user(
     )
     await user.insert()
     return _user_response(user)
+
+
+@router.post("/me/avatar", response_model=UserResponse)
+async def upload_my_avatar(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+):
+    file_bytes = await file.read()
+    user_id = str(current_user.id)
+    url = await asyncio.to_thread(upload_image, file_bytes, "ziyafat/users", user_id)
+    current_user.avatar_url = url
+    current_user.updated_at = datetime.now(timezone.utc)
+    await current_user.save()
+    return _user_response(current_user)
+
+
+@router.delete("/me/avatar", response_model=UserResponse)
+async def delete_my_avatar(current_user: User = Depends(get_current_user)):
+    if not current_user.avatar_url:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No avatar to remove")
+    public_id = extract_public_id(current_user.avatar_url)
+    if public_id:
+        await asyncio.to_thread(delete_image, public_id)
+    current_user.avatar_url = None
+    current_user.updated_at = datetime.now(timezone.utc)
+    await current_user.save()
+    return _user_response(current_user)
 
 
 @router.get("/{user_id}", response_model=UserResponse)

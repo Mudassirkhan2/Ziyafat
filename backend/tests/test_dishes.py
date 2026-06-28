@@ -225,3 +225,28 @@ async def test_dish_image_requires_file(client: AsyncClient, owner_user: User):
     # endpoint is implemented (no longer a 501 stub).
     response = await client.post(f"/api/v1/dishes/{dish_id}/image")
     assert response.status_code == 422
+
+
+async def test_delete_dish_image_clears_url(client: AsyncClient, owner_user: User):
+    from unittest.mock import patch as mock_patch
+    await login_as(client, "owner@test.com", "Password123!")
+    created = await _create_dish(client, DISH_MAIN)
+    dish_id = created["id"]
+
+    from models.dish import Dish
+    d = await Dish.get(dish_id)
+    d.image_url = "https://res.cloudinary.com/demo/image/upload/v1/ziyafat/dishes/abc123.jpg"
+    await d.save()
+
+    with mock_patch("routers.dishes.delete_image") as mock_del:
+        response = await client.delete(f"/api/v1/dishes/{dish_id}/image")
+    assert response.status_code == 200
+    assert response.json()["image_url"] is None
+    mock_del.assert_called_once_with("ziyafat/dishes/abc123")
+
+
+async def test_delete_dish_image_when_none_returns_400(client: AsyncClient, owner_user: User):
+    await login_as(client, "owner@test.com", "Password123!")
+    created = await _create_dish(client, DISH_MAIN)
+    response = await client.delete(f"/api/v1/dishes/{created['id']}/image")
+    assert response.status_code == 400

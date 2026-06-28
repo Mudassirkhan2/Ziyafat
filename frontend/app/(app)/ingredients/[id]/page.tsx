@@ -136,7 +136,7 @@ export default function EditIngredientPage() {
   if (isError || !ingredient) {
     return (
       <div className="p-6">
-        <p className="text-red-400">Failed to load ingredient.</p>
+        <p className="text-red-600 dark:text-red-400">Failed to load ingredient.</p>
         <Button variant="outline" className="mt-4" onClick={() => router.push("/ingredients")}>
           ← Back to Ingredients
         </Button>

@@ -54,16 +54,26 @@ export function useUploadOrgBanner() {
   });
 }
 
-export function useUploadDishImage(dishId: string) {
+export function useDeleteOrgLogo() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (file: File) => {
-      const fd = new FormData();
-      fd.append("file", file);
-      return api.upload<{ image_url: string }>(`/dishes/${dishId}/image`, fd);
+    mutationFn: () => api.delete<Organisation>("/organisation/logo"),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["org"], data);
+      queryClient.invalidateQueries({ queryKey: ["org-info"] });
+      applyOrgTheme(data);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["dishes"] });
+  });
+}
+
+export function useDeleteOrgBanner() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.delete<Organisation>("/organisation/banner"),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["org"], data);
+      queryClient.invalidateQueries({ queryKey: ["org-info"] });
+      applyOrgTheme(data);
     },
   });
 }

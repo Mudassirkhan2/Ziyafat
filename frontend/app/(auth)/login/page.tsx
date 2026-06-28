@@ -46,11 +46,26 @@ export default function LoginPage() {
     register,
     handleSubmit,
     setError,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
   });
+
+  async function loginAsGuest() {
+    setValue("email", "guest@albaraka.in");
+    setValue("password", "Password@1234");
+    try {
+      await login.mutateAsync({ email: "guest@albaraka.in", password: "Password@1234" });
+      const org = await api.get<{ setup_completed: boolean }>("/organisation");
+      router.push(org.setup_completed ? "/dashboard" : "/setup");
+    } catch (err) {
+      setError("root", {
+        message: err instanceof Error ? err.message : "Login failed",
+      });
+    }
+  }
 
   async function onSubmit(values: LoginValues) {
     try {
@@ -236,6 +251,28 @@ export default function LoginPage() {
                 </>
               )}
             </motion.button>
+
+            <div className={styles.divider}>
+              <span>or</span>
+            </div>
+
+            <motion.button
+              type="button"
+              className={styles.guestBtn}
+              disabled={isPending}
+              onClick={loginAsGuest}
+              whileHover={isPending ? {} : { y: -2 }}
+              whileTap={isPending ? {} : { scale: 0.98 }}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M2 13c0-2.21 2.686-4 6-4s6 1.79 6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              Continue as Guest
+            </motion.button>
+            <p className={styles.guestNote}>
+              Explore the full platform with our demo account — no sign-up required.
+            </p>
           </form>
         </div>
       </div>

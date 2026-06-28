@@ -15,6 +15,13 @@ import {
   LeadFormFields,
 } from "@/components/forms/LeadFormFields";
 
+function guessMealType(): string {
+  const hour = new Date().getHours();
+  if (hour >= 6 && hour < 11) return "breakfast";
+  if (hour >= 11 && hour < 16) return "lunch";
+  return "dinner";
+}
+
 export default function NewLeadPage() {
   const router = useRouter();
   const createLead = useCreateLead();
@@ -25,7 +32,7 @@ export default function NewLeadPage() {
       name: "", phone: "", email: "", event_type: "",
       approx_date: undefined, approx_guest_count: "", source: "",
       notes: "", budget: "", budget_per_person: "", ceremony_type: "",
-      food_preference: "", service_style: "", venue_type: "", meal_type: "",
+      food_preference: "", service_style: "", venue_type: "", meal_type: guessMealType(),
       tentative_venue: "", preferred_contact_time: "", dietary_notes: "",
       follow_up_date: undefined, number_of_events: "",
     },

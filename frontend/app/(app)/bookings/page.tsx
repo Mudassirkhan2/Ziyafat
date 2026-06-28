@@ -12,13 +12,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
-import { FiEye, FiPlus } from "react-icons/fi";
+import { FiPlus } from "react-icons/fi";
 
 const STATUS_COLORS: Record<BookingStatus, string> = {
-  confirmed: "bg-green-900/30 text-green-400 border-green-800",
-  in_progress: "bg-blue-900/30 text-blue-400 border-blue-800",
+  confirmed: "bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
+  in_progress: "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
   completed: "bg-surface-highest text-on-surface-medium border-outline",
-  cancelled: "bg-red-900/30 text-red-400 border-red-800",
+  cancelled: "bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800",
 };
 
 function statusLabel(s: BookingStatus) {
@@ -33,7 +33,7 @@ function formatDate(dateStr: string) {
   });
 }
 
-function getColumns(router: ReturnType<typeof useRouter>): ColumnDef<Booking>[] {
+function getColumns(): ColumnDef<Booking>[] {
   return [
     {
       id: "title",
@@ -72,20 +72,6 @@ function getColumns(router: ReturnType<typeof useRouter>): ColumnDef<Booking>[] 
         <span className="text-on-surface-medium">{formatDate(row.original.created_at)}</span>
       ),
     },
-    {
-      id: "actions",
-      header: "",
-      cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.push(`/bookings/${row.original.id}`)}
-          title="View"
-        >
-          <FiEye className="h-4 w-4" />
-        </Button>
-      ),
-    },
   ];
 }
 
@@ -101,7 +87,10 @@ function BookingsContent() {
     sortDir: ts.sortDir,
   });
 
-  const columns = getColumns(router);
+  const columns = getColumns();
+  function handleRowClick(booking: Booking) {
+    router.push(`/bookings/${booking.id}`);
+  }
 
   return (
     <div className="p-6">
@@ -137,6 +126,7 @@ function BookingsContent() {
         sortBy={ts.sortBy}
         sortDir={ts.sortDir}
         isLoading={isLoading}
+        onRowClick={handleRowClick}
         emptyState={
           <EmptyState
             variant="bookings"

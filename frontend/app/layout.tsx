@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Hanken_Grotesk } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
@@ -20,31 +21,60 @@ const hanken = Hanken_Grotesk({
   display: "swap",
 });
 
+const SITE = "https://getziyafat.vercel.app";
+
 const DESCRIPTION =
-  "One system for leads, quotes, multi-event bookings and branded invoices — built for caterers of every cuisine and scale.";
+  "Free catering management software for leads, bookings, quotations and branded invoices — built for caterers of every cuisine and scale across India.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ziyafat.com"),
+  metadataBase: new URL(SITE),
   applicationName: "Ziyafat",
   title: {
-    default: "Ziyafat — Catering Management",
+    default: "Ziyafat — Free Catering Software for Caterers",
     template: "%s | Ziyafat",
   },
   description: DESCRIPTION,
-  keywords: ["catering", "catering ERP", "catering management", "event catering", "bookings", "invoices", "quotations"],
+  keywords: [
+    "catering software",
+    "free catering software",
+    "catering software india",
+    "catering management software",
+    "catering software for small business",
+    "best catering software",
+    "catering management app",
+    "software for caterers",
+    "software for catering",
+    "catering services software",
+    "catering business software",
+    "catering booking software",
+    "catering event management software",
+    "catering order software",
+    "catering business management software",
+    "catering inventory software",
+    "catering accounting software",
+    "catering scheduling software",
+    "catering software programs",
+    "catering management system",
+    "online catering software",
+    "catering event software",
+    "catering ERP",
+    "catering software hyderabad",
+  ],
   openGraph: {
     type: "website",
     siteName: "Ziyafat",
-    title: "Ziyafat — Catering Management",
+    title: "Ziyafat — Free Catering Software for Caterers",
     description: DESCRIPTION,
     locale: "en_IN",
+    url: SITE,
   },
   twitter: {
-    card: "summary",
-    title: "Ziyafat — Catering Management",
+    card: "summary_large_image",
+    title: "Ziyafat — Free Catering Software for Caterers",
     description: DESCRIPTION,
   },
   robots: { index: true, follow: true },
+  alternates: { canonical: SITE },
 };
 
 export const viewport: Viewport = {
@@ -64,6 +94,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <QueryProvider>{children}</QueryProvider>
           <Toaster richColors position="top-right" />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );

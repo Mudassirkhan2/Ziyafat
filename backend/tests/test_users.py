@@ -93,3 +93,38 @@ async def test_change_own_password(client: AsyncClient, manager_user: User):
     )
     # PATCH /password returns 204 No Content
     assert response.status_code == 204
+
+
+async def test_upload_my_avatar(client: AsyncClient, owner_user: User):
+    from unittest.mock import patch as mock_patch
+    await login_as(client, "owner@test.com", "Password123!")
+    fake_bytes = b"fakeimagebytes"
+    with mock_patch(
+        "routers.users.upload_image",
+        return_value="https://res.cloudinary.com/demo/image/upload/v1/ziyafat/users/test.jpg",
+    ):
+        response = await client.post(
+            "/api/v1/users/me/avatar",
+            files={"file": ("avatar.jpg", fake_bytes, "image/jpeg")},
+        )
+    assert response.status_code == 200
+    assert response.json()["avatar_url"] == "https://res.cloudinary.com/demo/image/upload/v1/ziyafat/users/test.jpg"
+
+
+async def test_delete_my_avatar(client: AsyncClient, owner_user: User):
+    from unittest.mock import patch as mock_patch
+    await login_as(client, "owner@test.com", "Password123!")
+    owner_user.avatar_url = "https://res.cloudinary.com/demo/image/upload/v1/ziyafat/users/abc.jpg"
+    await owner_user.save()
+
+    with mock_patch("routers.users.delete_image") as mock_del:
+        response = await client.delete("/api/v1/users/me/avatar")
+    assert response.status_code == 200
+    assert response.json()["avatar_url"] is None
+    mock_del.assert_called_once_with("ziyafat/users/abc")
+
+
+async def test_delete_my_avatar_when_none_returns_400(client: AsyncClient, owner_user: User):
+    await login_as(client, "owner@test.com", "Password123!")
+    response = await client.delete("/api/v1/users/me/avatar")
+    assert response.status_code == 400

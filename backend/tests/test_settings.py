@@ -18,6 +18,7 @@ async def seed_data():
     org = Organisation(name="Test Caterers", slug="test-caterers")
     await org.insert()
     user = User(
+        org_id=org.id,
         name="Owner",
         email=_OWNER_EMAIL,
         hashed_password=hash_password(_OWNER_PASSWORD),

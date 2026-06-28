@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useOrg, useUpdateOrg, useUploadOrgLogo, useUploadOrgBanner } from "@/lib/organisation-api";
+import { useOrg, useUpdateOrg, useUploadOrgLogo, useUploadOrgBanner, useDeleteOrgLogo, useDeleteOrgBanner } from "@/lib/organisation-api";
 import { toast } from "sonner";
 import { applyOrgTheme } from "@/lib/dls/tokens";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,8 @@ export default function BrandingSettingsPage() {
   const updateOrg = useUpdateOrg();
   const uploadLogo = useUploadOrgLogo();
   const uploadBanner = useUploadOrgBanner();
+  const deleteLogo = useDeleteOrgLogo();
+  const deleteBanner = useDeleteOrgBanner();
 
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -132,10 +134,24 @@ export default function BrandingSettingsPage() {
         {org?.logo_url && (
           <img src={org.logo_url} alt="Logo" className="h-12 object-contain rounded" />
         )}
-        <input ref={logoInputRef} type="file" accept="image/png,image/svg+xml,image/jpeg,image/webp" className="hidden" onChange={handleLogoChange} />
-        <Button variant="outline" onClick={() => logoInputRef.current?.click()} disabled={uploadLogo.isPending}>
-          {uploadLogo.isPending ? "Uploading…" : "Upload Logo"}
-        </Button>
+        <div className="flex gap-2">
+          <input ref={logoInputRef} type="file" accept="image/png,image/svg+xml,image/jpeg,image/webp" className="hidden" onChange={handleLogoChange} />
+          <Button variant="outline" onClick={() => logoInputRef.current?.click()} disabled={uploadLogo.isPending || deleteLogo.isPending}>
+            {uploadLogo.isPending ? "Uploading…" : "Upload Logo"}
+          </Button>
+          {org?.logo_url && (
+            <Button
+              variant="ghost"
+              disabled={uploadLogo.isPending || deleteLogo.isPending}
+              onClick={() => deleteLogo.mutate(undefined, {
+                onSuccess: () => toast.success("Logo removed."),
+                onError: () => toast.error("Failed to remove logo. Try again."),
+              })}
+            >
+              {deleteLogo.isPending ? "Removing…" : "Remove"}
+            </Button>
+          )}
+        </div>
       </section>
 
       {/* Banner */}
@@ -152,10 +168,24 @@ export default function BrandingSettingsPage() {
         {org?.banner_url && (
           <img src={org.banner_url} alt="Banner" className="h-24 w-full object-cover rounded" />
         )}
-        <input ref={bannerInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleBannerChange} />
-        <Button variant="outline" onClick={() => bannerInputRef.current?.click()} disabled={uploadBanner.isPending}>
-          {uploadBanner.isPending ? "Uploading…" : "Upload Banner"}
-        </Button>
+        <div className="flex gap-2">
+          <input ref={bannerInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={handleBannerChange} />
+          <Button variant="outline" onClick={() => bannerInputRef.current?.click()} disabled={uploadBanner.isPending || deleteBanner.isPending}>
+            {uploadBanner.isPending ? "Uploading…" : "Upload Banner"}
+          </Button>
+          {org?.banner_url && (
+            <Button
+              variant="ghost"
+              disabled={uploadBanner.isPending || deleteBanner.isPending}
+              onClick={() => deleteBanner.mutate(undefined, {
+                onSuccess: () => toast.success("Banner removed."),
+                onError: () => toast.error("Failed to remove banner. Try again."),
+              })}
+            >
+              {deleteBanner.isPending ? "Removing…" : "Remove"}
+            </Button>
+          )}
+        </div>
       </section>
 
       {/* DLS Colors */}

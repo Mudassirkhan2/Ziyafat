@@ -116,7 +116,7 @@ export default function EditLeadPage() {
   if (isError || !lead) {
     return (
       <div className="p-6">
-        <p className="text-red-400">Failed to load lead. Please go back and try again.</p>
+        <p className="text-red-600 dark:text-red-400">Failed to load lead. Please go back and try again.</p>
         <Button variant="outline" className="mt-4" onClick={() => router.push("/leads")}>
           ← Back to Leads
         </Button>
@@ -146,7 +146,7 @@ export default function EditLeadPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="border-green-800 text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20"
+                  className="border-green-600 text-green-700 hover:bg-green-50 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-900/20"
                   onClick={handleConvert}
                   disabled={convertLead.isPending}
                 >

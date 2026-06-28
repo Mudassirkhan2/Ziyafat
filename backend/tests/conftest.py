@@ -46,9 +46,17 @@ async def client():
 
 
 @pytest_asyncio.fixture
-async def owner_user():
+async def org():
+    o = Organisation(name="Test Caterers", slug="test-caterers")
+    await o.insert()
+    return o
+
+
+@pytest_asyncio.fixture
+async def owner_user(org):
     from core.security import hash_password
     user = User(
+        org_id=org.id,
         name="Test Owner",
         email="owner@test.com",
         hashed_password=hash_password("Password123!"),
@@ -59,9 +67,10 @@ async def owner_user():
 
 
 @pytest_asyncio.fixture
-async def manager_user():
+async def manager_user(org):
     from core.security import hash_password
     user = User(
+        org_id=org.id,
         name="Test Manager",
         email="manager@test.com",
         hashed_password=hash_password("Password123!"),

@@ -13,16 +13,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
-import { FiEye, FiPlus } from "react-icons/fi";
+import { FiPlus } from "react-icons/fi";
 
 const ALL_STATUSES: LeadStatus[] = ["new", "quoted", "negotiating", "won", "lost"];
 
 const STATUS_COLORS: Record<LeadStatus, string> = {
   new: "border-outline text-on-surface-medium",
-  quoted: "bg-blue-900/30 text-blue-400 border-blue-800",
-  negotiating: "bg-amber-900/30 text-amber-400 border-amber-800",
-  won: "bg-green-900/30 text-green-400 border-green-800",
-  lost: "bg-red-900/30 text-red-400 border-red-800",
+  quoted: "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
+  negotiating: "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800",
+  won: "bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
+  lost: "bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800",
 };
 
 function capitalize(str: string) {
@@ -85,20 +85,6 @@ function getColumns(router: ReturnType<typeof useRouter>): ColumnDef<Lead>[] {
         </Badge>
       ),
     },
-    {
-      id: "actions",
-      header: "",
-      cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.push(`/leads/${row.original.id}`)}
-          title="View"
-        >
-          <FiEye className="h-4 w-4" />
-        </Button>
-      ),
-    },
   ];
 }
 
@@ -117,6 +103,9 @@ function LeadsContent() {
   });
 
   const columns = getColumns(router);
+  function handleRowClick(lead: Lead) {
+    router.push(`/leads/${lead.id}`);
+  }
 
   return (
     <div className="p-4 md:p-6">
@@ -170,6 +159,7 @@ function LeadsContent() {
         sortBy={ts.sortBy}
         sortDir={ts.sortDir}
         isLoading={isLoading}
+        onRowClick={handleRowClick}
         emptyState={
           <EmptyState
             variant="leads"

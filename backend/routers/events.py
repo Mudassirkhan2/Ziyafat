@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime, date, time as time_type, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 from beanie import PydanticObjectId
 from dependencies import get_current_user, require_role
@@ -11,7 +11,7 @@ from models.enums import CeremonyType, ServiceStyle, FoodPreference, EventStatus
 from models.booking import Booking
 from models.user import User, UserRole
 from services.procurement_service import generate_procurement_list
-from services.pdf_service import render_pdf
+from services.pdf_service import render_pdf, WeasyPrintUnavailableError
 
 router = APIRouter(prefix="/api/v1/bookings", tags=["events"])
 
@@ -414,7 +414,10 @@ async def get_event_procurement_pdf(
         "wastage_pct": wastage_pct,
         "total_cost": sum(i.cost for i in items),
     }
-    pdf_bytes = await asyncio.to_thread(render_pdf, "procurement.html", context)
+    try:
+        pdf_bytes = await asyncio.to_thread(render_pdf, "procurement.html", context)
+    except WeasyPrintUnavailableError as e:
+        return HTMLResponse(content=e.html)
     filename = f"procurement-{event.name.replace(' ', '-').lower()}.pdf"
     return StreamingResponse(
         iter([pdf_bytes]),

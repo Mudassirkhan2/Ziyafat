@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { UtensilsCrossed } from "lucide-react";
 
-import { useDish, useUpdateDish } from "@/lib/dishes-api";
+import { useDish, useUpdateDish, useUploadDishImage, useDeleteDishImage } from "@/lib/dishes-api";
 import { toast } from "sonner";
 import {
   useIngredients,
@@ -46,8 +46,12 @@ export default function EditDishPage() {
   const router = useRouter();
   const id = params.id as string;
 
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
   const { data: dish, isLoading, isError } = useDish(id);
   const updateDish = useUpdateDish(id);
+  const uploadImage = useUploadDishImage(id);
+  const deleteImage = useDeleteDishImage(id);
 
   const { data: recipe } = useDishRecipe(id);
   const replaceRecipe = useReplaceDishRecipe(id);
@@ -230,6 +234,65 @@ export default function EditDishPage() {
               />
             </form>
           </Form>
+
+          {/* Dish Image */}
+          <section className="mt-6 rounded-[20px] border border-outline-low p-6 space-y-3 bg-surface-high shadow-[0_1px_2px_rgba(0,0,0,0.04),0_18px_40px_-28px_rgba(0,0,0,0.15)]">
+            <div>
+              <h2 className="text-base font-semibold text-on-surface">Dish Photo</h2>
+              <p className="text-sm text-on-surface-medium mt-0.5">
+                Shown on the public storefront and dish catalog. Upload a clear, appetising photo of the dish.
+              </p>
+              <p className="text-xs text-on-surface-low mt-1">
+                Recommended: <strong>800 × 600 px</strong> · JPEG or PNG · Max 5 MB
+              </p>
+            </div>
+            {dish.image_url && (
+              <img
+                src={dish.image_url}
+                alt={dish.name}
+                className="h-40 w-full max-w-xs object-cover rounded-lg border border-outline-low"
+              />
+            )}
+            <div className="flex gap-2">
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    uploadImage.mutate(file, {
+                      onSuccess: () => toast.success("Photo uploaded."),
+                      onError: () => toast.error("Photo upload failed. Try again."),
+                    });
+                    e.target.value = "";
+                  }
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                disabled={uploadImage.isPending || deleteImage.isPending}
+                onClick={() => imageInputRef.current?.click()}
+              >
+                {uploadImage.isPending ? "Uploading…" : dish.image_url ? "Replace Photo" : "Upload Photo"}
+              </Button>
+              {dish.image_url && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={uploadImage.isPending || deleteImage.isPending}
+                  onClick={() => deleteImage.mutate(undefined, {
+                    onSuccess: () => toast.success("Photo removed."),
+                    onError: () => toast.error("Failed to remove photo. Try again."),
+                  })}
+                >
+                  {deleteImage.isPending ? "Removing…" : "Remove"}
+                </Button>
+              )}
+            </div>
+          </section>
         </TabsContent>
 
         {/* ── Recipe Tab ── */}
@@ -318,7 +381,7 @@ export default function EditDishPage() {
                   onError: () => toast.error("Failed to clear recipe."),
                 })}
                 disabled={clearRecipe.isPending || recipeRows.length === 0}
-                className="inline-flex items-center justify-center h-[44px] px-5 rounded-[11px] text-sm font-semibold border border-outline text-on-surface-medium hover:bg-surface-high hover:text-on-surface transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center h-[44px] px-5 rounded-[11px] text-sm font-semibold border border-outline text-on-surface-medium hover:bg-surface-high hover:text-on-surface transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {clearRecipe.isPending ? "Clearing…" : "Clear Recipe"}
               </button>
@@ -326,7 +389,7 @@ export default function EditDishPage() {
                 type="button"
                 onClick={onSaveRecipe}
                 disabled={replaceRecipe.isPending}
-                className="inline-flex items-center justify-center h-[44px] px-6 rounded-[11px] text-sm font-bold transition-all disabled:opacity-60 disabled:cursor-not-allowed hover:-translate-y-px"
+                className="inline-flex items-center justify-center h-[44px] px-6 rounded-[11px] text-sm font-bold transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed hover:-translate-y-px"
                 style={{
                   background:
                     "linear-gradient(180deg, color-mix(in oklab, var(--secondary), #fff 12%), var(--secondary))",

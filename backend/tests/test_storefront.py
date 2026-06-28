@@ -16,6 +16,7 @@ async def seed_storefront():
     )
     await org.insert()
     dish = Dish(
+        org_id=org.id,
         name="Biryani",
         category="Main Course",
         per_plate_cost=120.0,
@@ -27,6 +28,7 @@ async def seed_storefront():
     )
     await dish.insert()
     inactive = Dish(
+        org_id=org.id,
         name="Hidden Dish",
         category="Main Course",
         per_plate_cost=50.0,

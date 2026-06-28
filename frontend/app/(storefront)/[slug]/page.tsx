@@ -8,7 +8,8 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 type PublicDish = {
   id: string; name: string; category: string; description: string | null;
-  selling_price: number; is_veg: boolean; image_url: string | null;
+  selling_price: number; per_plate_cost: number; is_veg: boolean; image_url: string | null;
+  cuisine_type: string | null; portion_size: string | null; minimum_order_quantity: number | null;
 };
 
 type PublicOrg = {
@@ -114,28 +115,59 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {items.map((dish) => (
-                      <div key={dish.id} className="rounded-lg border border-gray-200 overflow-hidden">
+                      <div key={dish.id} className="rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                         {dish.image_url ? (
-                          <img src={dish.image_url} alt={dish.name} className="w-full h-36 object-cover" />
+                          <img src={dish.image_url} alt={dish.name} className="w-full h-40 object-cover" />
                         ) : (
-                          <div className="w-full h-36 bg-gray-100 flex items-center justify-center text-gray-300 text-3xl">
+                          <div className="w-full h-40 bg-gray-100 flex items-center justify-center text-gray-300 text-4xl">
                             🍽
                           </div>
                         )}
-                        <div className="p-3">
-                          <div className="flex items-center gap-1.5 mb-1">
+                        <div className="p-4">
+                          <div className="flex items-start justify-between gap-2 mb-1.5">
+                            <p className="font-semibold text-gray-900 text-base leading-snug">{dish.name}</p>
                             <span
-                              className={`inline-block w-2.5 h-2.5 rounded-full border ${dish.is_veg ? "bg-green-500 border-green-600" : "bg-red-500 border-red-600"
-                                }`}
-                            />
-                            <p className="font-medium text-gray-900 text-sm">{dish.name}</p>
+                              className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded ${
+                                dish.is_veg
+                                  ? "bg-green-100 text-green-700 border border-green-300"
+                                  : "bg-red-100 text-red-700 border border-red-300"
+                              }`}
+                            >
+                              {dish.is_veg ? "Veg" : "Non-Veg"}
+                            </span>
                           </div>
                           {dish.description && (
-                            <p className="text-xs text-gray-500 mb-2">{dish.description}</p>
+                            <p className="text-sm text-gray-500 mb-3 leading-snug">{dish.description}</p>
                           )}
-                          <p className="text-sm font-semibold" style={{ color: org.primary }}>
-                            ₹{dish.selling_price.toLocaleString("en-IN")}
-                          </p>
+                          {(dish.cuisine_type || dish.portion_size || dish.minimum_order_quantity) && (
+                            <div className="flex flex-wrap gap-x-3 gap-y-1 mb-3">
+                              {dish.cuisine_type && (
+                                <span className="text-xs text-gray-500">
+                                  <span className="text-gray-400">Cuisine: </span>{dish.cuisine_type}
+                                </span>
+                              )}
+                              {dish.portion_size && (
+                                <span className="text-xs text-gray-500">
+                                  <span className="text-gray-400">Portion: </span>{dish.portion_size}
+                                </span>
+                              )}
+                              {dish.minimum_order_quantity && (
+                                <span className="text-xs text-gray-500">
+                                  <span className="text-gray-400">Min. plates: </span>{dish.minimum_order_quantity}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          <div className="flex items-baseline justify-between gap-2 mt-auto">
+                            <p className="text-lg font-bold" style={{ color: org.primary }}>
+                              ₹{dish.selling_price.toLocaleString("en-IN")}
+                            </p>
+                            {dish.per_plate_cost > 0 && (
+                              <p className="text-xs text-gray-400">
+                                Cost: ₹{dish.per_plate_cost.toLocaleString("en-IN")}/plate
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}

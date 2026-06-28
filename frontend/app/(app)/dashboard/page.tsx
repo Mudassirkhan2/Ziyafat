@@ -6,6 +6,7 @@ import { useDashboard } from "@/lib/analytics-api";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { StatusChart } from "@/components/dashboard/StatusChart";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
+import { QuotationsChart } from "@/components/dashboard/QuotationsChart";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   FiDollarSign,
@@ -79,9 +80,8 @@ export default function DashboardPage() {
 
           {/* Charts Grid */}
           <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <div className="lg:col-span-2">
-              <RevenueChart data={data.revenue_by_month} />
-            </div>
+            <RevenueChart data={data.revenue_by_month} />
+            <QuotationsChart data={data.quotations_by_month} />
             <StatusChart title="Leads by Status" data={data.leads_by_status} />
             <StatusChart title="Bookings by Status" data={data.bookings_by_status} />
             <StatusChart title="Events by Status" data={data.events_by_status} />
@@ -155,9 +155,8 @@ function DashboardSkeleton() {
         ))}
       </div>
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="lg:col-span-2">
-          <RevenueChartSkeleton />
-        </div>
+        <RevenueChartSkeleton />
+        <RevenueChartSkeleton />
         {Array.from({ length: 6 }).map((_, i) => (
           <StatusChartSkeleton key={i} />
         ))}

@@ -11,9 +11,9 @@ import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
-import { FiEye, FiPlus } from "react-icons/fi";
+import { FiPlus } from "react-icons/fi";
 
-function getColumns(router: ReturnType<typeof useRouter>): ColumnDef<Customer>[] {
+function getColumns(): ColumnDef<Customer>[] {
   return [
     {
       id: "name",
@@ -50,20 +50,6 @@ function getColumns(router: ReturnType<typeof useRouter>): ColumnDef<Customer>[]
         </span>
       ),
     },
-    {
-      id: "actions",
-      header: "",
-      cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.push(`/customers/${row.original.id}`)}
-          title="View"
-        >
-          <FiEye className="h-4 w-4" />
-        </Button>
-      ),
-    },
   ];
 }
 
@@ -79,7 +65,10 @@ function CustomersContent() {
     sortDir: ts.sortDir,
   });
 
-  const columns = getColumns(router);
+  const columns = getColumns();
+  function handleRowClick(customer: Customer) {
+    router.push(`/customers/${customer.id}`);
+  }
 
   return (
     <div className="p-6">
@@ -115,6 +104,7 @@ function CustomersContent() {
         sortBy={ts.sortBy}
         sortDir={ts.sortDir}
         isLoading={isLoading}
+        onRowClick={handleRowClick}
         emptyState={
           <EmptyState
             variant="customers"

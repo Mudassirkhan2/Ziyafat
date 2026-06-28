@@ -9,6 +9,7 @@ async def seed_data():
     org = Organisation(name="Test Caterers", slug="test-caterers")
     await org.insert()
     user = User(
+        org_id=org.id,
         name="Owner",
         email="owner@test.com",
         hashed_password=hash_password("Password123!"),
@@ -90,3 +91,42 @@ async def test_patch_report_header_partial_update(client):
     rh = response.json()["report_header"]
     assert rh["show_address"] is False
     assert rh["show_phone"] is True  # must NOT have reset to default
+
+
+async def test_delete_logo_clears_url(client):
+    from unittest.mock import patch as mock_patch
+    await _login(client)
+    org = await Organisation.find_one({})
+    org.logo_url = "https://res.cloudinary.com/demo/image/upload/v1/ziyafat/org/test-logo.jpg"
+    await org.save()
+
+    with mock_patch("routers.organisation.delete_image") as mock_del:
+        response = await client.delete("/api/v1/organisation/logo")
+    assert response.status_code == 200
+    assert response.json()["logo_url"] is None
+    mock_del.assert_called_once_with("ziyafat/org/test-logo")
+
+
+async def test_delete_logo_when_none_returns_400(client):
+    await _login(client)
+    response = await client.delete("/api/v1/organisation/logo")
+    assert response.status_code == 400
+
+
+async def test_delete_banner_clears_url(client):
+    from unittest.mock import patch as mock_patch
+    await _login(client)
+    org = await Organisation.find_one({})
+    org.banner_url = "https://res.cloudinary.com/demo/image/upload/v1/ziyafat/org/test-banner.jpg"
+    await org.save()
+
+    with mock_patch("routers.organisation.delete_image"):
+        response = await client.delete("/api/v1/organisation/banner")
+    assert response.status_code == 200
+    assert response.json()["banner_url"] is None
+
+
+async def test_delete_banner_when_none_returns_400(client):
+    await _login(client)
+    response = await client.delete("/api/v1/organisation/banner")
+    assert response.status_code == 400

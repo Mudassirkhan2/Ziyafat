@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { FiUser, FiImage, FiShoppingBag } from "react-icons/fi";
+import { FiUser, FiImage, FiShoppingBag, FiUserCheck } from "react-icons/fi";
 
 const SETTINGS_TABS = [
+  { href: "/settings/profile",    label: "Profile",    icon: FiUserCheck   },
   { href: "/settings/account",    label: "Account",    icon: FiUser        },
   { href: "/settings/branding",   label: "Branding",   icon: FiImage       },
   { href: "/settings/storefront", label: "Storefront", icon: FiShoppingBag },

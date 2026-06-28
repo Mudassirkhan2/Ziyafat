@@ -19,10 +19,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { FiPlus, FiEdit2, FiTrash2, FiLoader, FiX } from "react-icons/fi";
+import { FiPlus, FiTrash2, FiLoader, FiX } from "react-icons/fi";
 
 function getColumns(
-  router: ReturnType<typeof useRouter>,
   onDelete: (ingredient: Ingredient) => void
 ): ColumnDef<Ingredient>[] {
   return [
@@ -86,16 +85,8 @@ function getColumns(
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => router.push(`/ingredients/${row.original.id}/edit`)}
-            title="Edit"
-          >
-            <FiEdit2 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
             className="text-destructive hover:text-destructive hover:bg-destructive/10"
-            onClick={() => onDelete(row.original)}
+            onClick={(e) => { e.stopPropagation(); onDelete(row.original); }}
             title="Delete"
           >
             <FiTrash2 className="h-4 w-4" />
@@ -121,7 +112,10 @@ function IngredientsContent() {
     sortDir: ts.sortDir,
   });
 
-  const columns = getColumns(router, setDeleteTarget);
+  const columns = getColumns(setDeleteTarget);
+  function handleRowClick(ingredient: Ingredient) {
+    router.push(`/ingredients/${ingredient.id}/edit`);
+  }
 
   function handleDeleteConfirm() {
     if (!deleteTarget) return;
@@ -164,6 +158,7 @@ function IngredientsContent() {
         sortBy={ts.sortBy}
         sortDir={ts.sortDir}
         isLoading={isLoading}
+        onRowClick={handleRowClick}
         emptyState={
           <EmptyState
             variant="ingredients"

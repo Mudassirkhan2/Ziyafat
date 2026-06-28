@@ -10,7 +10,11 @@ _PW = "Password123!"
 
 @pytest.fixture(autouse=True)
 async def seed_owner():
+    from models.organisation import Organisation
+    org = Organisation(name="Test Caterers", slug="test-caterers")
+    await org.insert()
     await User(
+        org_id=org.id,
         name="Owner",
         email=_EMAIL,
         hashed_password=hash_password(_PW),

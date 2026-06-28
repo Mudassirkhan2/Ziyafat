@@ -40,8 +40,8 @@ import { Separator } from "@/components/ui/separator";
 
 const STATUS_COLORS: Record<InvoiceStatus, string> = {
   draft: "border-outline text-on-surface-medium",
-  sent: "bg-blue-900/30 text-blue-400 border-blue-800",
-  paid: "bg-green-900/30 text-green-400 border-green-800",
+  sent: "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
+  paid: "bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
 };
 
 // ---------------------------------------------------------------------------
@@ -99,7 +99,7 @@ export default function InvoiceDetailPage({
   }
 
   if (isError || !invoice) {
-    return <div className="p-6 text-red-400">Invoice not found.</div>;
+    return <div className="p-6 text-red-600 dark:text-red-400">Invoice not found.</div>;
   }
 
   // ---------------------------------------------------------------------------
@@ -314,7 +314,7 @@ export default function InvoiceDetailPage({
           </div>
           {(invoice.amount_paid ?? 0) > 0 && (
             <>
-              <div className="flex justify-between text-sm text-green-400">
+              <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
                 <span>Amount Paid</span>
                 <span>− ₹{(invoice.amount_paid ?? 0).toLocaleString("en-IN")}</span>
               </div>
@@ -346,7 +346,7 @@ export default function InvoiceDetailPage({
             variant="outline"
             onClick={handleMarkSent}
             disabled={isMutating}
-            className="border-blue-800 text-blue-400 hover:bg-blue-900/20"
+            className="border-blue-600 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/20"
           >
             {updateInvoice.isPending ? "Saving…" : "Mark as Sent"}
           </Button>
@@ -357,7 +357,7 @@ export default function InvoiceDetailPage({
             variant="outline"
             onClick={handleMarkPaid}
             disabled={isMutating}
-            className="border-green-800 text-green-400 hover:bg-green-900/20"
+            className="border-green-600 text-green-700 hover:bg-green-50 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-900/20"
           >
             {updateInvoice.isPending ? "Saving…" : "Mark as Paid"}
           </Button>
@@ -368,7 +368,7 @@ export default function InvoiceDetailPage({
             variant="outline"
             onClick={() => setDeleteDialogOpen(true)}
             disabled={isMutating}
-            className="border-red-800 text-red-400 hover:bg-red-900/20"
+            className="border-red-600 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
           >
             Delete
           </Button>

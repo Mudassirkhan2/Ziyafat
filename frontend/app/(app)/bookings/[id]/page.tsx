@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -10,7 +10,13 @@ import { z } from "zod";
 import { format } from "date-fns"
 import { useBooking, useUpdateBooking } from "@/lib/bookings-api";
 import { toast } from "sonner";
-import { FormDatePicker } from "@/components/ui/form-fields";
+import {
+  FormDatePicker,
+  FormInput,
+  FormSelect,
+  FormTextarea,
+  SectionLabel,
+} from "@/components/ui/form-fields";
 import {
   useBookingEvents,
   useCreateEvent,
@@ -49,7 +55,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
@@ -59,25 +64,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
-
+import { Form } from "@/components/ui/form";
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
+const CATERING_MODEL_OPTIONS = [
+  { value: "per_plate", label: "Per Plate" },
+  { value: "chef_driven", label: "Chef Driven" },
+];
+
 const BOOKING_STATUS_COLORS: Record<BookingStatus, string> = {
-  confirmed: "bg-green-900/30 text-green-400 border-green-800",
-  in_progress: "bg-blue-900/30 text-blue-400 border-blue-800",
+  confirmed: "bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
+  in_progress: "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
   completed: "bg-surface-highest text-on-surface-medium border-outline",
-  cancelled: "bg-red-900/30 text-red-400 border-red-800",
+  cancelled: "bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800",
 };
 
 const BOOKING_STATUSES: BookingStatus[] = [
@@ -138,6 +139,24 @@ function statusLabel(status: BookingStatus) {
 
 function cateringLabel(model: CateringModel) {
   return model === "per_plate" ? "Per Plate" : "Chef Driven";
+}
+
+function InfoCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="space-y-0.5">
+      <p className="text-xs text-on-surface-low uppercase tracking-wide">{label}</p>
+      <p className="text-sm font-medium text-on-surface">{value}</p>
+    </div>
+  );
+}
+
+function InfoBlock({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="space-y-0.5">
+      <p className="text-xs text-on-surface-low uppercase tracking-wide">{label}</p>
+      <p className="text-sm text-on-surface-medium whitespace-pre-wrap">{value}</p>
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -246,370 +265,106 @@ function EventSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>{isEdit ? "Edit Event" : "Add Event"}</SheetTitle>
+      <SheetContent side="right" className="data-[side=right]:w-[70vw] data-[side=right]:max-w-[70vw] data-[side=right]:sm:max-w-[70vw] p-0 gap-0 flex flex-col">
+        <SheetHeader className="px-[30px] py-5 border-b border-outline-low shrink-0">
+          <SheetTitle className="text-xl font-semibold text-on-surface">
+            {isEdit ? "Edit Event" : "Add Event"}
+          </SheetTitle>
         </SheetHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="mt-6 space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. Nikah Ceremony" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="rounded-[20px] border border-outline-low overflow-hidden divide-y divide-outline-low shadow-[0_1px_2px_rgba(0,0,0,0.04),0_18px_40px_-28px_rgba(0,0,0,0.15)] bg-surface-high">
 
-            <div className="grid grid-cols-3 gap-3">
-              <FormDatePicker name="date" label="Date *" />
-              <FormField
-                control={form.control}
-                name="start_time"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Time</FormLabel>
-                    <FormControl><Input type="time" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="end_time"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>End Time</FormLabel>
-                    <FormControl><Input type="time" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                {/* 1 · Event Info */}
+                <div className="space-y-4 px-[30px] py-[26px]">
+                  <SectionLabel number={1}>Event Info</SectionLabel>
+                  <FormInput name="name" label="Event Name *" placeholder="e.g. Nikah Ceremony" />
+                  <div className="grid grid-cols-3 gap-3">
+                    <FormDatePicker name="date" label="Date *" />
+                    <FormInput name="start_time" label="Start Time" type="time" />
+                    <FormInput name="end_time" label="End Time" type="time" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormSelect name="ceremony_type" label="Ceremony Type" placeholder="Select type" options={CEREMONY_TYPE_OPTIONS} />
+                    <FormSelect name="event_status" label="Event Status" placeholder="Select status" options={EVENT_STATUS_OPTIONS} />
+                  </div>
+                </div>
+
+                {/* 2 · Catering */}
+                <div className="space-y-4 px-[30px] py-[26px]">
+                  <SectionLabel number={2}>Catering</SectionLabel>
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormSelect name="service_style" label="Service Style" placeholder="Select style" options={SERVICE_STYLE_OPTIONS} />
+                    <FormSelect name="food_preference" label="Food Preference" placeholder="Select preference" options={FOOD_PREFERENCE_OPTIONS} />
+                  </div>
+                  <FormSelect name="catering_model" label="Catering Model *" placeholder="Select model" options={CATERING_MODEL_OPTIONS} />
+                </div>
+
+                {/* 3 · Headcount */}
+                <div className="space-y-4 px-[30px] py-[26px]">
+                  <SectionLabel number={3}>Headcount</SectionLabel>
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormInput name="guest_count" label="Expected Guests *" type="number" placeholder="e.g. 250" />
+                    <FormInput name="confirmed_count" label="Confirmed Count" type="number" placeholder="Confirmed" />
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <FormInput name="veg_count" label="Veg" type="number" placeholder="0" />
+                    <FormInput name="non_veg_count" label="Non-Veg" type="number" placeholder="0" />
+                    <FormInput name="actual_headcount" label="Actual (post-event)" type="number" placeholder="0" />
+                  </div>
+                </div>
+
+                {/* 4 · Venue */}
+                <div className="space-y-4 px-[30px] py-[26px]">
+                  <SectionLabel number={4}>Venue</SectionLabel>
+                  <FormInput name="venue" label="Venue Name" placeholder="e.g. Grand Hall" />
+                  <FormTextarea name="venue_address" label="Venue Address" placeholder="Full venue address" rows={2} />
+                  <FormInput name="venue_contact" label="Venue Contact" placeholder="Venue manager name / phone" />
+                </div>
+
+                {/* 5 · Operations */}
+                <div className="space-y-4 px-[30px] py-[26px]">
+                  <SectionLabel number={5}>Operations</SectionLabel>
+                  <div className="grid grid-cols-2 gap-3">
+                    <FormInput name="room_setup_style" label="Room Setup Style" placeholder="e.g. Banquet, Buffet" />
+                    <FormInput name="staffing_count" label="Staff Required" type="number" placeholder="e.g. 12" />
+                  </div>
+                  <FormTextarea name="equipment_needed" label="Equipment Needed" placeholder="e.g. Chafing dishes, crockery sets" rows={2} />
+                  <FormTextarea name="kitchen_notes" label="Kitchen Notes" placeholder="Special prep instructions" rows={2} />
+                  <FormTextarea name="access_instructions" label="Access Instructions" placeholder="Gate access, parking, loading bay" rows={2} />
+                </div>
+
+                {/* 6 · Notes */}
+                <div className="space-y-4 px-[30px] py-[26px]">
+                  <SectionLabel number={6}>Notes</SectionLabel>
+                  <FormTextarea name="notes" label="Notes" placeholder="Any additional notes…" rows={3} />
+                </div>
+
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="ceremony_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ceremony Type</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {CEREMONY_TYPE_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="event_status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Event Status</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {EVENT_STATUS_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="service_style"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Service Style</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select style" /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {SERVICE_STYLE_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="food_preference"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Food Preference</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger><SelectValue placeholder="Select preference" /></SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {FOOD_PREFERENCE_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="venue"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Venue Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. Grand Hall" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="venue_address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Venue Address</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Full venue address" rows={2} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="venue_contact"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Venue Contact</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Venue manager name / phone" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-3">
-              <FormField
-                control={form.control}
-                name="guest_count"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Expected Guests *</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="e.g. 250" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="confirmed_count"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirmed Count</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="Confirmed" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <FormField
-                control={form.control}
-                name="veg_count"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Veg</FormLabel>
-                    <FormControl><Input type="number" placeholder="0" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="non_veg_count"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Non-Veg</FormLabel>
-                    <FormControl><Input type="number" placeholder="0" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="actual_headcount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Actual (post-event)</FormLabel>
-                    <FormControl><Input type="number" placeholder="0" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="catering_model"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Catering Model *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select catering model" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="per_plate">Per Plate</SelectItem>
-                      <SelectItem value="chef_driven">Chef Driven</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="room_setup_style"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Room Setup Style</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. Banquet, Buffet, Classroom" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="staffing_count"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Staff Required (count)</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="e.g. 12" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="equipment_needed"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Equipment Needed</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="e.g. Chafing dishes, crockery sets" rows={2} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="kitchen_notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Kitchen Notes</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Special prep instructions" rows={2} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="access_instructions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Access Instructions</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Gate access, parking, loading bay" rows={2} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Any additional notes…" rows={2} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button
+            <div className="shrink-0 border-t border-outline-low px-[30px] py-4 flex items-center justify-end gap-3">
+              <button
                 type="button"
-                variant="outline"
                 onClick={() => onOpenChange(false)}
+                className="inline-flex items-center justify-center h-[44px] px-5 rounded-[11px] text-sm font-semibold border border-outline text-on-surface-medium hover:bg-surface-high hover:text-on-surface transition-all cursor-pointer"
               >
                 Cancel
-              </Button>
-              <Button type="submit" disabled={isMutating}>
-                {isMutating
-                  ? isEdit
-                    ? "Saving…"
-                    : "Creating…"
-                  : isEdit
-                    ? "Save"
-                    : "Create"}
-              </Button>
+              </button>
+              <button
+                type="submit"
+                disabled={isMutating}
+                className="inline-flex items-center justify-center h-[44px] px-6 rounded-[11px] text-sm font-bold transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed hover:-translate-y-px"
+                style={{
+                  background: "linear-gradient(180deg, color-mix(in oklab, var(--secondary), #fff 12%), var(--secondary))",
+                  color: "var(--secondary-foreground)",
+                  boxShadow: "0 8px 22px -10px var(--secondary)",
+                }}
+              >
+                {isMutating ? (isEdit ? "Saving…" : "Creating…") : (isEdit ? "Save" : "Create")}
+              </button>
             </div>
           </form>
         </Form>
@@ -675,7 +430,7 @@ function MenuDialog({
               <span className="flex-1 text-sm text-on-surface">{dish.name}</span>
               <span className="text-xs text-on-surface-medium">{dish.category}</span>
               {dish.has_recipe && (
-                <span className="text-xs text-green-400">✓ recipe</span>
+                <span className="text-xs text-green-600 dark:text-green-400">✓ recipe</span>
               )}
             </label>
           ))}
@@ -717,7 +472,7 @@ function DeleteEventDialog({
       <Button
         variant="outline"
         size="sm"
-        className="text-red-400 border-red-800 hover:bg-red-900/20"
+        className="text-red-700 border-red-600 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/20"
         onClick={() => setOpen(true)}
       >
         Delete
@@ -760,7 +515,10 @@ export default function BookingDetailPage() {
 
   const { data: booking, isLoading: bookingLoading, isError: bookingError } = useBooking(id);
   const { data: events, isLoading: eventsLoading, isError: eventsError } = useBookingEvents(id);
+  const { data: dishes } = useDishes();
   const updateBooking = useUpdateBooking(id);
+
+  const dishMap = new Map(dishes?.items?.map((d) => [d.id, d.name]) ?? []);
 
   const [eventSheetOpen, setEventSheetOpen] = useState(false);
   const [eventSheetMode, setEventSheetMode] = useState<EventSheetMode>({ mode: "add" });
@@ -798,7 +556,7 @@ export default function BookingDetailPage() {
   if (bookingError || !booking) {
     return (
       <div className="p-6">
-        <p className="text-red-400">Failed to load booking. Please try again.</p>
+        <p className="text-red-600 dark:text-red-400">Failed to load booking. Please try again.</p>
       </div>
     );
   }
@@ -814,15 +572,17 @@ export default function BookingDetailPage() {
       </Link>
 
       {/* Booking Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-on-surface mb-2">{booking.title}</h1>
-        <div className="flex flex-wrap items-center gap-4">
-          <p className="text-on-surface-medium text-sm">
-            Customer:{" "}
-            <span className="text-on-surface font-medium">{booking.customer_name}</span>
-          </p>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-on-surface mb-3">{booking.title}</h1>
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-on-surface-medium text-sm">Status:</span>
+            <span className="text-xs text-on-surface-low uppercase tracking-wide">Customer</span>
+            <span className="text-sm font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">
+              {booking.customer_name}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-on-surface-low uppercase tracking-wide">Status</span>
             <Select
               value={booking.status}
               onValueChange={handleStatusChange}
@@ -850,6 +610,49 @@ export default function BookingDetailPage() {
         </div>
       </div>
 
+      {/* Booking Details Card */}
+      {(booking.deposit_amount || booking.deposit_due_date || booking.deposit_paid_date ||
+        booking.minimum_guarantee || booking.contract_signed || booking.payment_terms ||
+        booking.cancellation_policy || booking.special_instructions || booking.notes) && (
+        <div className="mb-8 rounded-lg border border-outline bg-surface-high overflow-hidden">
+          <div className="px-5 py-3 border-b border-outline-low">
+            <h2 className="text-xs font-semibold text-on-surface-medium uppercase tracking-wide">Booking Details</h2>
+          </div>
+          <div className="p-5 space-y-5">
+            {(booking.deposit_amount || booking.deposit_due_date || booking.deposit_paid_date || booking.minimum_guarantee || booking.contract_signed) && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {booking.deposit_amount != null && (
+                  <InfoCell label="Deposit Amount" value={`₹${booking.deposit_amount.toLocaleString("en-IN")}`} />
+                )}
+                {booking.deposit_due_date && (
+                  <InfoCell label="Deposit Due" value={formatDate(booking.deposit_due_date)} />
+                )}
+                {booking.deposit_paid_date && (
+                  <InfoCell label="Deposit Paid" value={formatDate(booking.deposit_paid_date)} />
+                )}
+                {booking.minimum_guarantee != null && (
+                  <InfoCell label="Min. Guarantee" value={`${booking.minimum_guarantee} guests`} />
+                )}
+                {booking.contract_signed && (
+                  <InfoCell
+                    label="Contract"
+                    value={booking.contract_signed_date ? `Signed ${formatDate(booking.contract_signed_date)}` : "Signed"}
+                  />
+                )}
+              </div>
+            )}
+            {(booking.payment_terms || booking.cancellation_policy || booking.special_instructions || booking.notes) && (
+              <div className="space-y-4 pt-1 border-t border-outline-low">
+                {booking.payment_terms && <InfoBlock label="Payment Terms" value={booking.payment_terms} />}
+                {booking.cancellation_policy && <InfoBlock label="Cancellation Policy" value={booking.cancellation_policy} />}
+                {booking.special_instructions && <InfoBlock label="Special Instructions" value={booking.special_instructions} />}
+                {booking.notes && <InfoBlock label="Notes" value={booking.notes} />}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Events Section */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-on-surface">Events</h2>
@@ -860,7 +663,7 @@ export default function BookingDetailPage() {
         <p className="text-on-surface-medium">Loading events…</p>
       )}
       {eventsError && (
-        <p className="text-red-400">Failed to load events. Please try again.</p>
+        <p className="text-red-600 dark:text-red-400">Failed to load events. Please try again.</p>
       )}
 
       {!eventsLoading && !eventsError && events && (
@@ -894,41 +697,59 @@ export default function BookingDetailPage() {
                 </TableRow>
               )}
               {events.map((event: BookingEvent) => (
-                <TableRow key={event.id} className="border-outline-low">
-                  <TableCell className="text-on-surface font-medium">
-                    {event.name}
-                  </TableCell>
-                  <TableCell className="text-on-surface-medium">
-                    {formatDate(event.date)}
-                  </TableCell>
-                  <TableCell className="text-on-surface-medium">
-                    {event.venue ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-on-surface-medium">
-                    {event.guest_count}
-                  </TableCell>
-                  <TableCell className="text-on-surface-medium">
-                    {cateringLabel(event.catering_model)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEditEvent(event)}
-                      >
-                        Edit
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => setMenuTarget(event)}>
-                        Set Menu{event.menu_dish_ids.length > 0 ? ` (${event.menu_dish_ids.length})` : ""}
-                      </Button>
-                      <Link href={`/bookings/${id}/procurement/${event.id}`}>
-                        <Button variant="outline" size="sm">Procurement</Button>
-                      </Link>
-                      <DeleteEventDialog bookingId={id} event={event} />
-                    </div>
-                  </TableCell>
-                </TableRow>
+                <React.Fragment key={event.id}>
+                  <TableRow className="border-outline-low">
+                    <TableCell className="text-on-surface font-medium">
+                      {event.name}
+                    </TableCell>
+                    <TableCell className="text-on-surface-medium">
+                      {formatDate(event.date)}
+                    </TableCell>
+                    <TableCell className="text-on-surface-medium">
+                      {event.venue ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-on-surface-medium">
+                      {event.guest_count}
+                    </TableCell>
+                    <TableCell className="text-on-surface-medium">
+                      {cateringLabel(event.catering_model)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEditEvent(event)}
+                        >
+                          Edit
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => setMenuTarget(event)}>
+                          Set Menu{event.menu_dish_ids.length > 0 ? ` (${event.menu_dish_ids.length})` : ""}
+                        </Button>
+                        <Link href={`/bookings/${id}/procurement/${event.id}`}>
+                          <Button variant="outline" size="sm">Procurement</Button>
+                        </Link>
+                        <DeleteEventDialog bookingId={id} event={event} />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                  {event.menu_dish_ids.length > 0 && (
+                    <TableRow className="border-outline-low hover:bg-transparent">
+                      <TableCell colSpan={6} className="pt-0 pb-2.5 pl-10">
+                        <div className="flex flex-wrap gap-1.5">
+                          {event.menu_dish_ids.map((dishId) => (
+                            <span
+                              key={dishId}
+                              className="text-xs text-on-surface-medium bg-surface-highest border border-outline-low px-2.5 py-0.5 rounded-full"
+                            >
+                              {dishMap.get(dishId) ?? dishId}
+                            </span>
+                          ))}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
               ))}
             </TableBody>
           </Table>

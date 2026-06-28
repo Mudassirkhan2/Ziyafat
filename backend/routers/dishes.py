@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
-from fastapi.responses import StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 from beanie import PydanticObjectId
 from dependencies import get_current_user, require_role
@@ -11,8 +11,8 @@ from models.ingredient import Ingredient, SUPPORTED_UNITS
 from models.organisation import Organisation
 from models.user import User, UserRole
 from models.enums import DishCourse, CuisineType
-from services.cloudinary_service import upload_image
-from services.pdf_service import render_pdf
+from services.cloudinary_service import upload_image, extract_public_id, delete_image
+from services.pdf_service import render_pdf, WeasyPrintUnavailableError
 from schemas.pagination import PaginatedResponse
 
 
@@ -268,7 +268,10 @@ async def get_dishes_pdf(current_user: User = Depends(get_current_user)):
         "org": org,
         "grouped_dishes": grouped,
     }
-    pdf_bytes = await asyncio.to_thread(render_pdf, "dish_list.html", context)
+    try:
+        pdf_bytes = await asyncio.to_thread(render_pdf, "dish_list.html", context)
+    except WeasyPrintUnavailableError as e:
+        return HTMLResponse(content=e.html)
     return StreamingResponse(
         iter([pdf_bytes]),
         media_type="application/pdf",
@@ -359,6 +362,25 @@ async def upload_dish_image(
     file_bytes = await file.read()
     url = await asyncio.to_thread(upload_image, file_bytes, "ziyafat/dishes", dish_id)
     dish.image_url = url
+    dish.updated_at = datetime.now(timezone.utc)
+    await dish.save()
+    return _dish_response(dish)
+
+
+@router.delete("/{dish_id}/image", response_model=DishResponse)
+async def delete_dish_image(
+    dish_id: str,
+    current_user: User = Depends(require_role(UserRole.owner, UserRole.manager)),
+):
+    dish = await Dish.get(dish_id)
+    if not dish or dish.org_id != current_user.org_id:
+        raise HTTPException(status_code=404, detail="Dish not found")
+    if not dish.image_url:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No image to remove")
+    public_id = extract_public_id(dish.image_url)
+    if public_id:
+        await asyncio.to_thread(delete_image, public_id)
+    dish.image_url = None
     dish.updated_at = datetime.now(timezone.utc)
     await dish.save()
     return _dish_response(dish)

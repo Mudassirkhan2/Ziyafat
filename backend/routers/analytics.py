@@ -31,6 +31,11 @@ class RevenueMonth(BaseModel):
     revenue: float
 
 
+class QuotationMonth(BaseModel):
+    month: str
+    count: int
+
+
 class DashboardData(BaseModel):
     kpis: KPIs
     leads_by_status: dict[str, int]
@@ -40,6 +45,7 @@ class DashboardData(BaseModel):
     invoices_by_status: dict[str, int]
     customers_by_type: dict[str, int]
     revenue_by_month: list[RevenueMonth]
+    quotations_by_month: list[QuotationMonth]
 
 
 def _count_by(items: list, field: str) -> dict[str, int]:
@@ -137,6 +143,18 @@ async def get_dashboard(current_user=Depends(get_current_user)) -> DashboardData
         for yr, mo in window
     ]
 
+    # Quotations created per month (last 6 months, by created_at)
+    monthly_quotations: dict[tuple[int, int], int] = {}
+    for q in all_quotations:
+        ym = (q.created_at.year, q.created_at.month)
+        if ym in window_set:
+            monthly_quotations[ym] = monthly_quotations.get(ym, 0) + 1
+
+    quotations_by_month = [
+        QuotationMonth(month=calendar.month_abbr[mo], count=monthly_quotations.get((yr, mo), 0))
+        for yr, mo in window
+    ]
+
     return DashboardData(
         kpis=KPIs(
             revenue_paid=revenue_paid,
@@ -153,4 +171,5 @@ async def get_dashboard(current_user=Depends(get_current_user)) -> DashboardData
         invoices_by_status=invoices_by_status,
         customers_by_type=customers_by_type,
         revenue_by_month=revenue_by_month,
+        quotations_by_month=quotations_by_month,
     )

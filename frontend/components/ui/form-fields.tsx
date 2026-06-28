@@ -35,7 +35,7 @@ export function SectionLabel({
     <div className="flex items-center gap-3 mb-5">
       {number != null && (
         <span
-          className="inline-flex w-6 h-6 items-center justify-center rounded-[7px] text-[11px] font-bold flex-shrink-0"
+          className="inline-flex w-6 h-6 items-center justify-center rounded-[6px] border text-[16px] font-bold flex-shrink-0"
           style={{
             fontFamily: "var(--font-serif)",
             color: "var(--secondary)",
@@ -45,7 +45,7 @@ export function SectionLabel({
           {number}
         </span>
       )}
-      <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-on-surface-medium">
+      <span className="text-[12px] font-bold uppercase tracking-[0.14em] text-on-surface-medium">
         {children}
       </span>
       <span className="flex-1 h-px bg-outline-low" />
@@ -222,7 +222,7 @@ export function FormDatePicker({
           <Popover>
             <PopoverTrigger
               className={cn(
-                "flex h-[44px] w-full items-center justify-between rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors hover:bg-accent",
+                "flex h-[44px] w-full items-center justify-between rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors hover:bg-accent cursor-pointer",
                 !field.value && "text-muted-foreground"
               )}
             >

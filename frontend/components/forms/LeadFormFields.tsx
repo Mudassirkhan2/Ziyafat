@@ -14,6 +14,12 @@ import {
   SectionLabel,
 } from "@/components/ui/form-fields"
 
+const MEAL_TYPE_OPTIONS = [
+  { value: "breakfast", label: "Breakfast" },
+  { value: "lunch", label: "Lunch" },
+  { value: "dinner", label: "Dinner" },
+]
+
 const STATUS_OPTIONS = [
   { value: "new", label: "New" },
   { value: "quoted", label: "Quoted" },
@@ -97,7 +103,7 @@ export function LeadFormFields({ showStatusField = false }: LeadFormFieldsProps)
           <FormSelect name="food_preference" label="Food Preference" placeholder="Veg / Non-veg" options={FOOD_PREFERENCE_OPTIONS} />
           <FormSelect name="service_style" label="Service Style" placeholder="Buffet / Plated…" options={SERVICE_STYLE_OPTIONS} />
         </div>
-        <FormInput name="meal_type" label="Meal Type" placeholder="e.g. Lunch, Dinner" />
+        <FormSelect name="meal_type" label="Meal Type" placeholder="Select meal type" options={MEAL_TYPE_OPTIONS} />
       </div>
 
       {/* 4 · Budget */}

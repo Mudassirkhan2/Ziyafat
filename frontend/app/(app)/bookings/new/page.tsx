@@ -90,7 +90,7 @@ export default function NewBookingPage() {
       <div className="mb-6">
         <button
           onClick={() => router.push("/bookings")}
-          className="text-on-surface-medium hover:text-on-surface text-sm mb-2"
+          className="text-on-surface-medium hover:text-on-surface text-sm mb-2 cursor-pointer"
         >
           ← Back to Bookings
         </button>

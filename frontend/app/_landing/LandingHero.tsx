@@ -22,7 +22,7 @@ export default function LandingHero() {
             Catering, from first <em>inquiry</em> to final invoice.
           </h1>
           <p className={s.heroSub}>
-            One system for leads, quotes, multi-event bookings and branded invoices — replacing spreadsheets and WhatsApp for caterers of every cuisine and scale.
+            Free catering management software for leads, quotes, multi-event bookings and branded invoices — replacing spreadsheets and WhatsApp for caterers of every cuisine and scale across India.
           </p>
           <div className={s.heroActions}>
             <Link href="/signup" className={`${s.btn} ${s.btnGold}`}>

@@ -93,7 +93,7 @@ export function StatusChart({ title, data }: StatusChartProps) {
 
   return (
     <div className="rounded-lg border border-outline bg-surface-high p-4">
-      <h3 className="text-sm font-semibold text-on-surface-medium mb-1">{title}</h3>
+      <h3 className="text-base font-bold text-on-surface mb-1">{title}</h3>
       <p className="text-xs text-on-surface-low mb-3">Total: {total}</p>
       {total === 0 ? (
         <EmptyState variant="chart" title="No data yet" className="py-4" />

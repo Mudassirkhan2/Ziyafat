@@ -3,6 +3,7 @@
 import { useState, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useDishes, useDeleteDish } from "@/lib/dishes-api";
+import { API_BASE } from "@/lib/api";
 import { useDataTableState } from "@/lib/use-data-table-state";
 import type { Dish } from "@/lib/types";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -21,12 +22,11 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { FiPlus, FiEdit2, FiTrash2, FiLoader, FiX, FiPrinter } from "react-icons/fi";
+import { FiPlus, FiTrash2, FiLoader, FiX, FiPrinter } from "react-icons/fi";
 
 type VegFilter = "all" | "veg" | "non-veg";
 
 function getColumns(
-  router: ReturnType<typeof useRouter>,
   onDelete: (dish: Dish) => void
 ): ColumnDef<Dish>[] {
   return [
@@ -54,11 +54,11 @@ function getColumns(
       accessorKey: "is_veg",
       cell: ({ row }) =>
         row.original.is_veg ? (
-          <Badge variant="outline" className="bg-green-900/30 text-green-400 border-green-800">
+          <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800">
             Veg
           </Badge>
         ) : (
-          <Badge variant="outline" className="bg-red-900/30 text-red-400 border-red-800">
+          <Badge variant="outline" className="bg-red-100 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800">
             Non-Veg
           </Badge>
         ),
@@ -92,16 +92,8 @@ function getColumns(
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => router.push(`/dishes/${row.original.id}/edit`)}
-            title="Edit"
-          >
-            <FiEdit2 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
             className="text-destructive hover:text-destructive hover:bg-destructive/10"
-            onClick={() => onDelete(row.original)}
+            onClick={(e) => { e.stopPropagation(); onDelete(row.original); }}
             title="Delete"
           >
             <FiTrash2 className="h-4 w-4" />
@@ -131,7 +123,10 @@ function DishesContent() {
 
   const { data, isLoading, isError } = useDishes(queryParams);
 
-  const columns = getColumns(router, setDeleteTarget);
+  const columns = getColumns(setDeleteTarget);
+  function handleRowClick(dish: Dish) {
+    router.push(`/dishes/${dish.id}/edit`);
+  }
 
   function handleDeleteConfirm() {
     if (!deleteTarget) return;
@@ -145,7 +140,7 @@ function DishesContent() {
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-on-surface">Dishes</h1>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => window.open("/api/v1/dishes/pdf")}>
+          <Button variant="outline" onClick={() => window.open(`${API_BASE}/api/v1/dishes/pdf`)}>
             <FiPrinter className="h-4 w-4 mr-1" /> Print Dish List
           </Button>
           <Button onClick={() => router.push("/dishes/new")}>
@@ -189,6 +184,7 @@ function DishesContent() {
         sortBy={ts.sortBy}
         sortDir={ts.sortDir}
         isLoading={isLoading}
+        onRowClick={handleRowClick}
         emptyState={
           <EmptyState
             variant="dishes"

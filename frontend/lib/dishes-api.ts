@@ -72,3 +72,29 @@ export function useDeleteDish() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["dishes"] }),
   });
 }
+
+export function useUploadDishImage(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => {
+      const fd = new FormData();
+      fd.append("file", file);
+      return api.upload<Dish>(`/dishes/${id}/image`, fd);
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(["dishes", id], data);
+      queryClient.invalidateQueries({ queryKey: ["dishes"] });
+    },
+  });
+}
+
+export function useDeleteDishImage(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.delete<Dish>(`/dishes/${id}/image`),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["dishes", id], data);
+      queryClient.invalidateQueries({ queryKey: ["dishes"] });
+    },
+  });
+}

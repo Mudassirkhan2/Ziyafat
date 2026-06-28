@@ -12,12 +12,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
-import { FiEdit2, FiPlus } from "react-icons/fi";
+import { FiPlus } from "react-icons/fi";
 
 const ROLE_COLORS: Record<UserRole, string> = {
-  owner: "bg-amber-900/30 text-amber-400 border-amber-800",
-  manager: "bg-blue-900/30 text-blue-400 border-blue-800",
-  kitchen: "bg-green-900/30 text-green-400 border-green-800",
+  owner: "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800",
+  manager: "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
+  kitchen: "bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
   viewer: "border-outline text-on-surface-medium",
 };
 
@@ -25,7 +25,7 @@ function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-function getColumns(router: ReturnType<typeof useRouter>): ColumnDef<StaffUser>[] {
+function getColumns(): ColumnDef<StaffUser>[] {
   return [
     {
       id: "name",
@@ -62,24 +62,10 @@ function getColumns(router: ReturnType<typeof useRouter>): ColumnDef<StaffUser>[
       accessorKey: "is_active",
       cell: ({ row }) =>
         row.original.is_active ? (
-          <Badge className="bg-green-900/30 text-green-400 border-green-800 border">Active</Badge>
+          <Badge className="bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800 border">Active</Badge>
         ) : (
           <Badge variant="outline" className="text-on-surface-low">Deactivated</Badge>
         ),
-    },
-    {
-      id: "actions",
-      header: "",
-      cell: ({ row }) => (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.push(`/users/${row.original.id}/edit`)}
-          title="Edit"
-        >
-          <FiEdit2 className="h-4 w-4" />
-        </Button>
-      ),
     },
   ];
 }
@@ -96,7 +82,10 @@ function UsersContent() {
     sortDir: ts.sortDir,
   });
 
-  const columns = getColumns(router);
+  const columns = getColumns();
+  function handleRowClick(user: StaffUser) {
+    router.push(`/users/${user.id}/edit`);
+  }
 
   return (
     <div className="p-6">
@@ -132,6 +121,7 @@ function UsersContent() {
         sortBy={ts.sortBy}
         sortDir={ts.sortDir}
         isLoading={isLoading}
+        onRowClick={handleRowClick}
         emptyState={
           <EmptyState
             variant="users"

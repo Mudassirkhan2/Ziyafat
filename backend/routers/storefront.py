@@ -13,8 +13,12 @@ class PublicDish(BaseModel):
     category: str
     description: str | None
     selling_price: float
+    per_plate_cost: float
     is_veg: bool
     image_url: str | None
+    cuisine_type: str | None
+    portion_size: str | None
+    minimum_order_quantity: int | None
 
 
 class PublicOrg(BaseModel):
@@ -65,8 +69,12 @@ async def get_storefront(slug: str):
                 category=d.category,
                 description=d.description,
                 selling_price=d.selling_price,
+                per_plate_cost=d.per_plate_cost,
                 is_veg=d.is_veg,
                 image_url=d.image_url,
+                cuisine_type=d.cuisine_type,
+                portion_size=d.portion_size,
+                minimum_order_quantity=d.minimum_order_quantity,
             )
             for d in dishes
         ],

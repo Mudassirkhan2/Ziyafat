@@ -32,7 +32,7 @@ export function FormPageShell({
       <button
         type="button"
         onClick={() => router.push(backHref)}
-        className="inline-flex items-center gap-2 text-[13.5px] font-semibold text-on-surface-low hover:text-primary mb-6 transition-colors"
+        className="inline-flex items-center gap-2 text-[13.5px] font-semibold text-on-surface-low hover:text-primary mb-6 transition-colors cursor-pointer"
       >
         <ArrowLeft className="h-4 w-4" />
         {backLabel}
@@ -104,14 +104,14 @@ export function FormStickyFooter({
         <button
           type="button"
           onClick={() => router.push(cancelHref)}
-          className="inline-flex items-center justify-center h-[44px] px-5 rounded-[11px] text-sm font-semibold border border-outline text-on-surface-medium hover:bg-surface-high hover:text-on-surface transition-all"
+          className="inline-flex items-center justify-center h-[44px] px-5 rounded-[11px] text-sm font-semibold border border-outline text-on-surface-medium hover:bg-surface-high hover:text-on-surface transition-all cursor-pointer"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isPending}
-          className="inline-flex items-center justify-center h-[44px] px-6 rounded-[11px] text-sm font-bold transition-all disabled:opacity-60 disabled:cursor-not-allowed hover:-translate-y-px"
+          className="inline-flex items-center justify-center h-[44px] px-6 rounded-[11px] text-sm font-bold transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed hover:-translate-y-px"
           style={{
             background:
               "linear-gradient(180deg, color-mix(in oklab, var(--secondary), #fff 12%), var(--secondary))",

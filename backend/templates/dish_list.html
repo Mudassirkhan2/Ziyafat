@@ -3,17 +3,24 @@
 <head>
   <meta charset="utf-8">
   <title>Our Menu</title>
+  <script>window.onload = function () { window.print(); };</script>
   <style>
-    body { font-family: Arial, sans-serif; color: #111; margin: 40px; }
-    h1 { font-size: 22px; margin-bottom: 24px; }
-    h2 { font-size: 15px; font-weight: bold; margin: 20px 0 8px; color: #333; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
-    .dish { display: flex; justify-content: space-between; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
-    .dish-name { font-size: 13px; font-weight: 600; }
-    .dish-desc { font-size: 11px; color: #666; margin-top: 2px; }
-    .dish-price { font-size: 13px; font-weight: bold; white-space: nowrap; margin-left: 16px; }
-    .veg-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
-    .veg { background: #22c55e; }
-    .non-veg { background: #ef4444; }
+    body { font-family: Arial, sans-serif; color: #111; margin: 48px; font-size: 14px; }
+    h1 { font-size: 26px; margin-bottom: 28px; font-weight: bold; }
+    h2 { font-size: 17px; font-weight: bold; margin: 24px 0 10px; color: #333; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+    .dish { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #f0f0f0; gap: 20px; }
+    .dish-left { flex: 1; min-width: 0; }
+    .dish-name { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .veg-badge { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 3px; white-space: nowrap; }
+    .veg-badge.veg { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+    .veg-badge.non-veg { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .dish-desc { font-size: 12px; color: #666; margin-top: 4px; line-height: 1.4; }
+    .dish-meta { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 6px; }
+    .meta-item { font-size: 12px; color: #444; }
+    .meta-label { color: #999; }
+    .dish-right { text-align: right; white-space: nowrap; flex-shrink: 0; }
+    .dish-price { font-size: 16px; font-weight: bold; color: #111; }
+    .dish-cost { font-size: 12px; color: #888; margin-top: 3px; }
   </style>
 </head>
 <body>
@@ -23,16 +30,32 @@
     <h2>{{ category }}</h2>
     {% for dish in dishes %}
       <div class="dish">
-        <div>
+        <div class="dish-left">
           <div class="dish-name">
-            <span class="veg-dot {{ 'veg' if dish.is_veg else 'non-veg' }}"></span>
+            <span class="veg-badge {{ 'veg' if dish.is_veg else 'non-veg' }}">{{ 'Veg' if dish.is_veg else 'Non-Veg' }}</span>
             {{ dish.name }}
           </div>
           {% if dish.description %}
             <div class="dish-desc">{{ dish.description }}</div>
           {% endif %}
+          <div class="dish-meta">
+            {% if dish.cuisine_type %}
+              <span class="meta-item"><span class="meta-label">Cuisine: </span>{{ dish.cuisine_type }}</span>
+            {% endif %}
+            {% if dish.portion_size %}
+              <span class="meta-item"><span class="meta-label">Portion: </span>{{ dish.portion_size }}</span>
+            {% endif %}
+            {% if dish.minimum_order_quantity %}
+              <span class="meta-item"><span class="meta-label">Min. plates: </span>{{ dish.minimum_order_quantity }}</span>
+            {% endif %}
+          </div>
         </div>
-        <div class="dish-price">&#8377;{{ "%.0f"|format(dish.selling_price) }}</div>
+        <div class="dish-right">
+          <div class="dish-price">&#8377;{{ "%.0f"|format(dish.selling_price) }}</div>
+          {% if dish.per_plate_cost %}
+            <div class="dish-cost">Cost: &#8377;{{ "%.0f"|format(dish.per_plate_cost) }}/plate</div>
+          {% endif %}
+        </div>
       </div>
     {% endfor %}
   {% endfor %}

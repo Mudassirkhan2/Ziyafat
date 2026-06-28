@@ -1,4 +1,5 @@
 import re
+from datetime import datetime, timezone
 from typing import Literal
 from beanie import Document
 from pydantic import BaseModel, Field, field_validator
@@ -63,6 +64,7 @@ class Organisation(Document):
     social_links: dict = Field(default_factory=dict)
     # Onboarding
     setup_completed: bool = False
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     @field_validator("gstin")
     @classmethod

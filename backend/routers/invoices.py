@@ -3,7 +3,7 @@ import re
 from datetime import datetime, date, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
-from fastapi.responses import StreamingResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 from beanie import PydanticObjectId
 from dependencies import get_current_user, require_role
@@ -12,7 +12,7 @@ from models.quotation import Quotation, QuotationLineItem
 from models.booking import Booking
 from models.organisation import Organisation
 from models.user import User, UserRole
-from services.pdf_service import render_pdf
+from services.pdf_service import render_pdf, WeasyPrintUnavailableError
 from schemas.pagination import PaginatedResponse
 
 
@@ -460,7 +460,10 @@ async def get_invoice_pdf(
         "booking": booking,
         "quotation_version": quotation_version,
     }
-    pdf_bytes = await asyncio.to_thread(render_pdf, "invoice.html", context)
+    try:
+        pdf_bytes = await asyncio.to_thread(render_pdf, "invoice.html", context)
+    except WeasyPrintUnavailableError as e:
+        return HTMLResponse(content=e.html)
     return StreamingResponse(
         iter([pdf_bytes]),
         media_type="application/pdf",

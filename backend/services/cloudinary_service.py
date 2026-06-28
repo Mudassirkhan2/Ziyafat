@@ -1,3 +1,5 @@
+import re
+
 from fastapi import HTTPException
 
 
@@ -32,3 +34,17 @@ def upload_image(file_bytes: bytes, folder: str, public_id: str) -> str:
         resource_type="image",
     )
     return result["secure_url"]
+
+
+def extract_public_id(url: str | None) -> str | None:
+    """Parse Cloudinary public_id from a secure URL, stripping version prefix and file extension."""
+    if not url:
+        return None
+    match = re.search(r"/upload/(?:v\d+/)?(.+?)(?:\.[a-zA-Z]{2,5})?$", url)
+    return match.group(1) if match else None
+
+
+def delete_image(public_id: str) -> None:
+    """Delete a Cloudinary asset and invalidate its CDN cache."""
+    uploader = _get_cloudinary()
+    uploader.destroy(public_id, invalidate=True, resource_type="image")

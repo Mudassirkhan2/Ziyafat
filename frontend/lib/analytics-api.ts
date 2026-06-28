@@ -16,6 +16,11 @@ export interface RevenueMonth {
   revenue: number;
 }
 
+export interface QuotationMonth {
+  month: string;
+  count: number;
+}
+
 export interface DashboardData {
   kpis: DashboardKPIs;
   leads_by_status: Record<string, number>;
@@ -25,6 +30,7 @@ export interface DashboardData {
   invoices_by_status: Record<string, number>;
   customers_by_type: Record<string, number>;
   revenue_by_month: RevenueMonth[];
+  quotations_by_month: QuotationMonth[];
 }
 
 export function useDashboard() {

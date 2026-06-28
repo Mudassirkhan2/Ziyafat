@@ -64,7 +64,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
 
   return (
     <div className="rounded-lg border border-outline bg-surface-high p-4">
-      <h3 className="text-sm font-semibold text-on-surface-medium mb-1">
+      <h3 className="text-base font-bold text-on-surface mb-1">
         Revenue — Last 6 Months
       </h3>
       <p className="text-xs text-on-surface-low mb-3">Paid invoices only</p>

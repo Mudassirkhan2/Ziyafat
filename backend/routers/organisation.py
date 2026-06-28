@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from dependencies import get_current_user, require_role
 from models.organisation import Organisation, ReportHeaderConfig, StorefrontSection
 from models.user import User, UserRole
-from services.cloudinary_service import upload_image
+from services.cloudinary_service import upload_image, extract_public_id, delete_image
 
 router = APIRouter(prefix="/api/v1/organisation", tags=["organisation"])
 
@@ -140,5 +140,35 @@ async def upload_org_banner(
     file_bytes = await file.read()
     url = await asyncio.to_thread(upload_image, file_bytes, "ziyafat/org", f"{org.slug}-banner")
     org.banner_url = url
+    await org.save()
+    return org
+
+
+@router.delete("/logo", response_model=OrgResponse)
+async def delete_org_logo(
+    current_user: User = Depends(require_role(UserRole.owner, UserRole.manager)),
+):
+    org = await _get_org(current_user)
+    if not org.logo_url:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No logo to remove")
+    public_id = extract_public_id(org.logo_url)
+    if public_id:
+        await asyncio.to_thread(delete_image, public_id)
+    org.logo_url = None
+    await org.save()
+    return org
+
+
+@router.delete("/banner", response_model=OrgResponse)
+async def delete_org_banner(
+    current_user: User = Depends(require_role(UserRole.owner, UserRole.manager)),
+):
+    org = await _get_org(current_user)
+    if not org.banner_url:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No banner to remove")
+    public_id = extract_public_id(org.banner_url)
+    if public_id:
+        await asyncio.to_thread(delete_image, public_id)
+    org.banner_url = None
     await org.save()
     return org

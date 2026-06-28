@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
 type RequestOptions = {
   method?: string;
@@ -37,7 +37,7 @@ export async function apiRequest<T>(
     credentials: "include",
   });
 
-  if (response.status === 401 && !_retry) {
+  if (response.status === 401 && !_retry && path !== "/auth/login") {
     await tryRefresh();
     return apiRequest<T>(path, options, true);
   }

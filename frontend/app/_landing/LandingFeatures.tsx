@@ -15,9 +15,9 @@ export default function LandingFeatures() {
         {/* Row 1: Lead-to-invoice pipeline — text left, shot right */}
         <Reveal className={s.frow}>
           <div className={s.ftext}>
-            <span className={`${s.eyebrow} ${s.featEyebrow} ${s.ftextEyebrow}`}><span className={s.eyebrowDot} /> Lead-to-invoice pipeline</span>
+            <span className={`${s.eyebrow} ${s.featEyebrow} ${s.ftextEyebrow}`}><span className={s.eyebrowDot} /> Catering Booking Software</span>
             <h3 className={s.ftextH3}>One thread from the first call to the final bill.</h3>
-            <p className={s.ftextP}>Every inquiry becomes a trackable opportunity that flows — without re-keying — into a quotation, a confirmed booking, the events themselves, and finally an invoice.</p>
+            <p className={s.ftextP}>Every inquiry becomes a trackable opportunity that flows — without re-keying — into a quotation, a confirmed booking, the events themselves, and finally an invoice. The complete catering order management system.</p>
             <ul className={s.fList}>
               <li className={s.fListItem}><span className={s.ck}><CheckIcon /></span><span><b>Capture every inquiry</b> with budget, guest count, ceremony type and source.</span></li>
               <li className={s.fListItem}><span className={s.ck}><CheckIcon /></span><span><b>Pipeline stages</b> — New → Quoted → Negotiating → Won — with follow-up reminders.</span></li>
@@ -51,9 +51,9 @@ export default function LandingFeatures() {
         {/* Row 2: Per-plate cost — shot left, text right */}
         <Reveal className={`${s.frow} ${s.frowRev}`}>
           <div className={s.ftext}>
-            <span className={`${s.eyebrow} ${s.featEyebrow} ${s.ftextEyebrow}`}><span className={s.eyebrowDot} /> Per-plate cost visibility</span>
+            <span className={`${s.eyebrow} ${s.featEyebrow} ${s.ftextEyebrow}`}><span className={s.eyebrowDot} /> Catering Inventory Software</span>
             <h3 className={s.ftextH3}>Know your margin on every plate.</h3>
-            <p className={s.ftextP}>Build each dish once with its recipe and ingredient costs, and Ziyafat shows your true per-plate cost beside the selling price — so you quote with confidence whether it&apos;s 100 guests or 2,000.</p>
+            <p className={s.ftextP}>Build each dish once with its recipe and ingredient costs, and Ziyafat shows your true per-plate cost beside the selling price — so you quote with confidence whether it&apos;s 100 guests or 2,000. Complete catering accounting and inventory management in one place.</p>
             <ul className={s.fList}>
               <li className={s.fListItem}><span className={s.ck}><CheckIcon /></span><span><b>Recipe builder</b> links ingredients per 100 guests and auto-costs the plate.</span></li>
               <li className={s.fListItem}><span className={s.ck}><CheckIcon /></span><span><b>Live margin</b> on every dish, with veg / non-veg and cuisine tags.</span></li>
@@ -92,7 +92,7 @@ export default function LandingFeatures() {
         {/* Row 3: Multi-event bookings — text left, shot right */}
         <Reveal className={s.frow}>
           <div className={s.ftext}>
-            <span className={`${s.eyebrow} ${s.featEyebrow} ${s.ftextEyebrow}`}><span className={s.eyebrowDot} /> Multi-event bookings</span>
+            <span className={`${s.eyebrow} ${s.featEyebrow} ${s.ftextEyebrow}`}><span className={s.eyebrowDot} /> Catering Event Management Software</span>
             <h3 className={s.ftextH3}>One booking. Mehendi, Nikah and Walima.</h3>
             <p className={s.ftextP}>A single wedding usually means several functions across days and venues. Keep them under one booking with shared client, deposit and contract — while each event carries its own date, venue, headcount and service style.</p>
             <ul className={s.fList}>

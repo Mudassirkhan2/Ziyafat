@@ -67,7 +67,7 @@ export default function ProcurementPage({
       </div>
 
       {isPending && <p className="text-on-surface-medium">Calculating…</p>}
-      {isError && <p className="text-red-400">Failed to load procurement list.</p>}
+      {isError && <p className="text-red-600 dark:text-red-400">Failed to load procurement list.</p>}
 
       {!isPending && !isError && items && items.length === 0 && (
         <div className="text-center py-12 text-on-surface-medium">

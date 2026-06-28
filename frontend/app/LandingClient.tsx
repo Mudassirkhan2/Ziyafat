@@ -8,6 +8,8 @@ import LandingTour from "./_landing/LandingTour";
 import LandingTestimonials from "./_landing/LandingTestimonials";
 import LandingStats from "./_landing/LandingStats";
 import LandingCta from "./_landing/LandingCta";
+import LandingBlog from "./_landing/LandingBlog";
+import LandingContact from "./_landing/LandingContact";
 import LandingFooter from "./_landing/LandingFooter";
 
 export default function LandingClient() {
@@ -24,6 +26,8 @@ export default function LandingClient() {
         <LandingTestimonials />
         <LandingStats />
         <LandingCta />
+        <LandingBlog />
+        <LandingContact />
       </main>
       <LandingFooter />
     </div>

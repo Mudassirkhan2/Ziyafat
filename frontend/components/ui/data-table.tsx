@@ -38,6 +38,7 @@ interface DataTableProps<TData> {
   sortDir: "asc" | "desc";
   isLoading?: boolean;
   emptyState?: React.ReactNode;
+  onRowClick?: (row: TData) => void;
 }
 
 export function DataTable<TData>({
@@ -53,6 +54,7 @@ export function DataTable<TData>({
   sortDir,
   isLoading,
   emptyState,
+  onRowClick,
 }: DataTableProps<TData>) {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -90,7 +92,7 @@ export function DataTable<TData>({
                       {sortable ? (
                         <button
                           onClick={() => handleSortClick(header.column.id)}
-                          className="flex items-center gap-1 hover:text-on-surface transition-colors"
+                          className="flex items-center gap-1 cursor-pointer hover:text-on-surface transition-colors"
                         >
                           {flexRender(header.column.columnDef.header, header.getContext())}
                           {header.column.id === sortBy ? (
@@ -127,7 +129,11 @@ export function DataTable<TData>({
               </TableRow>
             ) : (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="border-outline-low hover:bg-surface-high">
+                <TableRow
+                  key={row.id}
+                  className={`border-outline-low hover:bg-surface-high${onRowClick ? " cursor-pointer" : ""}`}
+                  onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="text-on-surface">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

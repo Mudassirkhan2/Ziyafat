@@ -62,3 +62,27 @@ export function useChangePassword() {
       api.patch(`/users/${id}/password`, body),
   });
 }
+
+export function useUploadMyAvatar() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => {
+      const fd = new FormData();
+      fd.append("file", file);
+      return api.upload<StaffUser>("/users/me/avatar", fd);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["current-user"] });
+    },
+  });
+}
+
+export function useDeleteMyAvatar() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.delete<StaffUser>("/users/me/avatar"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["current-user"] });
+    },
+  });
+}
