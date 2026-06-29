@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/", "/login", "/signup", "/setup"];
 const AUTH_ONLY_PATHS = ["/login", "/signup"];
+
+// Only these paths require authentication — everything else (landing, blog, storefront slugs) is public
+const PROTECTED_PREFIXES = [
+  "/dashboard", "/bookings", "/customers", "/dishes", "/ingredients",
+  "/invoices", "/leads", "/quotations", "/settings", "/users",
+];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -24,12 +29,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // Public paths don't require auth
-  if (
-    PUBLIC_PATHS.some((p) =>
-      p === "/" ? pathname === "/" : pathname === p || pathname.startsWith(`${p}/`)
-    )
-  ) {
+  // Only require auth for known app routes
+  const isProtectedRoute = PROTECTED_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  );
+
+  if (!isProtectedRoute) {
     return NextResponse.next();
   }
 
