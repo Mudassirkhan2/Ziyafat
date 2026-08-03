@@ -1,0 +1,190 @@
+from datetime import date
+from typing import Optional
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from beanie import PydanticObjectId
+from models.booking import Booking
+from models.event import Event
+from models.quotation import Quotation, QuotationLineItem
+from models.organisation import Organisation
+
+router = APIRouter(prefix="/api/v1/portal", tags=["portal"])
+
+
+class PortalOrg(BaseModel):
+    name: str
+    logo_url: Optional[str]
+    phone: Optional[str]
+    email: Optional[str]
+    tagline: Optional[str]
+    primary: str
+    on_primary: str
+    secondary: str
+
+
+class PortalEvent(BaseModel):
+    id: str
+    name: str
+    date: str
+    venue: Optional[str]
+    guest_count: int
+    ceremony_type: Optional[str]
+    service_style: Optional[str]
+    client_dietary_notes: Optional[str]
+
+
+class PortalLineItem(BaseModel):
+    dish_id: Optional[str]
+    label: str
+    qty_per_plate: float
+    guest_count: int
+    unit_price: float
+    total: float
+
+
+class PortalQuotation(BaseModel):
+    id: str
+    version: int
+    status: str
+    line_items: list[PortalLineItem]
+    subtotal: float
+    discount: float
+    service_charge_percentage: float
+    service_charge_amount: float
+    tax_percentage: float
+    tax_amount: float
+    gratuity_percentage: float
+    gratuity_amount: float
+    delivery_fee: float
+    setup_fee: float
+    total: float
+    deposit_percentage: Optional[float]
+    deposit_amount: float
+    deposit_due_date: Optional[date]
+    final_balance_due_date: Optional[date]
+    payment_terms_text: Optional[str]
+    cancellation_policy_text: Optional[str]
+    per_person_price: float
+    client_signature_status: str
+    signed_date: Optional[date]
+    signer_name: Optional[str]
+
+
+class PortalResponse(BaseModel):
+    org: PortalOrg
+    booking_title: str
+    booking_status: str
+    contract_signed: bool
+    contract_signed_date: Optional[date]
+    events: list[PortalEvent]
+    quotation: Optional[PortalQuotation]
+
+
+async def _resolve_booking(token: str) -> Booking:
+    booking = await Booking.find_one(Booking.portal_token == token)
+    if not booking:
+        raise HTTPException(status_code=404, detail="Portal not found")
+    return booking
+
+
+async def _get_org(org_id) -> Organisation:
+    org = await Organisation.get(org_id)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organisation not found")
+    return org
+
+
+def _resolve_id(link_field) -> str:
+    """Extract string ID from a Beanie Link field regardless of fetch state."""
+    if hasattr(link_field, 'id'):
+        return str(link_field.id)
+    return str(link_field.ref.id)
+
+
+@router.get("/{token}", response_model=PortalResponse)
+async def get_portal(token: str):
+    booking = await _resolve_booking(token)
+    org = await _get_org(booking.org_id)
+
+    # Fetch all events for this booking using the same pattern as events router
+    events_raw = await Event.find({"booking.$id": PydanticObjectId(booking.id)}).to_list()
+
+    # Latest quotation by version — fetch all for this org and filter by booking_id
+    all_quotations = await Quotation.find({"org_id": booking.org_id}).to_list()
+    booking_quotations = [q for q in all_quotations if _resolve_id(q.booking_id) == str(booking.id)]
+    # Sort by version descending, pick the latest
+    booking_quotations.sort(key=lambda q: q.version, reverse=True)
+    quotation = booking_quotations[0] if booking_quotations else None
+
+    portal_events = [
+        PortalEvent(
+            id=str(e.id),
+            name=e.name,
+            date=str(e.date),
+            venue=e.venue,
+            guest_count=e.guest_count,
+            ceremony_type=e.ceremony_type.value if e.ceremony_type else None,
+            service_style=e.service_style.value if e.service_style else None,
+            client_dietary_notes=e.client_dietary_notes,
+        )
+        for e in events_raw
+    ]
+
+    portal_quotation = None
+    if quotation:
+        portal_quotation = PortalQuotation(
+            id=str(quotation.id),
+            version=quotation.version,
+            status=quotation.status.value,
+            line_items=[
+                PortalLineItem(
+                    dish_id=str(item.dish_id) if item.dish_id else None,
+                    label=item.label,
+                    qty_per_plate=item.qty_per_plate,
+                    guest_count=item.guest_count,
+                    unit_price=item.unit_price,
+                    total=item.total,
+                )
+                for item in quotation.line_items
+            ],
+            subtotal=quotation.subtotal,
+            discount=quotation.discount,
+            service_charge_percentage=quotation.service_charge_percentage,
+            service_charge_amount=quotation.service_charge_amount,
+            tax_percentage=quotation.tax_percentage,
+            tax_amount=quotation.tax_amount,
+            gratuity_percentage=quotation.gratuity_percentage,
+            gratuity_amount=quotation.gratuity_amount,
+            delivery_fee=quotation.delivery_fee,
+            setup_fee=quotation.setup_fee,
+            total=quotation.total,
+            deposit_percentage=quotation.deposit_percentage,
+            deposit_amount=quotation.deposit_amount,
+            deposit_due_date=quotation.deposit_due_date,
+            final_balance_due_date=quotation.final_balance_due_date,
+            payment_terms_text=quotation.payment_terms_text,
+            cancellation_policy_text=quotation.cancellation_policy_text,
+            per_person_price=quotation.per_person_price,
+            client_signature_status=quotation.client_signature_status,
+            signed_date=quotation.signed_date,
+            signer_name=quotation.signer_name,
+        )
+
+    return PortalResponse(
+        org=PortalOrg(
+            name=org.name,
+            logo_url=org.logo_url,
+            phone=org.phone,
+            email=org.email,
+            tagline=org.tagline,
+            primary=org.primary,
+            on_primary=org.on_primary,
+            secondary=org.secondary,
+        ),
+        booking_title=booking.title,
+        booking_status=booking.status.value,
+        contract_signed=booking.contract_signed,
+        contract_signed_date=booking.contract_signed_date,
+        events=portal_events,
+        quotation=portal_quotation,
+    )
