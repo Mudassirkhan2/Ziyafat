@@ -30,9 +30,12 @@ class BookingResponse(BaseModel):
     cancellation_policy: Optional[str]
     payment_terms: Optional[str]
     special_instructions: Optional[str]
-    portal_token: str
     created_at: datetime
     updated_at: datetime
+
+
+class BookingDetailResponse(BookingResponse):
+    portal_token: str
 
 
 class CreateBookingBody(BaseModel):
@@ -71,6 +74,30 @@ class UpdateBookingBody(BaseModel):
 async def _booking_response(booking: Booking) -> BookingResponse:
     await booking.fetch_link(Booking.customer)
     return BookingResponse(
+        id=str(booking.id),
+        customer_id=str(booking.customer.id),
+        customer_name=booking.customer.name,
+        title=booking.title,
+        status=booking.status,
+        notes=booking.notes,
+        deposit_amount=booking.deposit_amount,
+        deposit_due_date=booking.deposit_due_date,
+        deposit_paid_date=booking.deposit_paid_date,
+        contract_signed=booking.contract_signed,
+        contract_signed_date=booking.contract_signed_date,
+        minimum_guarantee=booking.minimum_guarantee,
+        booking_manager_id=str(booking.booking_manager_id) if booking.booking_manager_id else None,
+        cancellation_policy=booking.cancellation_policy,
+        payment_terms=booking.payment_terms,
+        special_instructions=booking.special_instructions,
+        created_at=booking.created_at,
+        updated_at=booking.updated_at,
+    )
+
+
+async def _booking_detail_response(booking: Booking) -> BookingDetailResponse:
+    await booking.fetch_link(Booking.customer)
+    return BookingDetailResponse(
         id=str(booking.id),
         customer_id=str(booking.customer.id),
         customer_name=booking.customer.name,
@@ -161,12 +188,12 @@ async def create_booking(
     return await _booking_response(booking)
 
 
-@router.get("/{booking_id}", response_model=BookingResponse)
+@router.get("/{booking_id}", response_model=BookingDetailResponse)
 async def get_booking(booking_id: str, current_user: User = Depends(get_current_user)):
     booking = await Booking.get(booking_id)
     if not booking or booking.org_id != current_user.org_id:
         raise HTTPException(status_code=404, detail="Booking not found")
-    return await _booking_response(booking)
+    return await _booking_detail_response(booking)
 
 
 @router.patch("/{booking_id}", response_model=BookingResponse)
