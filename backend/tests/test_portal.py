@@ -51,6 +51,24 @@ async def test_get_portal_data(client: AsyncClient, owner_user: User, org: Organ
     assert "events" in data
     assert isinstance(data["events"], list)
     assert "quotation" in data
+    assert data["quotation"] is not None
+    assert data["quotation"]["total"] == 35000
+
+
+async def test_portal_no_quotation(client: AsyncClient, owner_user: User, org: Organisation):
+    await login_as(client, "owner@test.com", "Password123!")
+    r = await client.post("/api/v1/customers", json={"name": "Fatima", "phone": "9100000099"})
+    customer_id = r.json()["id"]
+    r = await client.post("/api/v1/bookings", json={"customer_id": customer_id, "title": "Mehndi Only"})
+    booking_id = r.json()["id"]
+    r = await client.get(f"/api/v1/bookings/{booking_id}")
+    token = r.json()["portal_token"]
+
+    await client.post("/api/v1/auth/logout")
+
+    r = await client.get(f"/api/v1/portal/{token}")
+    assert r.status_code == 200
+    assert r.json()["quotation"] is None
 
 
 async def test_portal_invalid_token(client: AsyncClient):

@@ -3,6 +3,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from beanie import PydanticObjectId
+from bson import DBRef, ObjectId
 from models.booking import Booking
 from models.event import Event
 from models.quotation import Quotation, QuotationLineItem
@@ -94,27 +95,23 @@ async def _get_org(org_id) -> Organisation:
     return org
 
 
-def _resolve_id(link_field) -> str:
-    """Extract string ID from a Beanie Link field regardless of fetch state."""
-    if hasattr(link_field, 'id'):
-        return str(link_field.id)
-    return str(link_field.ref.id)
-
-
 @router.get("/{token}", response_model=PortalResponse)
 async def get_portal(token: str):
     booking = await _resolve_booking(token)
     org = await _get_org(booking.org_id)
 
-    # Fetch all events for this booking using the same pattern as events router
-    events_raw = await Event.find({"booking.$id": PydanticObjectId(booking.id)}).to_list()
+    booking_oid = ObjectId(str(booking.id))
 
-    # Latest quotation by version — fetch all for this org and filter by booking_id
-    all_quotations = await Quotation.find({"org_id": booking.org_id}).to_list()
-    booking_quotations = [q for q in all_quotations if _resolve_id(q.booking_id) == str(booking.id)]
-    # Sort by version descending, pick the latest
-    booking_quotations.sort(key=lambda q: q.version, reverse=True)
-    quotation = booking_quotations[0] if booking_quotations else None
+    # Fetch all events for this booking
+    events_raw = await Event.find(
+        {"org_id": booking.org_id, "booking": DBRef("bookings", booking_oid)}
+    ).to_list()
+
+    # Latest quotation by version — DB-level filter avoids loading all org quotations
+    quotations = await Quotation.find(
+        {"org_id": booking.org_id, "booking_id": DBRef("bookings", booking_oid)}
+    ).sort("-version").limit(1).to_list()
+    quotation = quotations[0] if quotations else None
 
     portal_events = [
         PortalEvent(
