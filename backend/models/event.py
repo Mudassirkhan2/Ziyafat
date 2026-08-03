@@ -47,6 +47,7 @@ class Event(Document):
     staffing_requirements: Optional[int] = None
     equipment_needed: Optional[str] = None
     kitchen_notes: Optional[str] = None
+    client_dietary_notes: Optional[str] = None
     access_instructions: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

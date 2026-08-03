@@ -30,6 +30,7 @@ class BookingResponse(BaseModel):
     cancellation_policy: Optional[str]
     payment_terms: Optional[str]
     special_instructions: Optional[str]
+    portal_token: str
     created_at: datetime
     updated_at: datetime
 
@@ -86,6 +87,7 @@ async def _booking_response(booking: Booking) -> BookingResponse:
         cancellation_policy=booking.cancellation_policy,
         payment_terms=booking.payment_terms,
         special_instructions=booking.special_instructions,
+        portal_token=booking.portal_token,
         created_at=booking.created_at,
         updated_at=booking.updated_at,
     )

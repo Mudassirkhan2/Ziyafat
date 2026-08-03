@@ -1,3 +1,4 @@
+import secrets
 from enum import Enum
 from datetime import datetime, date, timezone
 from typing import Optional
@@ -33,9 +34,14 @@ class Booking(Document):
     cancellation_policy: Optional[str] = None
     payment_terms: Optional[str] = None
     special_instructions: Optional[str] = None
+    # Portal
+    portal_token: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     class Settings:
         name = "bookings"
-        indexes = [IndexModel([("org_id", ASCENDING)])]
+        indexes = [
+            IndexModel([("org_id", ASCENDING)]),
+            IndexModel([("portal_token", ASCENDING)], unique=True),
+        ]
