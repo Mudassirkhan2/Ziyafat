@@ -36,7 +36,7 @@ export default function LandingTestimonials() {
           </Reveal>
           <Reveal className={s.tCard}>
             <div className={s.tStars}>★★★★★</div>
-            <span className={s.tQuote}>Multi-event bookings — Mehendi, Nikah, Walima — all under one file. Incredible.</span>
+            <span className={s.tQuote}>Multi-event bookings — Mehendi, Ceremony, Reception — all under one file. Incredible.</span>
             <div className={s.tWho}><div className={s.tAv}>FH</div><div><div className={s.tName}>Fatima H.</div><div className={s.tRole}>Operations · Shahi Caterers</div></div></div>
           </Reveal>
         </div>

@@ -71,7 +71,7 @@ export default function LandingFeatures() {
             <div className={s.dCost}>
               <div className={s.dDish}>
                 <div className={s.dPic} style={{ background: "linear-gradient(150deg,#c87a32,#8a4a1e)" }} />
-                <div className={s.dName}>Chicken Dum Biryani<span className={s.dNameMeta}>Main · Hyderabadi · Non-veg</span></div>
+                <div className={s.dName}>Chicken Biryani<span className={s.dNameMeta}>Main · South Asian · Non-veg</span></div>
               </div>
               <div className={s.dMetrics}>
                 <div className={s.dm}><div className={s.dmLabel}>Plate cost</div><div className={s.dmVal}>₹118</div></div>
@@ -93,7 +93,7 @@ export default function LandingFeatures() {
         <Reveal className={s.frow}>
           <div className={s.ftext}>
             <span className={`${s.eyebrow} ${s.featEyebrow} ${s.ftextEyebrow}`}><span className={s.eyebrowDot} /> Catering Event Management Software</span>
-            <h3 className={s.ftextH3}>One booking. Mehendi, Nikah and Walima.</h3>
+            <h3 className={s.ftextH3}>One booking. Mehendi, Ceremony and Reception.</h3>
             <p className={s.ftextP}>A single wedding usually means several functions across days and venues. Keep them under one booking with shared client, deposit and contract — while each event carries its own date, venue, headcount and service style.</p>
             <ul className={s.fList}>
               <li className={s.fListItem}><span className={s.ck}><CheckIcon /></span><span><b>Multiple events</b> per booking, each scheduled with setup, service and breakdown times.</span></li>
@@ -115,8 +115,8 @@ export default function LandingFeatures() {
                 <div className={s.bkGuests}>Total guests<b className={s.bkGuestsNum}>1,450</b></div>
               </div>
               <div className={s.evt}><div className={s.evtDate}><div className={s.evtMo}>Sep</div><div className={s.evtDy}>12</div></div><div className={s.evtInfo}><div className={s.evtName}>Mehendi</div><div className={s.evtDesc}>Taj Krishna · 300 guests · 6:00 PM</div></div><span className={s.evtBadge}>Live counters</span></div>
-              <div className={s.evt}><div className={s.evtDate}><div className={s.evtMo}>Sep</div><div className={s.evtDy}>13</div></div><div className={s.evtInfo}><div className={s.evtName}>Nikah</div><div className={s.evtDesc}>Grand hall · 450 guests · 1:00 PM</div></div><span className={s.evtBadge}>Family service</span></div>
-              <div className={s.evt}><div className={s.evtDate}><div className={s.evtMo}>Sep</div><div className={s.evtDy}>14</div></div><div className={s.evtInfo}><div className={s.evtName}>Walima</div><div className={s.evtDesc}>Lawn · 700 guests · 7:30 PM</div></div><span className={s.evtBadge}>Buffet + stations</span></div>
+              <div className={s.evt}><div className={s.evtDate}><div className={s.evtMo}>Sep</div><div className={s.evtDy}>13</div></div><div className={s.evtInfo}><div className={s.evtName}>Ceremony</div><div className={s.evtDesc}>Grand hall · 450 guests · 1:00 PM</div></div><span className={s.evtBadge}>Family service</span></div>
+              <div className={s.evt}><div className={s.evtDate}><div className={s.evtMo}>Sep</div><div className={s.evtDy}>14</div></div><div className={s.evtInfo}><div className={s.evtName}>Reception</div><div className={s.evtDesc}>Lawn · 700 guests · 7:30 PM</div></div><span className={s.evtBadge}>Buffet + stations</span></div>
             </div>
           </div>
         </Reveal>

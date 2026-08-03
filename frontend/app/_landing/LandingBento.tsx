@@ -26,7 +26,7 @@ export default function LandingBento() {
             </div>
             <div className={s.cellVisual}>
               <div className={s.statusRow}>
-                <div className={s.statusLn}><b>Walima · 600 pax</b><span className={`${s.pill2} ${s.pill2Quote}`}>Quoted</span></div>
+                <div className={s.statusLn}><b>Reception · 600 pax</b><span className={`${s.pill2} ${s.pill2Quote}`}>Quoted</span></div>
                 <div className={s.statusLn}><b>Corporate · 250 pax</b><span className={`${s.pill2} ${s.pill2Neg}`}>Negotiating</span></div>
                 <div className={s.statusLn}><b>Fatima &amp; Bilal · 1,450</b><span className={`${s.pill2} ${s.pill2Won}`}>Won</span></div>
               </div>
@@ -118,10 +118,10 @@ export default function LandingBento() {
             <p className={s.cellP}>Every dish with recipe, per-plate cost, cuisine and veg / non-veg.</p>
             <div className={s.cellVisual}>
               <div className={s.statusRow}>
-                <div className={s.statusLn}><b><span className={s.vTagNon} />Chicken Dum Biryani</b><span style={{ color: "var(--gold-s)", fontWeight: 700 }}>₹310</span></div>
-                <div className={s.statusLn}><b><span className={s.vTagNon} />Mutton Haleem</b><span style={{ color: "var(--gold-s)", fontWeight: 700 }}>₹260</span></div>
-                <div className={s.statusLn}><b><span className={s.vTagVeg} />Mirchi ka Salan</b><span style={{ color: "var(--gold-s)", fontWeight: 700 }}>₹120</span></div>
-                <div className={s.statusLn}><b><span className={s.vTagVeg} />Qubani ka Meetha</b><span style={{ color: "var(--gold-s)", fontWeight: 700 }}>₹140</span></div>
+                <div className={s.statusLn}><b><span className={s.vTagNon} />Chicken Biryani</b><span style={{ color: "var(--gold-s)", fontWeight: 700 }}>₹310</span></div>
+                <div className={s.statusLn}><b><span className={s.vTagNon} />Slow-cooked Lamb Stew</b><span style={{ color: "var(--gold-s)", fontWeight: 700 }}>₹260</span></div>
+                <div className={s.statusLn}><b><span className={s.vTagVeg} />Spiced Pepper Curry</b><span style={{ color: "var(--gold-s)", fontWeight: 700 }}>₹120</span></div>
+                <div className={s.statusLn}><b><span className={s.vTagVeg} />Apricot Pudding</b><span style={{ color: "var(--gold-s)", fontWeight: 700 }}>₹140</span></div>
               </div>
             </div>
           </Reveal>
@@ -132,11 +132,11 @@ export default function LandingBento() {
             </div>
             <span className={s.cellTagline}>Functions</span>
             <h3 className={s.cellH3}>Events</h3>
-            <p className={s.cellP}>Many events per booking — Mehendi, Nikah, Walima — each with its own venue, headcount and service style.</p>
+            <p className={s.cellP}>Many events per booking — Mehendi, Ceremony, Reception — each with its own venue, headcount and service style.</p>
             <div className={s.cellVisual}>
               <div className={s.statusRow}>
-                <div className={s.statusLn}><b>Nikah · 450 pax</b><span className={`${s.pill2} ${s.pill2Quote}`}>Family</span></div>
-                <div className={s.statusLn}><b>Walima · 700 pax</b><span className={`${s.pill2} ${s.pill2Quote}`}>Buffet</span></div>
+                <div className={s.statusLn}><b>Ceremony · 450 pax</b><span className={`${s.pill2} ${s.pill2Quote}`}>Family</span></div>
+                <div className={s.statusLn}><b>Reception · 700 pax</b><span className={`${s.pill2} ${s.pill2Quote}`}>Buffet</span></div>
               </div>
             </div>
           </Reveal>
