@@ -1,6 +1,6 @@
 from datetime import date
 from typing import Optional
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 from beanie import PydanticObjectId
 from bson import DBRef, ObjectId
@@ -185,3 +185,93 @@ async def get_portal(token: str):
         events=portal_events,
         quotation=portal_quotation,
     )
+
+
+# ---------------------------------------------------------------------------
+# POST /api/v1/portal/{token}/sign
+# ---------------------------------------------------------------------------
+
+class SignBody(BaseModel):
+    signer_name: str
+
+
+class SignResponse(BaseModel):
+    client_signature_status: str
+    signed_date: Optional[date]
+    signer_name: Optional[str]
+
+
+@router.post("/{token}/sign", response_model=SignResponse)
+async def sign_quotation(token: str, body: SignBody, request: Request):
+    booking = await _resolve_booking(token)
+
+    quotations = await Quotation.find(
+        {"org_id": booking.org_id, "booking_id": DBRef("bookings", PydanticObjectId(str(booking.id)))}
+    ).sort("-version").limit(1).to_list()
+
+    if not quotations:
+        raise HTTPException(status_code=404, detail="No quotation found for this booking")
+
+    quotation = quotations[0]
+
+    if quotation.client_signature_status == "signed":
+        raise HTTPException(status_code=409, detail="Quotation already signed")
+
+    quotation.client_signature_status = "signed"
+    quotation.signed_date = date.today()
+    quotation.signer_name = body.signer_name
+    quotation.signer_ip = request.client.host if request.client else None
+    await quotation.save()
+
+    return SignResponse(
+        client_signature_status=quotation.client_signature_status,
+        signed_date=quotation.signed_date,
+        signer_name=quotation.signer_name,
+    )
+
+
+# ---------------------------------------------------------------------------
+# POST /api/v1/portal/{token}/dietary
+# ---------------------------------------------------------------------------
+
+class DietaryBody(BaseModel):
+    event_id: str
+    notes: str
+
+
+class DietaryResponse(BaseModel):
+    event_id: str
+    client_dietary_notes: str
+
+
+@router.post("/{token}/dietary", response_model=DietaryResponse)
+async def submit_dietary(token: str, body: DietaryBody):
+    booking = await _resolve_booking(token)
+
+    # Fetch event and verify it belongs to this booking
+    try:
+        event = await Event.get(body.event_id)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    if event is None:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    # Check the event's booking reference points to our booking
+    # Use the same pattern as events.py _verify_event_belongs_to_booking
+    if hasattr(event.booking, "ref"):
+        event_booking_id = str(event.booking.ref.id)
+    elif isinstance(event.booking, DBRef):
+        event_booking_id = str(event.booking.id)
+    elif hasattr(event.booking, "id"):
+        event_booking_id = str(event.booking.id)
+    else:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    if event_booking_id != str(booking.id):
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    event.client_dietary_notes = body.notes
+    await event.save()
+
+    return DietaryResponse(event_id=str(event.id), client_dietary_notes=event.client_dietary_notes)

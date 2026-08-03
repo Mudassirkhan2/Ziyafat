@@ -74,3 +74,88 @@ async def test_portal_no_quotation(client: AsyncClient, owner_user: User, org: O
 async def test_portal_invalid_token(client: AsyncClient):
     r = await client.get("/api/v1/portal/invalid-token-xyz")
     assert r.status_code == 404
+
+
+async def test_portal_sign_quotation(client: AsyncClient, owner_user: User, org: Organisation):
+    token = await _setup_portal(client, owner_user, org)
+    await client.post("/api/v1/auth/logout")
+
+    r = await client.post(
+        f"/api/v1/portal/{token}/sign",
+        json={"signer_name": "Ahmed Ali"},
+    )
+    assert r.status_code == 200
+    data = r.json()
+    assert data["client_signature_status"] == "signed"
+    assert data["signer_name"] == "Ahmed Ali"
+
+
+async def test_portal_sign_invalid_token(client: AsyncClient):
+    r = await client.post("/api/v1/portal/bad-token/sign", json={"signer_name": "X"})
+    assert r.status_code == 404
+
+
+async def test_portal_sign_already_signed(client: AsyncClient, owner_user: User, org: Organisation):
+    token = await _setup_portal(client, owner_user, org)
+    await client.post("/api/v1/auth/logout")
+    # Sign once
+    await client.post(f"/api/v1/portal/{token}/sign", json={"signer_name": "Ahmed Ali"})
+    # Sign again — should 409
+    r = await client.post(f"/api/v1/portal/{token}/sign", json={"signer_name": "Ahmed Ali"})
+    assert r.status_code == 409
+
+
+async def test_portal_dietary_submission(client: AsyncClient, owner_user: User, org: Organisation):
+    token = await _setup_portal(client, owner_user, org)
+
+    # Create an event while still logged in
+    await login_as(client, "owner@test.com", "Password123!")
+    booking_r = await client.get("/api/v1/bookings")
+    booking_id = booking_r.json()["items"][0]["id"]
+
+    # Events are at POST /api/v1/bookings/{booking_id}/events
+    event_r = await client.post(
+        f"/api/v1/bookings/{booking_id}/events",
+        json={
+            "name": "Walima Ceremony",
+            "date": "2026-12-01",
+            "guest_count": 200,
+            "catering_model": "per_plate",
+        },
+    )
+    assert event_r.status_code == 201
+    event_id = event_r.json()["id"]
+
+    await client.post("/api/v1/auth/logout")
+
+    r = await client.post(
+        f"/api/v1/portal/{token}/dietary",
+        json={"event_id": event_id, "notes": "3 guests gluten-free, 1 nut allergy"},
+    )
+    assert r.status_code == 200
+    assert r.json()["client_dietary_notes"] == "3 guests gluten-free, 1 nut allergy"
+
+
+async def test_portal_dietary_wrong_event(client: AsyncClient, owner_user: User, org: Organisation):
+    """Event that belongs to a different booking cannot be updated via this portal token."""
+    token = await _setup_portal(client, owner_user, org)
+
+    # Create a SECOND booking with its own event
+    await login_as(client, "owner@test.com", "Password123!")
+    r = await client.post("/api/v1/customers", json={"name": "Zara", "phone": "9199999999"})
+    cid = r.json()["id"]
+    r = await client.post("/api/v1/bookings", json={"customer_id": cid, "title": "Other Booking"})
+    other_booking_id = r.json()["id"]
+    r = await client.post(
+        f"/api/v1/bookings/{other_booking_id}/events",
+        json={"name": "Other Event", "date": "2026-12-02", "guest_count": 50, "catering_model": "per_plate"},
+    )
+    other_event_id = r.json()["id"]
+    await client.post("/api/v1/auth/logout")
+
+    # Try to update the other booking's event via THIS portal token — should 404
+    r = await client.post(
+        f"/api/v1/portal/{token}/dietary",
+        json={"event_id": other_event_id, "notes": "attempt"},
+    )
+    assert r.status_code == 404
