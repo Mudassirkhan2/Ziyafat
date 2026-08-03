@@ -607,6 +607,16 @@ export default function BookingDetailPage() {
               </SelectContent>
             </Select>
           </div>
+          <button
+            onClick={() => {
+              const url = `${window.location.origin}/portal/${booking.portal_token}`;
+              navigator.clipboard.writeText(url);
+              toast.success("Portal link copied to clipboard.");
+            }}
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-outline text-xs font-semibold text-on-surface-medium hover:bg-surface-high hover:text-on-surface transition-all cursor-pointer"
+          >
+            Share Portal
+          </button>
         </div>
       </div>
 

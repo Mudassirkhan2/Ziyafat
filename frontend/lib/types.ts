@@ -95,6 +95,7 @@ export interface Booking {
   cancellation_policy: string | null;
   payment_terms: string | null;
   special_instructions: string | null;
+  portal_token: string;
   created_at: string;
   updated_at: string;
 }
