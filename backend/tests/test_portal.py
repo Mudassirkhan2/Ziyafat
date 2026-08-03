@@ -88,6 +88,7 @@ async def test_portal_sign_quotation(client: AsyncClient, owner_user: User, org:
     data = r.json()
     assert data["client_signature_status"] == "signed"
     assert data["signer_name"] == "Ahmed Ali"
+    assert data["signed_date"] is not None
 
 
 async def test_portal_sign_invalid_token(client: AsyncClient):

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timezone
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
@@ -221,6 +221,7 @@ async def sign_quotation(token: str, body: SignBody, request: Request):
     quotation.signed_date = date.today()
     quotation.signer_name = body.signer_name
     quotation.signer_ip = request.client.host if request.client else None
+    quotation.updated_at = datetime.now(timezone.utc)
     await quotation.save()
 
     return SignResponse(
@@ -258,20 +259,17 @@ async def submit_dietary(token: str, body: DietaryBody):
         raise HTTPException(status_code=404, detail="Event not found")
 
     # Check the event's booking reference points to our booking
-    # Use the same pattern as events.py _verify_event_belongs_to_booking
-    if hasattr(event.booking, "ref"):
-        event_booking_id = str(event.booking.ref.id)
-    elif isinstance(event.booking, DBRef):
-        event_booking_id = str(event.booking.id)
-    elif hasattr(event.booking, "id"):
-        event_booking_id = str(event.booking.id)
+    booking_ref = event.booking
+    if hasattr(booking_ref, "ref"):
+        event_booking_id = str(booking_ref.ref.id)
     else:
-        raise HTTPException(status_code=404, detail="Event not found")
+        event_booking_id = str(booking_ref.id)
 
     if event_booking_id != str(booking.id):
         raise HTTPException(status_code=404, detail="Event not found")
 
     event.client_dietary_notes = body.notes
+    event.updated_at = datetime.now(timezone.utc)
     await event.save()
 
     return DietaryResponse(event_id=str(event.id), client_dietary_notes=event.client_dietary_notes)
