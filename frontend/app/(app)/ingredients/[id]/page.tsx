@@ -7,6 +7,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { useIngredient, useUpdateIngredient } from "@/lib/ingredients-api";
+import { useCurrencyStore } from "@/lib/currency-store";
+import { getCurrencyMeta } from "@/lib/currencies";
 import { toast } from "sonner";
 import { INGREDIENT_CATEGORY_OPTIONS } from "@/lib/constants";
 
@@ -61,6 +63,7 @@ export default function EditIngredientPage() {
 
   const { data: ingredient, isLoading, isError } = useIngredient(id);
   const updateIngredient = useUpdateIngredient(id);
+  const symbol = getCurrencyMeta(useCurrencyStore((s) => s.currencyCode)).symbol;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -220,7 +223,7 @@ export default function EditIngredientPage() {
                   name="cost_per_unit"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Cost per Unit (₹) *</FormLabel>
+                      <FormLabel>Cost per Unit ({symbol}) *</FormLabel>
                       <FormControl><Input type="number" step="0.01" placeholder="0.00" {...field} /></FormControl>
                       <FormMessage />
                     </FormItem>

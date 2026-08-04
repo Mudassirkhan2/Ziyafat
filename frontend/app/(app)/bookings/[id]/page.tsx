@@ -1,14 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 import { format } from "date-fns"
-import { useBooking, useUpdateBooking } from "@/lib/bookings-api";
+import { useBooking, useUpdateBooking, useDeleteBooking } from "@/lib/bookings-api";
 import { toast } from "sonner";
 import {
   FormDatePicker,
@@ -32,6 +32,7 @@ import {
   FOOD_PREFERENCE_OPTIONS,
   EVENT_STATUS_OPTIONS,
 } from "@/lib/constants";
+import { useCurrencyStore } from "@/lib/currency-store";
 
 import {
   Table,
@@ -65,6 +66,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Form } from "@/components/ui/form";
+import { Users, Trash2 } from "lucide-react";
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -188,31 +190,62 @@ function EventSheet({
   const form = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
-      name: event?.name ?? "",
-      date: event?.date ? new Date(event.date) : undefined as unknown as Date,
-      start_time: event?.start_time ?? "",
-      end_time: event?.end_time ?? "",
-      venue: event?.venue ?? "",
-      venue_address: event?.venue_address ?? "",
-      venue_contact: event?.venue_contact ?? "",
-      guest_count: event?.guest_count?.toString() ?? "",
-      veg_count: event?.veg_count?.toString() ?? "",
-      non_veg_count: event?.non_veg_count?.toString() ?? "",
-      confirmed_count: event?.confirmed_count?.toString() ?? "",
-      actual_headcount: event?.actual_headcount?.toString() ?? "",
-      catering_model: event?.catering_model ?? "per_plate",
-      ceremony_type: event?.ceremony_type ?? "",
-      service_style: event?.service_style ?? "",
-      food_preference: event?.food_preference ?? "",
-      event_status: event?.event_status ?? "",
-      room_setup_style: event?.room_setup_style ?? "",
-      staffing_count: event?.staffing_requirements?.toString() ?? "",
-      equipment_needed: event?.equipment_needed ?? "",
-      kitchen_notes: event?.kitchen_notes ?? "",
-      access_instructions: event?.access_instructions ?? "",
-      notes: event?.notes ?? "",
+      name: "",
+      date: undefined as unknown as Date,
+      start_time: "",
+      end_time: "",
+      venue: "",
+      venue_address: "",
+      venue_contact: "",
+      guest_count: "",
+      veg_count: "",
+      non_veg_count: "",
+      confirmed_count: "",
+      actual_headcount: "",
+      catering_model: "per_plate",
+      ceremony_type: "",
+      service_style: "",
+      food_preference: "",
+      event_status: "",
+      room_setup_style: "",
+      staffing_count: "",
+      equipment_needed: "",
+      kitchen_notes: "",
+      access_instructions: "",
+      notes: "",
     },
   });
+
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        name: event?.name ?? "",
+        date: event?.date ? new Date(event.date) : undefined as unknown as Date,
+        start_time: event?.start_time ?? "",
+        end_time: event?.end_time ?? "",
+        venue: event?.venue ?? "",
+        venue_address: event?.venue_address ?? "",
+        venue_contact: event?.venue_contact ?? "",
+        guest_count: event?.guest_count?.toString() ?? "",
+        veg_count: event?.veg_count?.toString() ?? "",
+        non_veg_count: event?.non_veg_count?.toString() ?? "",
+        confirmed_count: event?.confirmed_count?.toString() ?? "",
+        actual_headcount: event?.actual_headcount?.toString() ?? "",
+        catering_model: event?.catering_model ?? "per_plate",
+        ceremony_type: event?.ceremony_type ?? "",
+        service_style: event?.service_style ?? "",
+        food_preference: event?.food_preference ?? "",
+        event_status: event?.event_status ?? "",
+        room_setup_style: event?.room_setup_style ?? "",
+        staffing_count: event?.staffing_requirements?.toString() ?? "",
+        equipment_needed: event?.equipment_needed ?? "",
+        kitchen_notes: event?.kitchen_notes ?? "",
+        access_instructions: event?.access_instructions ?? "",
+        notes: event?.notes ?? "",
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, sheetMode]);
 
   function onSubmit(values: EventFormValues) {
     const payload = {
@@ -513,10 +546,21 @@ export default function BookingDetailPage() {
   const params = useParams();
   const id = params.id as string;
 
+  const fmt = useCurrencyStore((s) => s.format);
+  const router = useRouter();
   const { data: booking, isLoading: bookingLoading, isError: bookingError } = useBooking(id);
   const { data: events, isLoading: eventsLoading, isError: eventsError } = useBookingEvents(id);
   const { data: dishes } = useDishes();
   const updateBooking = useUpdateBooking(id);
+  const deleteBooking = useDeleteBooking();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  function handleDeleteBooking() {
+    deleteBooking.mutate(id, {
+      onSuccess: () => { toast.success("Booking deleted."); router.push("/bookings"); },
+      onError: () => toast.error("Failed to delete booking. Try again."),
+    });
+  }
 
   const dishMap = new Map(dishes?.items?.map((d) => [d.id, d.name]) ?? []);
 
@@ -608,17 +652,53 @@ export default function BookingDetailPage() {
             </Select>
           </div>
           <button
-            onClick={() => {
+            onClick={async () => {
+              if (!booking.portal_token) {
+                toast.error("Portal link not available yet. Try refreshing.");
+                return;
+              }
               const url = `${window.location.origin}/portal/${booking.portal_token}`;
-              navigator.clipboard.writeText(url);
-              toast.success("Portal link copied to clipboard.");
+              try {
+                await navigator.clipboard.writeText(url);
+                toast.success("Portal link copied to clipboard.");
+              } catch {
+                toast.error(`Copy this link manually: ${url}`);
+              }
             }}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-outline text-xs font-semibold text-on-surface-medium hover:bg-surface-high hover:text-on-surface transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-secondary text-on-secondary text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer"
           >
+            <Users className="h-3.5 w-3.5" />
             Share Portal
+          </button>
+          <button
+            onClick={() => setDeleteOpen(true)}
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-50 transition-colors cursor-pointer"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete
           </button>
         </div>
       </div>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete booking?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-on-surface-medium">
+            <span className="font-semibold text-on-surface">{booking.title}</span> will be permanently deleted. This cannot be undone.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleteBooking.isPending}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteBooking} disabled={deleteBooking.isPending}>
+              {deleteBooking.isPending ? "Deleting…" : "Delete booking"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Booking Details Card */}
       {(booking.deposit_amount || booking.deposit_due_date || booking.deposit_paid_date ||
@@ -632,7 +712,7 @@ export default function BookingDetailPage() {
             {(booking.deposit_amount || booking.deposit_due_date || booking.deposit_paid_date || booking.minimum_guarantee || booking.contract_signed) && (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {booking.deposit_amount != null && (
-                  <InfoCell label="Deposit Amount" value={`₹${booking.deposit_amount.toLocaleString("en-IN")}`} />
+                  <InfoCell label="Deposit Amount" value={fmt(booking.deposit_amount)} />
                 )}
                 {booking.deposit_due_date && (
                   <InfoCell label="Deposit Due" value={formatDate(booking.deposit_due_date)} />

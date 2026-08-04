@@ -8,6 +8,7 @@ import { useDataTableState } from "@/lib/use-data-table-state";
 import type { Dish } from "@/lib/types";
 import type { ColumnDef } from "@tanstack/react-table";
 
+import { useCurrencyStore } from "@/lib/currency-store";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
@@ -28,7 +29,8 @@ import { FiPlus, FiTrash2, FiLoader, FiX, FiPrinter, FiList } from "react-icons/
 type VegFilter = "all" | "veg" | "non-veg";
 
 function getColumns(
-  onDelete: (dish: Dish) => void
+  onDelete: (dish: Dish) => void,
+  fmt: (n: number) => string
 ): ColumnDef<Dish>[] {
   return [
     {
@@ -71,7 +73,7 @@ function getColumns(
       meta: { sortable: true },
       cell: ({ row }) => (
         <span className="text-on-surface-medium">
-          ₹{row.original.selling_price.toLocaleString("en-IN")}
+          {fmt(row.original.selling_price)}
         </span>
       ),
     },
@@ -124,7 +126,8 @@ function DishesContent() {
 
   const { data, isLoading, isError } = useDishes(queryParams);
 
-  const columns = getColumns(setDeleteTarget);
+  const fmt = useCurrencyStore((s) => s.format);
+  const columns = getColumns(setDeleteTarget, fmt);
   function handleRowClick(dish: Dish) {
     router.push(`/dishes/${dish.id}/edit`);
   }

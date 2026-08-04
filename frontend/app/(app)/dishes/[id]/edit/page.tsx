@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { UtensilsCrossed } from "lucide-react";
 
 import { useDish, useUpdateDish, useUploadDishImage, useDeleteDishImage } from "@/lib/dishes-api";
+import { useCurrencyStore } from "@/lib/currency-store";
 import { toast } from "sonner";
 import {
   useIngredients,
@@ -56,6 +57,7 @@ export default function EditDishPage() {
   const { data: recipe } = useDishRecipe(id);
   const replaceRecipe = useReplaceDishRecipe(id);
   const clearRecipe = useClearDishRecipe(id);
+  const fmt = useCurrencyStore((s) => s.format);
 
   const { data: ingredientsData } = useIngredients({
     pageSize: 100,
@@ -303,7 +305,7 @@ export default function EditDishPage() {
                 Quantities are per 100 guests.
                 {recipe && (
                   <span className="ml-2 font-medium text-on-surface">
-                    Recipe cost: ₹{recipe.recipe_cost_per_plate.toFixed(2)}/plate
+                    Recipe cost: {fmt(recipe.recipe_cost_per_plate)}/plate
                   </span>
                 )}
               </p>

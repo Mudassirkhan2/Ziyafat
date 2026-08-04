@@ -7,6 +7,7 @@ import { useDataTableState } from "@/lib/use-data-table-state";
 import type { Ingredient } from "@/lib/types";
 import type { ColumnDef } from "@tanstack/react-table";
 
+import { useCurrencyStore } from "@/lib/currency-store";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +23,8 @@ import {
 import { FiPlus, FiTrash2, FiLoader, FiX } from "react-icons/fi";
 
 function getColumns(
-  onDelete: (ingredient: Ingredient) => void
+  onDelete: (ingredient: Ingredient) => void,
+  fmt: (n: number) => string
 ): ColumnDef<Ingredient>[] {
   return [
     {
@@ -49,7 +51,7 @@ function getColumns(
       meta: { sortable: true },
       cell: ({ row }) => (
         <span className="text-on-surface-medium">
-          ₹{row.original.cost_per_unit.toLocaleString("en-IN")}
+          {fmt(row.original.cost_per_unit)}
         </span>
       ),
     },
@@ -112,7 +114,8 @@ function IngredientsContent() {
     sortDir: ts.sortDir,
   });
 
-  const columns = getColumns(setDeleteTarget);
+  const fmt = useCurrencyStore((s) => s.format);
+  const columns = getColumns(setDeleteTarget, fmt);
   function handleRowClick(ingredient: Ingredient) {
     router.push(`/ingredients/${ingredient.id}/edit`);
   }

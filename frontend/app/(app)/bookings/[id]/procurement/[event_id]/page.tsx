@@ -3,6 +3,7 @@
 import { use, useState } from "react";
 import Link from "next/link";
 import { useProcurementList } from "@/lib/ingredients-api";
+import { useCurrencyStore } from "@/lib/currency-store";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -18,6 +19,7 @@ export default function ProcurementPage({
 }) {
   const { id: bookingId, event_id: eventId } = use(params);
   const [wastage, setWastage] = useState(0);
+  const fmt = useCurrencyStore((s) => s.format);
 
   const { data: items, isPending, isError, refetch } = useProcurementList(bookingId, eventId, wastage);
 
@@ -88,7 +90,7 @@ export default function ProcurementPage({
                   <TableHead className="text-on-surface-medium">Ingredient</TableHead>
                   <TableHead className="text-on-surface-medium text-right">Quantity</TableHead>
                   <TableHead className="text-on-surface-medium">Unit</TableHead>
-                  <TableHead className="text-on-surface-medium text-right">Cost (₹)</TableHead>
+                  <TableHead className="text-on-surface-medium text-right">Cost</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -100,7 +102,7 @@ export default function ProcurementPage({
                     </TableCell>
                     <TableCell className="text-on-surface-medium">{item.unit}</TableCell>
                     <TableCell className="text-right text-on-surface-medium">
-                      ₹{item.cost.toFixed(2)}
+                      {fmt(item.cost)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -113,7 +115,7 @@ export default function ProcurementPage({
       {!isPending && !isError && items && items.length > 0 && (
         <div className="flex justify-end pt-4 border-t border-outline">
           <p className="text-lg font-bold text-on-surface">
-            Total: ₹{totalCost.toFixed(2)}
+            Total: {fmt(totalCost)}
           </p>
         </div>
       )}
