@@ -1,9 +1,15 @@
 import re
+from enum import Enum
 from datetime import datetime, timezone
 from typing import Literal
 from beanie import Document
 from pydantic import BaseModel, Field, field_validator
 from pymongo import ASCENDING, IndexModel
+
+
+class TaxItemMode(str, Enum):
+    same_for_all = "same_for_all"
+    different_per_item = "different_per_item"
 
 GSTIN_RE = re.compile(r"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$")
 IFSC_RE = re.compile(r"^[A-Z]{4}0[A-Z0-9]{6}$")
@@ -53,6 +59,8 @@ class Organisation(Document):
     bank_account_number: str | None = None
     bank_ifsc: str | None = None
     bank_name: str | None = None
+    # Tax configuration
+    tax_mode: TaxItemMode = TaxItemMode.same_for_all
     # Invoice defaults (auto-fill new quotations/invoices)
     default_service_charge_percentage: float = 0.0
     default_tax_rate: float = 0.0
@@ -60,6 +68,7 @@ class Organisation(Document):
     default_payment_terms: str | None = None
     default_cancellation_policy: str | None = None
     invoice_prefix: str = "INV"
+    currency_code: str = "INR"
     # Social
     social_links: dict = Field(default_factory=dict)
     # Onboarding
