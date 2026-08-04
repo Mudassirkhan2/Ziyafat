@@ -10,7 +10,7 @@ export type LeadStatus = "new" | "quoted" | "negotiating" | "won" | "lost";
 export type BookingStatus = "confirmed" | "in_progress" | "completed" | "cancelled";
 export type CateringModel = "per_plate" | "chef_driven";
 export type UserRole = "owner" | "manager" | "kitchen" | "viewer";
-export type CeremonyType = "nikah" | "walima" | "mehendi" | "reception" | "aqiqah" | "birthday" | "corporate" | "other";
+export type CeremonyType = "wedding" | "engagement" | "reception" | "birthday" | "anniversary" | "baby_shower" | "corporate" | "graduation" | "gala" | "other";
 export type ServiceStyle = "buffet" | "plated" | "live_counter" | "family" | "stations" | "combo";
 export type FoodPreference = "veg" | "non_veg" | "mixed" | "jain" | "vegan";
 export type DishCourse = "starter" | "soup" | "main" | "dessert" | "beverage" | "snack" | "bread";
@@ -95,7 +95,7 @@ export interface Booking {
   cancellation_policy: string | null;
   payment_terms: string | null;
   special_instructions: string | null;
-  portal_token: string;
+  portal_token?: string;
   created_at: string;
   updated_at: string;
 }
@@ -136,6 +136,27 @@ export interface BookingEvent {
 
 export type QuotationStatus = "draft" | "sent" | "approved" | "rejected" | "superseded";
 export type InvoiceStatus = "draft" | "sent" | "paid";
+export type TaxCalculationMethod = "additive" | "inclusive";
+export type TaxItemMode = "same_for_all" | "different_per_item";
+
+export interface Tax {
+  id: string;
+  name: string;
+  rate: number;
+  calculation_method: TaxCalculationMethod;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InvoiceTaxLine {
+  tax_id: string | null;
+  name: string;
+  rate: number;
+  calculation_method: TaxCalculationMethod;
+  taxable_amount: number;
+  amount: number;
+}
 
 export interface QuotationLineItem {
   dish_id: string | null;
@@ -144,6 +165,7 @@ export interface QuotationLineItem {
   guest_count: number;
   unit_price: number;
   total: number;
+  tax_id?: string | null;
 }
 
 export interface Dish {
@@ -213,6 +235,7 @@ export interface Invoice {
   invoice_number: string;
   status: InvoiceStatus;
   line_items: QuotationLineItem[];
+  tax_lines: InvoiceTaxLine[];
   subtotal: number;
   discount: number;
   total: number;
@@ -250,6 +273,7 @@ export interface StorefrontSection {
 }
 
 export interface Organisation {
+  id: string;
   name: string;
   slug: string;
   logo_url: string | null;
@@ -274,6 +298,7 @@ export interface Organisation {
   bank_account_number: string | null;
   bank_ifsc: string | null;
   bank_name: string | null;
+  tax_mode: TaxItemMode;
   default_payment_terms: string | null;
   default_cancellation_policy: string | null;
   default_service_charge_percentage: number;
@@ -281,6 +306,9 @@ export interface Organisation {
   default_gratuity_percentage: number;
   invoice_prefix: string;
   social_links: Record<string, string>;
+  setup_completed: boolean;
+  currency_code: string;
+  razorpay_configured: boolean;
 }
 
 export interface Ingredient {

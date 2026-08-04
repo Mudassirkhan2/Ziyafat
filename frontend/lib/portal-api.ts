@@ -9,6 +9,7 @@ export interface PortalOrg {
   primary: string;
   on_primary: string;
   secondary: string;
+  currency_code: string;
 }
 
 export interface PortalEvent {

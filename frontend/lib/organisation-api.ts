@@ -2,24 +2,34 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api";
 import { applyOrgTheme } from "./dls/tokens";
 import type { Organisation } from "./types";
+import { useCurrencyStore } from "./currency-store";
 
 export function useOrg() {
   return useQuery<Organisation>({
     queryKey: ["org"],
-    queryFn: () => api.get<Organisation>("/organisation"),
+    queryFn: async () => {
+      const data = await api.get<Organisation>("/organisation");
+      useCurrencyStore.getState().setFromOrg(data.currency_code ?? "INR");
+      return data;
+    },
     staleTime: 5 * 60 * 1000,
   });
 }
 
+type OrgUpdateBody = Partial<Organisation & {
+  report_header: Partial<Organisation["report_header"]>;
+}>;
+
 export function useUpdateOrg() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: Partial<Organisation & { report_header: Partial<Organisation["report_header"]> }>) =>
+    mutationFn: (body: OrgUpdateBody) =>
       api.patch<Organisation>("/organisation", body),
     onSuccess: (data) => {
       queryClient.setQueryData(["org"], data);
       queryClient.invalidateQueries({ queryKey: ["org-info"] });
       applyOrgTheme(data);
+      useCurrencyStore.getState().setFromOrg(data.currency_code ?? "INR");
     },
   });
 }
