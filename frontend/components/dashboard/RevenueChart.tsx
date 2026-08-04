@@ -11,6 +11,7 @@ import {
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
 import type { RevenueMonth } from "@/lib/analytics-api";
+import { useCurrencyStore } from "@/lib/currency-store";
 import { EmptyState } from "@/components/ui/empty-state";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
@@ -20,11 +21,12 @@ interface RevenueChartProps {
 }
 
 export function RevenueChart({ data }: RevenueChartProps) {
+  const fmt = useCurrencyStore((s) => s.format);
   const chartData = {
     labels: data.map((d) => d.month),
     datasets: [
       {
-        label: "Revenue (₹)",
+        label: "Revenue",
         data: data.map((d) => d.revenue),
         backgroundColor: "#3b82f6",
         borderRadius: 4,
@@ -40,7 +42,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
       tooltip: {
         callbacks: {
           label: (ctx: { raw: unknown }) =>
-            ` ₹${Number(ctx.raw).toLocaleString("en-IN")}`,
+            ` ${fmt(Number(ctx.raw))}`,
         },
       },
     },
@@ -53,7 +55,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
         ticks: {
           color: "#64748b",
           callback: (value: number | string) =>
-            `₹${Number(value).toLocaleString("en-IN")}`,
+            fmt(Number(value)),
         },
         grid: { color: "rgba(148,163,184,0.15)" },
       },

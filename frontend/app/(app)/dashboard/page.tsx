@@ -3,6 +3,7 @@
 
 import { useCurrentUser } from "@/lib/auth";
 import { useDashboard } from "@/lib/analytics-api";
+import { useCurrencyStore } from "@/lib/currency-store";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { StatusChart } from "@/components/dashboard/StatusChart";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
@@ -20,6 +21,7 @@ import {
 export default function DashboardPage() {
   const { data: user } = useCurrentUser();
   const { data, isLoading, isError } = useDashboard();
+  const formatCurrency = useCurrencyStore((s) => s.formatCompact);
 
   return (
     <div className="p-6">
@@ -95,11 +97,6 @@ export default function DashboardPage() {
   );
 }
 
-function formatCurrency(amount: number): string {
-  if (amount >= 100000) return `₹${(amount / 100000).toFixed(1)}L`;
-  if (amount >= 1000) return `₹${(amount / 1000).toFixed(0)}K`;
-  return `₹${amount}`;
-}
 
 function KpiCardSkeleton() {
   return (
