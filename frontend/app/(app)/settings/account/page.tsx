@@ -14,6 +14,14 @@ import { Separator } from "@/components/ui/separator";
 import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from "@/components/ui/form";
+import { CURRENCIES } from "@/lib/currencies";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const accountSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -34,6 +42,7 @@ const accountSchema = z.object({
   invoice_prefix: z.string().optional(),
   default_payment_terms: z.string().optional(),
   default_cancellation_policy: z.string().optional(),
+  currency_code: z.string().optional(),
 });
 
 type AccountFormValues = z.infer<typeof accountSchema>;
@@ -54,6 +63,7 @@ export default function AccountSettingsPage() {
       invoice_prefix: "INV",
       default_payment_terms: "",
       default_cancellation_policy: "",
+      currency_code: "INR",
     },
   });
 
@@ -78,42 +88,45 @@ export default function AccountSettingsPage() {
         invoice_prefix: org.invoice_prefix ?? "INV",
         default_payment_terms: org.default_payment_terms ?? "",
         default_cancellation_policy: org.default_cancellation_policy ?? "",
+        currency_code: org.currency_code ?? "INR",
       });
     }
   }, [org, form]);
 
   function onSubmit(values: AccountFormValues) {
     updateOrg.mutate(
-    {
-      name: values.name,
-      slug: values.slug,
-      address: values.address || undefined,
-      phone: values.phone || undefined,
-      email: values.email || undefined,
-      tagline: values.tagline || undefined,
-      website: values.website || undefined,
-      gstin: values.gstin || undefined,
-      bank_account_name: values.bank_account_name || undefined,
-      bank_account_number: values.bank_account_number || undefined,
-      bank_ifsc: values.bank_ifsc || undefined,
-      bank_name: values.bank_name || undefined,
-      default_service_charge_percentage: values.default_service_charge_percentage
-        ? parseFloat(values.default_service_charge_percentage)
-        : undefined,
-      default_tax_rate: values.default_tax_rate
-        ? parseFloat(values.default_tax_rate)
-        : undefined,
-      default_gratuity_percentage: values.default_gratuity_percentage
-        ? parseFloat(values.default_gratuity_percentage)
-        : undefined,
-      invoice_prefix: values.invoice_prefix || undefined,
-      default_payment_terms: values.default_payment_terms || undefined,
-      default_cancellation_policy: values.default_cancellation_policy || undefined,
-    },
-    {
-      onSuccess: () => toast.success("Settings saved."),
-      onError: () => toast.error("Failed to save settings. Please try again."),
-    });
+      {
+        name: values.name,
+        slug: values.slug,
+        address: values.address || undefined,
+        phone: values.phone || undefined,
+        email: values.email || undefined,
+        tagline: values.tagline || undefined,
+        website: values.website || undefined,
+        gstin: values.gstin || undefined,
+        bank_account_name: values.bank_account_name || undefined,
+        bank_account_number: values.bank_account_number || undefined,
+        bank_ifsc: values.bank_ifsc || undefined,
+        bank_name: values.bank_name || undefined,
+        default_service_charge_percentage: values.default_service_charge_percentage
+          ? parseFloat(values.default_service_charge_percentage)
+          : undefined,
+        default_tax_rate: values.default_tax_rate
+          ? parseFloat(values.default_tax_rate)
+          : undefined,
+        default_gratuity_percentage: values.default_gratuity_percentage
+          ? parseFloat(values.default_gratuity_percentage)
+          : undefined,
+        invoice_prefix: values.invoice_prefix || undefined,
+        default_payment_terms: values.default_payment_terms || undefined,
+        default_cancellation_policy: values.default_cancellation_policy || undefined,
+        currency_code: values.currency_code || undefined,
+      },
+      {
+        onSuccess: () => toast.success("Settings saved."),
+        onError: () => toast.error("Failed to save settings. Please try again."),
+      },
+    );
   }
 
   if (isLoading) return <p className="text-on-surface-medium">Loading…</p>;
@@ -228,6 +241,27 @@ export default function AccountSettingsPage() {
         <Separator className="my-2" />
         <p className="text-sm font-medium text-on-surface">Invoice &amp; Billing Defaults</p>
 
+          <FormField control={form.control} name="currency_code" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Currency</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {CURRENCIES.map((c) => (
+                    <SelectItem key={c.code} value={c.code}>
+                      {c.symbol} — {c.name} ({c.code})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )} />
+
         <div className="grid grid-cols-3 gap-4">
           <FormField control={form.control} name="default_service_charge_percentage" render={({ field }) => (
             <FormItem>
@@ -275,7 +309,6 @@ export default function AccountSettingsPage() {
             <FormMessage />
           </FormItem>
         )} />
-
 
         <div className="flex justify-end pt-2">
           <Button type="submit" disabled={updateOrg.isPending}>
