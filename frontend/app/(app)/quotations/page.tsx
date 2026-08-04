@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FiPlus } from "react-icons/fi";
 import { cn } from "@/lib/utils";
+import { useCurrencyStore } from "@/lib/currency-store";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -65,7 +66,7 @@ function formatDate(dateStr: string | null | undefined) {
 // Column definitions
 // ---------------------------------------------------------------------------
 
-function getColumns(bookingMap: Map<string, Booking>): ColumnDef<Quotation>[] {
+function getColumns(bookingMap: Map<string, Booking>, fmt: (n: number) => string): ColumnDef<Quotation>[] {
   return [
     {
       id: "booking",
@@ -93,7 +94,7 @@ function getColumns(bookingMap: Map<string, Booking>): ColumnDef<Quotation>[] {
       meta: { sortable: true },
       cell: ({ row }) => (
         <span className="text-on-surface-medium">
-          ₹{row.original.total.toLocaleString("en-IN")}
+          {fmt(row.original.total)}
         </span>
       ),
     },
@@ -135,8 +136,9 @@ function QuotationsContent() {
     sortDir: ts.sortDir,
   });
 
+  const fmt = useCurrencyStore((s) => s.format);
   const bookingMap = new Map((bookings?.items ?? []).map((b) => [b.id, b]));
-  const columns = getColumns(bookingMap);
+  const columns = getColumns(bookingMap, fmt);
 
   function handleRowClick(q: Quotation) {
     router.push(`/quotations/${q.id}`);

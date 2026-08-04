@@ -10,6 +10,8 @@ import { ClipboardList } from "lucide-react";
 
 import { useCreateQuotation } from "@/lib/quotations-api";
 import { useBookingsForSelect } from "@/lib/bookings-api";
+import { useCurrencyStore } from "@/lib/currency-store";
+import { getCurrencyMeta } from "@/lib/currencies";
 import { toast } from "sonner";
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -74,6 +76,9 @@ export default function NewQuotationPage() {
   const router = useRouter();
   const createQuotation = useCreateQuotation();
   const { data: bookings } = useBookingsForSelect();
+
+  const fmt = useCurrencyStore((s) => s.format);
+  const symbol = getCurrencyMeta(useCurrencyStore((s) => s.currencyCode)).symbol;
 
   const [lineItems, setLineItems] = useState<LineItemRow[]>([emptyRow()]);
 
@@ -190,7 +195,7 @@ export default function NewQuotationPage() {
                 name="discount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Discount (₹)</FormLabel>
+                    <FormLabel>Discount ({symbol})</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.01" defaultValue="0" {...field} />
                     </FormControl>
@@ -244,13 +249,13 @@ export default function NewQuotationPage() {
                     />
                     <Input
                       type="number"
-                      placeholder="Unit Price ₹"
+                      placeholder={`Unit Price ${symbol}`}
                       value={row.unit_price}
                       onChange={(e) => updateRow(index, "unit_price", e.target.value)}
                     />
                   </div>
                   <p className="text-xs text-on-surface-medium text-right">
-                    Row total: ₹{rowTotal(row).toLocaleString("en-IN")}
+                    Row total: {fmt(rowTotal(row))}
                   </p>
                 </div>
               ))}
@@ -268,7 +273,7 @@ export default function NewQuotationPage() {
               <div className="rounded-md bg-surface-high border border-outline-low px-4 py-2 text-sm text-on-surface-medium">
                 Subtotal:{" "}
                 <span className="font-medium text-on-surface">
-                  ₹{subtotal.toLocaleString("en-IN")}
+                  {fmt(subtotal)}
                 </span>
               </div>
             </div>
