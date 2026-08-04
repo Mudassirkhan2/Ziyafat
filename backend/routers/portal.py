@@ -21,6 +21,7 @@ class PortalOrg(BaseModel):
     primary: str
     on_primary: str
     secondary: str
+    currency_code: str
 
 
 class PortalEvent(BaseModel):
@@ -177,6 +178,7 @@ async def get_portal(token: str):
             primary=org.primary,
             on_primary=org.on_primary,
             secondary=org.secondary,
+            currency_code=org.currency_code,
         ),
         booking_title=booking.title,
         booking_status=booking.status.value,

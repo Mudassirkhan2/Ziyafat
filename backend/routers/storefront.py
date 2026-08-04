@@ -34,6 +34,7 @@ class PublicOrg(BaseModel):
     on_primary: str
     report_header: ReportHeaderConfig
     storefront_sections: list[StorefrontSection]
+    currency_code: str
 
 
 class StorefrontResponse(BaseModel):
@@ -61,6 +62,7 @@ async def get_storefront(slug: str):
             on_primary=org.on_primary,
             report_header=org.report_header,
             storefront_sections=org.storefront_sections,
+            currency_code=org.currency_code,
         ),
         dishes=[
             PublicDish(
