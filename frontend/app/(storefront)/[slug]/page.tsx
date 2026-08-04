@@ -3,6 +3,7 @@
 import { use } from "react";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
+import { formatMoney } from "@/lib/format-currency";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -17,6 +18,7 @@ type PublicOrg = {
   address: string | null; phone: string | null; email: string | null; tagline: string | null;
   primary: string; on_primary: string;
   storefront_sections: Array<{ type: string; enabled: boolean; order: number }>;
+  currency_code: string;
 };
 
 type StorefrontData = { org: PublicOrg; dishes: PublicDish[] };
@@ -160,11 +162,11 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
                           )}
                           <div className="flex items-baseline justify-between gap-2 mt-auto">
                             <p className="text-lg font-bold" style={{ color: org.primary }}>
-                              ₹{dish.selling_price.toLocaleString("en-IN")}
+                              {formatMoney(dish.selling_price, data.org.currency_code)}
                             </p>
                             {dish.per_plate_cost > 0 && (
                               <p className="text-xs text-gray-400">
-                                Cost: ₹{dish.per_plate_cost.toLocaleString("en-IN")}/plate
+                                Cost: {formatMoney(dish.per_plate_cost, data.org.currency_code)}/plate
                               </p>
                             )}
                           </div>
