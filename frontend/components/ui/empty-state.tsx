@@ -1,6 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { useCurrencyStore } from "@/lib/currency-store";
+import { getCurrencyMeta } from "@/lib/currencies";
 
 // ---------------------------------------------------------------------------
 // SVG Illustrations
@@ -121,6 +123,8 @@ function QuotationsSVG() {
 }
 
 function InvoicesSVG() {
+  const currencyCode = useCurrencyStore((s) => s.currencyCode);
+  const symbol = getCurrencyMeta(currencyCode).symbol;
   return (
     <svg viewBox="0 0 80 80" width="80" height="80" fill="none" xmlns="http://www.w3.org/2000/svg">
       {/* Receipt body */}
@@ -138,8 +142,8 @@ function InvoicesSVG() {
       />
       {/* Top divider */}
       <line x1="16" y1="22" x2="64" y2="22" stroke="currentColor" strokeWidth="1" strokeOpacity="0.3" />
-      {/* Amber accent: ₹ symbol */}
-      <text x="40" y="42" textAnchor="middle" fontSize="18" fontWeight="600" className="fill-primary" fillOpacity="0.9" fontFamily="sans-serif">₹</text>
+      {/* Amber accent: currency symbol */}
+      <text x="40" y="42" textAnchor="middle" fontSize="18" fontWeight="600" className="fill-primary" fillOpacity="0.9" fontFamily="sans-serif">{symbol}</text>
       {/* Lines below symbol */}
       <line x1="26" y1="50" x2="54" y2="50" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.35" />
       <line x1="30" y1="56" x2="50" y2="56" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.25" />
@@ -222,14 +226,16 @@ function ChartSVG() {
 }
 
 function RevenueSVG() {
+  const currencyCode = useCurrencyStore((s) => s.currencyCode);
+  const symbol = getCurrencyMeta(currencyCode).symbol;
   return (
     <svg viewBox="0 0 80 80" width="100" height="100" fill="none" xmlns="http://www.w3.org/2000/svg">
       {/* Y-axis */}
       <line x1="14" y1="10" x2="14" y2="62" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.3" />
       {/* X-axis */}
       <line x1="14" y1="62" x2="72" y2="62" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.3" />
-      {/* ₹ on Y-axis */}
-      <text x="6" y="14" fontSize="8" fontWeight="600" fill="currentColor" fillOpacity="0.25" fontFamily="sans-serif">₹</text>
+      {/* Currency symbol on Y-axis */}
+      <text x="6" y="14" fontSize="8" fontWeight="600" fill="currentColor" fillOpacity="0.25" fontFamily="sans-serif">{symbol}</text>
       {/* Bars — dashed outlines, varying heights */}
       <rect x="18" y="42" width="9" height="20" rx="2" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.2" strokeDasharray="3 2" />
       <rect x="31" y="30" width="9" height="32" rx="2" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.2" strokeDasharray="3 2" />
