@@ -11,6 +11,9 @@ import { FileText } from "lucide-react";
 import { useCreateInvoice } from "@/lib/invoices-api";
 import { useQuotations } from "@/lib/quotations-api";
 import { useBookingsForSelect } from "@/lib/bookings-api";
+import { useTaxes } from "@/lib/taxes-api";
+import { useCurrencyStore } from "@/lib/currency-store";
+import { getCurrencyMeta } from "@/lib/currencies";
 import { toast } from "sonner";
 import type { QuotationLineItem } from "@/lib/types";
 
@@ -39,6 +42,7 @@ const invoiceSchema = z.object({
   due_date: z.date().optional(),
   notes: z.string().optional(),
   discount: z.string().optional(),
+  tax_id: z.string().optional(),
 });
 
 type InvoiceFormValues = z.infer<typeof invoiceSchema>;
@@ -77,6 +81,11 @@ export default function NewInvoicePage() {
   const router = useRouter();
   const createInvoice = useCreateInvoice();
   const { data: bookings } = useBookingsForSelect();
+  const { data: taxes = [] } = useTaxes();
+  const activeTaxes = taxes.filter((t) => t.is_active);
+
+  const fmt = useCurrencyStore((s) => s.format);
+  const symbol = getCurrencyMeta(useCurrencyStore((s) => s.currencyCode)).symbol;
 
   const [lineItems, setLineItems] = useState<LineItemRow[]>([emptyRow()]);
 
@@ -88,12 +97,14 @@ export default function NewInvoicePage() {
       due_date: undefined,
       notes: "",
       discount: "0",
+      tax_id: "",
     },
   });
 
   const selectedBookingId = form.watch("booking_id");
   const selectedQuotationId = form.watch("quotation_id");
   const discountValue = form.watch("discount") ?? "0";
+  const selectedTaxId = form.watch("tax_id");
 
   const { data: bookingQuotationsData } = useQuotations(
     selectedBookingId ? { booking_id: selectedBookingId } : undefined
@@ -102,7 +113,15 @@ export default function NewInvoicePage() {
   const hasQuotation = !!selectedQuotationId;
 
   const subtotal = lineItems.reduce((sum, row) => sum + rowTotal(row), 0);
-  const total = subtotal - (parseFloat(discountValue) || 0);
+  const discount = parseFloat(discountValue) || 0;
+  const taxable = subtotal - discount;
+
+  const selectedTax = activeTaxes.find((t) => t.id === selectedTaxId) ?? null;
+  const taxAmount =
+    selectedTax && selectedTax.calculation_method === "additive"
+      ? (taxable * selectedTax.rate) / 100
+      : 0;
+  const total = taxable + taxAmount;
 
   function updateRow(index: number, field: keyof LineItemRow, value: string) {
     setLineItems((prev) =>
@@ -110,15 +129,37 @@ export default function NewInvoicePage() {
     );
   }
 
+  function buildTaxLines() {
+    if (!selectedTax) return [];
+    return [
+      {
+        tax_id: selectedTax.id,
+        name: selectedTax.name,
+        rate: selectedTax.rate,
+        calculation_method: selectedTax.calculation_method,
+        taxable_amount: taxable,
+        amount:
+          selectedTax.calculation_method === "additive"
+            ? (taxable * selectedTax.rate) / 100
+            : (total * selectedTax.rate) / (100 + selectedTax.rate),
+      },
+    ];
+  }
+
   function onSubmit(values: InvoiceFormValues) {
+    const taxLines = buildTaxLines();
+    const disc = parseFloat(values.discount ?? "0") || 0;
+
     if (hasQuotation) {
       createInvoice.mutate(
         {
           booking_id: values.booking_id,
           quotation_id: values.quotation_id || undefined,
+          tax_lines: taxLines,
+          tax_amount: taxAmount,
           subtotal: 0,
-          discount: parseFloat(values.discount ?? "0") || 0,
-          total: 0,
+          discount: disc,
+          total: taxAmount,
           due_date: values.due_date ? format(values.due_date, "yyyy-MM-dd") : undefined,
           notes: values.notes || undefined,
         },
@@ -141,8 +182,10 @@ export default function NewInvoicePage() {
         {
           booking_id: values.booking_id,
           line_items: lineItemsPayload,
+          tax_lines: taxLines,
+          tax_amount: taxAmount,
           subtotal,
-          discount: parseFloat(values.discount ?? "0") || 0,
+          discount: disc,
           total,
           due_date: values.due_date ? format(values.due_date, "yyyy-MM-dd") : undefined,
           notes: values.notes || undefined,
@@ -228,7 +271,7 @@ export default function NewInvoicePage() {
                         <SelectItem value="">None</SelectItem>
                         {bookingQuotations.map((q) => (
                           <SelectItem key={q.id} value={q.id}>
-                            v{q.version} — ₹{q.total.toLocaleString("en-IN")} ({q.status})
+                            v{q.version} — {fmt(q.total)} ({q.status})
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -268,10 +311,45 @@ export default function NewInvoicePage() {
                 name="discount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Discount (₹)</FormLabel>
+                    <FormLabel>Discount ({symbol})</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.01" defaultValue="0" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Tax */}
+            <div className="px-6 py-5">
+              <FormField
+                control={form.control}
+                name="tax_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tax Rate</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={activeTaxes.length ? "Select a tax rate" : "No tax rates configured"} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">None</SelectItem>
+                        {activeTaxes.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            {t.name} — {t.rate}% ({t.calculation_method})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {activeTaxes.length === 0 && (
+                      <p className="text-xs text-on-surface-medium mt-1">
+                        Add tax rates in{" "}
+                        <a href="/settings/taxes" className="underline">Settings → Taxes</a>.
+                      </p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -329,13 +407,13 @@ export default function NewInvoicePage() {
                         />
                         <Input
                           type="number"
-                          placeholder="Unit Price ₹"
+                          placeholder={`Unit Price ${symbol}`}
                           value={row.unit_price}
                           onChange={(e) => updateRow(index, "unit_price", e.target.value)}
                         />
                       </div>
                       <p className="text-xs text-on-surface-medium text-right">
-                        Row total: ₹{rowTotal(row).toLocaleString("en-IN")}
+                        Row total: {fmt(rowTotal(row))}
                       </p>
                     </div>
                   ))}
@@ -350,11 +428,33 @@ export default function NewInvoicePage() {
                     Add Item
                   </Button>
 
-                  <div className="rounded-md bg-surface-high border border-outline-low px-4 py-2 text-sm text-on-surface-medium">
-                    Subtotal:{" "}
-                    <span className="font-medium text-on-surface">
-                      ₹{subtotal.toLocaleString("en-IN")}
-                    </span>
+                  <div className="rounded-md bg-surface-high border border-outline-low px-4 py-2 text-sm space-y-1">
+                    <div className="flex justify-between text-on-surface-medium">
+                      <span>Subtotal</span>
+                      <span className="font-medium text-on-surface">{fmt(subtotal)}</span>
+                    </div>
+                    {discount > 0 && (
+                      <div className="flex justify-between text-on-surface-medium">
+                        <span>Discount</span>
+                        <span>− {fmt(discount)}</span>
+                      </div>
+                    )}
+                    {selectedTax && taxAmount > 0 && (
+                      <div className="flex justify-between text-on-surface-medium">
+                        <span>{selectedTax.name} ({selectedTax.rate}%)</span>
+                        <span>{fmt(taxAmount)}</span>
+                      </div>
+                    )}
+                    {selectedTax?.calculation_method === "inclusive" && (
+                      <div className="flex justify-between text-on-surface-medium text-xs">
+                        <span>{selectedTax.name} ({selectedTax.rate}%) — included</span>
+                        <span>{fmt((total * selectedTax.rate) / (100 + selectedTax.rate))}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-semibold text-on-surface pt-1 border-t border-outline-low">
+                      <span>Total</span>
+                      <span>{fmt(total)}</span>
+                    </div>
                   </div>
                 </>
               )}

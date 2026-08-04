@@ -9,11 +9,11 @@ import {
   useUpdateInvoice,
   useDeleteInvoice,
 } from "@/lib/invoices-api";
+import { useCurrencyStore } from "@/lib/currency-store";
 import { toast } from "sonner";
 import { useBooking } from "@/lib/bookings-api";
 import { useQuotation } from "@/lib/quotations-api";
 import type { InvoiceStatus } from "@/lib/types";
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -73,6 +73,10 @@ function formatDate(dateStr: string | null | undefined) {
 // Page
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
 export default function InvoiceDetailPage({
   params,
 }: {
@@ -86,6 +90,8 @@ export default function InvoiceDetailPage({
   const { data: invoice, isLoading, isError } = useInvoice(id);
   const { data: booking } = useBooking(invoice?.booking_id ?? "");
   const { data: quotation } = useQuotation(invoice?.quotation_id ?? "");
+
+  const fmt = useCurrencyStore((s) => s.format);
 
   const updateInvoice = useUpdateInvoice(id);
   const deleteInvoice = useDeleteInvoice();
@@ -176,7 +182,7 @@ export default function InvoiceDetailPage({
         <div>
           <p className="text-xs text-on-surface-low uppercase tracking-wide mb-1">Total</p>
           <p className="text-sm text-on-surface font-medium">
-            ₹{invoice.total.toLocaleString("en-IN")}
+            {fmt(invoice.total)}
           </p>
         </div>
         <div>
@@ -255,10 +261,10 @@ export default function InvoiceDetailPage({
                   {item.guest_count}
                 </TableCell>
                 <TableCell className="text-on-surface-medium text-right">
-                  ₹{item.unit_price.toLocaleString("en-IN")}
+                  {fmt(item.unit_price)}
                 </TableCell>
                 <TableCell className="text-on-surface text-right font-medium">
-                  ₹{item.total.toLocaleString("en-IN")}
+                  {fmt(item.total)}
                 </TableCell>
               </TableRow>
             ))}
@@ -269,58 +275,70 @@ export default function InvoiceDetailPage({
         <div className="bg-surface-high border-t border-outline px-4 py-3 space-y-1">
           <div className="flex justify-between text-sm text-on-surface-medium">
             <span>Subtotal</span>
-            <span>₹{invoice.subtotal.toLocaleString("en-IN")}</span>
+            <span>{fmt(invoice.subtotal)}</span>
           </div>
           {invoice.discount > 0 && (
             <div className="flex justify-between text-sm text-on-surface-medium">
               <span>Discount</span>
-              <span>− ₹{invoice.discount.toLocaleString("en-IN")}</span>
+              <span>− {fmt(invoice.discount)}</span>
             </div>
           )}
           {(invoice.service_charge_amount ?? 0) > 0 && (
             <div className="flex justify-between text-sm text-on-surface-medium">
               <span>Service Charge</span>
-              <span>₹{(invoice.service_charge_amount ?? 0).toLocaleString("en-IN")}</span>
+              <span>{fmt(invoice.service_charge_amount ?? 0)}</span>
             </div>
           )}
-          {(invoice.tax_amount ?? 0) > 0 && (
-            <div className="flex justify-between text-sm text-on-surface-medium">
-              <span>Tax</span>
-              <span>₹{(invoice.tax_amount ?? 0).toLocaleString("en-IN")}</span>
-            </div>
-          )}
+          {invoice.tax_lines && invoice.tax_lines.length > 0
+            ? invoice.tax_lines.map((line, i) => (
+                <div key={i} className="flex justify-between text-sm text-on-surface-medium">
+                  <span>
+                    {line.name} ({line.rate}%){" "}
+                    {line.calculation_method === "inclusive" && (
+                      <span className="text-xs text-on-surface-low">incl.</span>
+                    )}
+                  </span>
+                  <span>{fmt(line.amount)}</span>
+                </div>
+              ))
+            : (invoice.tax_amount ?? 0) > 0 && (
+                <div className="flex justify-between text-sm text-on-surface-medium">
+                  <span>Tax</span>
+                  <span>{fmt(invoice.tax_amount ?? 0)}</span>
+                </div>
+              )}
           {(invoice.gratuity_amount ?? 0) > 0 && (
             <div className="flex justify-between text-sm text-on-surface-medium">
               <span>Gratuity</span>
-              <span>₹{(invoice.gratuity_amount ?? 0).toLocaleString("en-IN")}</span>
+              <span>{fmt(invoice.gratuity_amount ?? 0)}</span>
             </div>
           )}
           {(invoice.delivery_fee ?? 0) > 0 && (
             <div className="flex justify-between text-sm text-on-surface-medium">
               <span>Delivery Fee</span>
-              <span>₹{(invoice.delivery_fee ?? 0).toLocaleString("en-IN")}</span>
+              <span>{fmt(invoice.delivery_fee ?? 0)}</span>
             </div>
           )}
           {(invoice.staffing_fee ?? 0) > 0 && (
             <div className="flex justify-between text-sm text-on-surface-medium">
               <span>Staffing Fee</span>
-              <span>₹{(invoice.staffing_fee ?? 0).toLocaleString("en-IN")}</span>
+              <span>{fmt(invoice.staffing_fee ?? 0)}</span>
             </div>
           )}
           <Separator className="my-1 border-outline-low" />
           <div className="flex justify-between text-base font-bold text-on-surface">
             <span>Total</span>
-            <span>₹{invoice.total.toLocaleString("en-IN")}</span>
+            <span>{fmt(invoice.total)}</span>
           </div>
           {(invoice.amount_paid ?? 0) > 0 && (
             <>
               <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
                 <span>Amount Paid</span>
-                <span>− ₹{(invoice.amount_paid ?? 0).toLocaleString("en-IN")}</span>
+                <span>− {fmt(invoice.amount_paid ?? 0)}</span>
               </div>
               <div className="flex justify-between text-sm font-semibold text-on-surface">
                 <span>Balance Due</span>
-                <span>₹{(invoice.balance_due ?? invoice.total - (invoice.amount_paid ?? 0)).toLocaleString("en-IN")}</span>
+                <span>{fmt(invoice.balance_due ?? invoice.total - (invoice.amount_paid ?? 0))}</span>
               </div>
             </>
           )}

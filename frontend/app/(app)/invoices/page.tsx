@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useInvoices } from "@/lib/invoices-api";
 import { useBookingsForSelect } from "@/lib/bookings-api";
 import { useDataTableState } from "@/lib/use-data-table-state";
+import { useCurrencyStore } from "@/lib/currency-store";
 import type { Booking, Invoice, InvoiceStatus } from "@/lib/types";
 import type { ColumnDef } from "@tanstack/react-table";
 
@@ -57,7 +58,7 @@ function formatDate(dateStr: string | null | undefined) {
 // Column definitions
 // ---------------------------------------------------------------------------
 
-function getColumns(bookingMap: Map<string, Booking>): ColumnDef<Invoice>[] {
+function getColumns(bookingMap: Map<string, Booking>, fmt: (n: number) => string): ColumnDef<Invoice>[] {
   return [
     {
       id: "invoice_number",
@@ -95,7 +96,7 @@ function getColumns(bookingMap: Map<string, Booking>): ColumnDef<Invoice>[] {
       meta: { sortable: true },
       cell: ({ row }) => (
         <span className="text-on-surface-medium">
-          ₹{row.original.total.toLocaleString("en-IN")}
+          {fmt(row.original.total)}
         </span>
       ),
     },
@@ -137,8 +138,10 @@ function InvoicesContent() {
     sortDir: ts.sortDir,
   });
 
+  const fmt = useCurrencyStore((s) => s.format);
+
   const bookingMap = new Map((bookings?.items ?? []).map((b) => [b.id, b]));
-  const columns = getColumns(bookingMap);
+  const columns = getColumns(bookingMap, fmt);
 
   function handleRowClick(invoice: Invoice) {
     router.push(`/invoices/${invoice.id}`);
