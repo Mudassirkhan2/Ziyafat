@@ -2,6 +2,7 @@
 
 import { ReportHeader, type OrgSettings } from "@/components/reports/ReportHeader";
 import type { Dish } from "@/lib/types";
+import { useCurrencyStore } from "@/lib/currency-store";
 
 export function DishListPrint({
   dishes,
@@ -10,6 +11,7 @@ export function DishListPrint({
   dishes: Dish[];
   org: OrgSettings;
 }) {
+  const fmt = useCurrencyStore((s) => s.format);
   // Group dishes by category
   const grouped = dishes.reduce<Record<string, Dish[]>>((acc, dish) => {
     (acc[dish.category] = acc[dish.category] || []).push(dish);
@@ -43,7 +45,7 @@ export function DishListPrint({
                   )}
                 </div>
                 <span className="font-medium ml-4">
-                  ₹{dish.selling_price.toLocaleString("en-IN")}
+                  {fmt(dish.selling_price)}
                 </span>
               </div>
             ))}

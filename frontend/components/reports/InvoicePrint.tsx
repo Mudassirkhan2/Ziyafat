@@ -2,6 +2,7 @@
 
 import { ReportHeader, type OrgSettings } from "@/components/reports/ReportHeader";
 import type { Invoice, Booking } from "@/lib/types";
+import { useCurrencyStore } from "@/lib/currency-store";
 
 export function InvoicePrint({
   invoice,
@@ -12,6 +13,7 @@ export function InvoicePrint({
   booking: Booking;
   org: OrgSettings;
 }) {
+  const fmt = useCurrencyStore((s) => s.format);
   return (
     <div className="hidden print:block bg-white text-gray-900 p-8 text-sm">
       <ReportHeader org={org} />
@@ -58,10 +60,10 @@ export function InvoicePrint({
               <td className="text-right py-1.5">{item.qty_per_plate}</td>
               <td className="text-right py-1.5">{item.guest_count}</td>
               <td className="text-right py-1.5">
-                ₹{item.unit_price.toLocaleString("en-IN")}
+                {fmt(item.unit_price)}
               </td>
               <td className="text-right py-1.5">
-                ₹{item.total.toLocaleString("en-IN")}
+                {fmt(item.total)}
               </td>
             </tr>
           ))}
@@ -72,17 +74,17 @@ export function InvoicePrint({
         <div className="w-48">
           <div className="flex justify-between py-1">
             <span>Subtotal</span>
-            <span>₹{invoice.subtotal.toLocaleString("en-IN")}</span>
+            <span>{fmt(invoice.subtotal)}</span>
           </div>
           {invoice.discount > 0 && (
             <div className="flex justify-between py-1 text-gray-600">
               <span>Discount</span>
-              <span>- ₹{invoice.discount.toLocaleString("en-IN")}</span>
+              <span>- {fmt(invoice.discount)}</span>
             </div>
           )}
           <div className="flex justify-between py-1 font-bold border-t-2 border-gray-300 mt-1">
             <span>Total</span>
-            <span>₹{invoice.total.toLocaleString("en-IN")}</span>
+            <span>{fmt(invoice.total)}</span>
           </div>
         </div>
       </div>
