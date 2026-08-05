@@ -22,12 +22,14 @@ class QuotationLineItem(BaseModel):
     guest_count: int
     unit_price: float
     total: float
+    tax_id: Optional[PydanticObjectId] = None
 
 
 class Quotation(Document):
     org_id: PydanticObjectId
     booking_id: Link[Booking]
     event_id: Optional[PydanticObjectId] = None
+    ref_number: Optional[str] = None
     version: int = 1
     status: QuotationStatus = QuotationStatus.draft
     line_items: list[QuotationLineItem] = Field(default_factory=list)
@@ -58,8 +60,10 @@ class Quotation(Document):
     # Signature
     client_signature_status: str = "unsigned"
     signed_date: Optional[date] = None
+    signed_at: Optional[datetime] = None
     signer_name: Optional[str] = None
     signer_ip: Optional[str] = None
+    signature_image: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 

@@ -97,7 +97,7 @@ export default function LandingTour() {
             </div>
             <div className={s.quote}>
               <div className={s.qHead}>
-                <div><div className={s.qEvent}>Fatima &amp; Bilal Wedding</div><div className={s.qEventMeta}>1,450 guests · 3 events</div></div>
+                <div><div className={s.qEvent}>Emily &amp; James Wedding</div><div className={s.qEventMeta}>1,450 guests · 3 events</div></div>
                 <div className={s.qNo}>#Q-1043<br />Valid 14 days</div>
               </div>
               <div className={s.qLine}><span className={s.qLineDish}>Chicken Dum Biryani — 700</span><span className={s.qLineQty}>₹310 / plate</span></div>
@@ -134,7 +134,7 @@ export default function LandingTour() {
               <div className={s.invSumItem}><div className={s.invSumLabel}>Outstanding</div><div className={`${s.invSumVal} ${s.invSumWarn}`}>₹4.2L</div></div>
             </div>
             <div className={s.invList}>
-              <div className={s.invRow}><span className={s.invNo}>SHC-044</span><span className={s.invClient}>Fatima &amp; Bilal</span><span className={s.invAmt}>₹4.7L</span><span className={`${s.invSt} ${s.invPaid}`}>Paid</span></div>
+              <div className={s.invRow}><span className={s.invNo}>SHC-044</span><span className={s.invClient}>Emily &amp; James</span><span className={s.invAmt}>₹4.7L</span><span className={`${s.invSt} ${s.invPaid}`}>Paid</span></div>
               <div className={s.invRow}><span className={s.invNo}>SHC-041</span><span className={s.invClient}>Acme Corp</span><span className={s.invAmt}>₹1.2L</span><span className={`${s.invSt} ${s.invOver}`}>Overdue</span></div>
               <div className={s.invRow}><span className={s.invNo}>SHC-046</span><span className={s.invClient}>Zara &amp; Sons</span><span className={s.invAmt}>₹98k</span><span className={`${s.invSt} ${s.invDraft}`}>Draft</span></div>
             </div>

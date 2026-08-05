@@ -69,7 +69,9 @@ class PortalQuotation(BaseModel):
     per_person_price: float
     client_signature_status: str
     signed_date: Optional[date]
+    signed_at: Optional[datetime]
     signer_name: Optional[str]
+    signature_image: Optional[str]
 
 
 class PortalResponse(BaseModel):
@@ -165,7 +167,9 @@ async def get_portal(token: str):
             per_person_price=quotation.per_person_price,
             client_signature_status=quotation.client_signature_status,
             signed_date=quotation.signed_date,
+            signed_at=quotation.signed_at,
             signer_name=quotation.signer_name,
+            signature_image=quotation.signature_image,
         )
 
     return PortalResponse(
@@ -195,11 +199,13 @@ async def get_portal(token: str):
 
 class SignBody(BaseModel):
     signer_name: str
+    signature_image: Optional[str] = None
 
 
 class SignResponse(BaseModel):
     client_signature_status: str
     signed_date: Optional[date]
+    signed_at: Optional[datetime]
     signer_name: Optional[str]
 
 
@@ -219,16 +225,20 @@ async def sign_quotation(token: str, body: SignBody, request: Request):
     if quotation.client_signature_status == "signed":
         raise HTTPException(status_code=409, detail="Quotation already signed")
 
+    now = datetime.now(timezone.utc)
     quotation.client_signature_status = "signed"
     quotation.signed_date = date.today()
+    quotation.signed_at = now
     quotation.signer_name = body.signer_name
     quotation.signer_ip = request.client.host if request.client else None
-    quotation.updated_at = datetime.now(timezone.utc)
+    quotation.signature_image = body.signature_image
+    quotation.updated_at = now
     await quotation.save()
 
     return SignResponse(
         client_signature_status=quotation.client_signature_status,
         signed_date=quotation.signed_date,
+        signed_at=quotation.signed_at,
         signer_name=quotation.signer_name,
     )
 

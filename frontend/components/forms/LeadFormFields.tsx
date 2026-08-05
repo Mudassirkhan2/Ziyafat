@@ -13,6 +13,8 @@ import {
   FormDatePicker,
   SectionLabel,
 } from "@/components/ui/form-fields"
+import { useCurrencyStore } from "@/lib/currency-store"
+import { getCurrencyMeta } from "@/lib/currencies"
 
 const MEAL_TYPE_OPTIONS = [
   { value: "breakfast", label: "Breakfast" },
@@ -63,6 +65,7 @@ interface LeadFormFieldsProps {
 }
 
 export function LeadFormFields({ showStatusField = false }: LeadFormFieldsProps) {
+  const symbol = getCurrencyMeta(useCurrencyStore((s) => s.currencyCode)).symbol
   return (
     <>
       {/* 1 · Contact */}
@@ -110,8 +113,8 @@ export function LeadFormFields({ showStatusField = false }: LeadFormFieldsProps)
       <div className="space-y-4 px-[30px] py-[26px]">
         <SectionLabel number={4}>Budget</SectionLabel>
         <div className="grid grid-cols-2 gap-4">
-          <FormInput name="budget" label="Budget (₹)" type="number" placeholder="Total budget" />
-          <FormInput name="budget_per_person" label="Per Person (₹)" type="number" placeholder="Per head" />
+          <FormInput name="budget" label={`Budget (${symbol})`} type="number" placeholder="Total budget" />
+          <FormInput name="budget_per_person" label={`Per Person (${symbol})`} type="number" placeholder="Per head" />
         </div>
       </div>
 

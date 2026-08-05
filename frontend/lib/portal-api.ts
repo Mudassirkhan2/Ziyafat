@@ -57,7 +57,9 @@ export interface PortalQuotation {
   per_person_price: number;
   client_signature_status: string;
   signed_date: string | null;
+  signed_at: string | null;
   signer_name: string | null;
+  signature_image: string | null;
 }
 
 export interface PortalData {
@@ -78,12 +80,13 @@ export async function fetchPortal(token: string): Promise<PortalData> {
 
 export async function signPortal(
   token: string,
-  signerName: string
-): Promise<{ client_signature_status: string; signer_name: string; signed_date: string | null }> {
+  signerName: string,
+  signatureImage: string | null = null,
+): Promise<{ client_signature_status: string; signer_name: string; signed_date: string | null; signed_at: string | null }> {
   const res = await fetch(`${PORTAL_API}/api/v1/portal/${token}/sign`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ signer_name: signerName }),
+    body: JSON.stringify({ signer_name: signerName, signature_image: signatureImage }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: "Failed to sign" }));

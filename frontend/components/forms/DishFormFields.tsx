@@ -9,6 +9,8 @@ import {
   FormSwitch,
   SectionLabel,
 } from "@/components/ui/form-fields"
+import { useCurrencyStore } from "@/lib/currency-store"
+import { getCurrencyMeta } from "@/lib/currencies"
 
 export const dishCreateSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -38,6 +40,7 @@ interface DishFormFieldsProps {
 }
 
 export function DishFormFields({ showActiveToggle = false }: DishFormFieldsProps) {
+  const symbol = getCurrencyMeta(useCurrencyStore((s) => s.currencyCode)).symbol
   return (
     <>
       {/* 1 · Basics */}
@@ -57,8 +60,8 @@ export function DishFormFields({ showActiveToggle = false }: DishFormFieldsProps
       <div className="space-y-4 px-[30px] py-[26px]">
         <SectionLabel number={2}>Pricing</SectionLabel>
         <div className="grid grid-cols-2 gap-4">
-          <FormInput name="per_plate_cost" label="Cost per Plate (₹) *" type="number" step="0.01" placeholder="0.00" />
-          <FormInput name="selling_price" label="Selling Price (₹) *" type="number" step="0.01" placeholder="0.00" />
+          <FormInput name="per_plate_cost" label={`Cost per Plate (${symbol}) *`} type="number" step="0.01" placeholder="0.00" />
+          <FormInput name="selling_price" label={`Selling Price (${symbol}) *`} type="number" step="0.01" placeholder="0.00" />
         </div>
       </div>
 

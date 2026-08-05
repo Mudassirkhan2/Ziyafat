@@ -2,7 +2,7 @@ from enum import Enum
 from datetime import datetime, date, timezone
 from typing import Optional
 from beanie import Document, Link, PydanticObjectId
-from pydantic import Field
+from pydantic import BaseModel, Field
 from pymongo import ASCENDING, IndexModel
 from models.booking import Booking
 from models.quotation import Quotation, QuotationLineItem
@@ -12,6 +12,15 @@ class InvoiceStatus(str, Enum):
     draft = "draft"
     sent = "sent"
     paid = "paid"
+
+
+class InvoiceTaxLine(BaseModel):
+    tax_id: Optional[PydanticObjectId] = None
+    name: str
+    rate: float
+    calculation_method: str = "additive"
+    taxable_amount: float
+    amount: float
 
 
 class Invoice(Document):
@@ -29,6 +38,7 @@ class Invoice(Document):
     # Financial
     invoice_date: Optional[date] = None
     service_charge_amount: float = 0.0
+    tax_lines: list[InvoiceTaxLine] = Field(default_factory=list)
     tax_amount: float = 0.0
     gratuity_amount: float = 0.0
     delivery_fee: float = 0.0

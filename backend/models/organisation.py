@@ -68,6 +68,7 @@ class Organisation(Document):
     default_payment_terms: str | None = None
     default_cancellation_policy: str | None = None
     invoice_prefix: str = "INV"
+    quotation_prefix: str = "QT"
     currency_code: str = "INR"
     # Social
     social_links: dict = Field(default_factory=dict)

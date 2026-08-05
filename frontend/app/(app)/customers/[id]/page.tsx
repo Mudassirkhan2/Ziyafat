@@ -1,13 +1,14 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
   useCustomer,
   useUpdateCustomer,
+  useDeleteCustomer,
   useCustomerBookings,
 } from "@/lib/customers-api";
 import { toast } from "sonner";
@@ -25,6 +26,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { FormPageShell, FormStickyFooter } from "@/components/layout/FormPageShell";
 import {
   customerSchema,
@@ -97,8 +105,11 @@ export default function EditCustomerPage() {
   const router = useRouter();
   const id = params.id as string;
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
   const { data: customer, isLoading, isError } = useCustomer(id);
   const updateCustomer = useUpdateCustomer(id);
+  const deleteCustomer = useDeleteCustomer();
 
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
@@ -129,6 +140,16 @@ export default function EditCustomerPage() {
       });
     }
   }, [customer, form]);
+
+  function handleDelete() {
+    deleteCustomer.mutate(id, {
+      onSuccess: () => {
+        toast.success("Customer deleted.");
+        router.push("/customers");
+      },
+      onError: () => toast.error("Failed to delete customer. Please try again."),
+    });
+  }
 
   function onSubmit(values: CustomerFormValues) {
     updateCustomer.mutate(
@@ -198,6 +219,49 @@ export default function EditCustomerPage() {
         <h2 className="text-lg font-semibold text-on-surface mb-4">Bookings</h2>
         <BookingsSection customerId={id} />
       </div>
+
+      {/* Danger zone */}
+      <div className="mt-10 rounded-lg border border-red-200 dark:border-red-900/50 p-5">
+        <h2 className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">Danger Zone</h2>
+        <p className="text-sm text-on-surface-medium mb-4">
+          Permanently delete this customer and all associated data. This action cannot be undone.
+        </p>
+        <Button
+          variant="outline"
+          className="border-red-600 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+          onClick={() => setDeleteDialogOpen(true)}
+        >
+          Delete Customer
+        </Button>
+      </div>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete {customer.name}?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-on-surface-medium">
+            This will permanently delete the customer and cannot be undone. Any bookings linked to this customer will lose their customer reference.
+          </p>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleteCustomer.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleteCustomer.isPending}
+            >
+              {deleteCustomer.isPending ? "Deleting…" : "Delete Customer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </FormPageShell>
   );
 }

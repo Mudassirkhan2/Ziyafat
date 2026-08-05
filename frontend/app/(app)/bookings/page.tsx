@@ -16,9 +16,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { FiPlus } from "react-icons/fi";
 import { cn } from "@/lib/utils";
 
-const ALL_BOOKING_STATUSES: BookingStatus[] = ["confirmed", "in_progress", "completed", "cancelled"];
+const ALL_BOOKING_STATUSES: BookingStatus[] = ["draft", "confirmed", "in_progress", "completed", "cancelled"];
 
 const STATUS_COLORS: Record<BookingStatus, string> = {
+  draft: "border-outline text-on-surface-medium",
   confirmed: "bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
   in_progress: "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
   completed: "bg-surface-highest text-on-surface-medium border-outline",

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { formatMoney, formatCompact } from "./format-currency";
 
 interface CurrencyStore {
@@ -8,14 +9,30 @@ interface CurrencyStore {
   setFromOrg: (code: string) => void;
 }
 
-export const useCurrencyStore = create<CurrencyStore>((set) => ({
-  currencyCode: "INR",
-  format: (amount) => formatMoney(amount, "INR"),
-  formatCompact: (amount) => formatCompact(amount, "INR"),
-  setFromOrg: (code: string) =>
-    set({
-      currencyCode: code,
-      format: (amount) => formatMoney(amount, code),
-      formatCompact: (amount) => formatCompact(amount, code),
+function derivedState(code: string) {
+  return {
+    currencyCode: code,
+    format: (amount: number) => formatMoney(amount, code),
+    formatCompact: (amount: number) => formatCompact(amount, code),
+  };
+}
+
+export const useCurrencyStore = create<CurrencyStore>()(
+  persist(
+    (set) => ({
+      ...derivedState("INR"),
+      setFromOrg: (code: string) => set(derivedState(code)),
     }),
-}));
+    {
+      name: "ziyafat-currency",
+      partialize: (state) => ({ currencyCode: state.currencyCode }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          const code = state.currencyCode;
+          state.format = (amount: number) => formatMoney(amount, code);
+          state.formatCompact = (amount: number) => formatCompact(amount, code);
+        }
+      },
+    }
+  )
+);

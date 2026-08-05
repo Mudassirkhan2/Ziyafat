@@ -13,10 +13,12 @@ import {
 import { toast } from "sonner";
 import { useBooking } from "@/lib/bookings-api";
 import type { QuotationStatus } from "@/lib/types";
+import { useCurrencyStore } from "@/lib/currency-store";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Share2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -71,6 +73,17 @@ function formatDate(dateStr: string | null | undefined) {
   });
 }
 
+function formatDateTime(dateStr: string | null | undefined) {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleString("en-IN", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Page
 // ---------------------------------------------------------------------------
@@ -92,6 +105,8 @@ export default function QuotationDetailPage({
   } = useQuotation(id);
 
   const { data: booking } = useBooking(quotation?.booking_id ?? "");
+
+  const fmt = useCurrencyStore((s) => s.format);
 
   const updateQuotation = useUpdateQuotation(id);
   const deleteQuotation = useDeleteQuotation();
@@ -171,12 +186,97 @@ export default function QuotationDetailPage({
       </Link>
 
       {/* Header row */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-on-surface">Quotation</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-on-surface">
+              {quotation.ref_number ?? "Quotation"}
+            </h1>
+            <StatusBadge status={quotation.status} />
+          </div>
           <p className="text-sm text-on-surface-medium mt-1">Version {quotation.version}</p>
         </div>
-        <StatusBadge status={quotation.status} />
+        <div className="flex flex-wrap gap-2 shrink-0">
+          <Button variant="outline" size="sm" onClick={handlePrintPDF} disabled={isMutating}>
+            Print PDF
+          </Button>
+
+          <button
+            onClick={async () => {
+              if (!booking?.portal_token) {
+                toast.error("Portal link not available. Try refreshing.");
+                return;
+              }
+              const url = `${window.location.origin}/portal/${booking.portal_token}`;
+              try {
+                await navigator.clipboard.writeText(url);
+                toast.success("Portal link copied to clipboard.");
+              } catch {
+                toast.error(`Copy this link manually: ${url}`);
+              }
+            }}
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-secondary text-on-secondary text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer"
+          >
+            <Share2 className="h-3.5 w-3.5" />
+            Share
+          </button>
+
+          {(quotation.status === "draft" || quotation.status === "sent") && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push(`/quotations/${id}/edit`)}
+              disabled={isMutating}
+            >
+              Edit
+            </Button>
+          )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDuplicate}
+            disabled={isMutating}
+          >
+            {duplicateQuotation.isPending ? "Duplicating…" : "Duplicate"}
+          </Button>
+
+          {quotation.status === "draft" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleMarkSent}
+              disabled={isMutating}
+              className="border-blue-600 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/20"
+            >
+              {updateQuotation.isPending ? "Saving…" : "Mark as Sent"}
+            </Button>
+          )}
+
+          {quotation.status === "sent" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleMarkApproved}
+              disabled={isMutating}
+              className="border-green-600 text-green-700 hover:bg-green-50 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-900/20"
+            >
+              {updateQuotation.isPending ? "Saving…" : "Mark as Approved"}
+            </Button>
+          )}
+
+          {quotation.status === "draft" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDeleteDialogOpen(true)}
+              disabled={isMutating}
+              className="border-red-600 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+            >
+              Delete
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Meta section */}
@@ -194,7 +294,7 @@ export default function QuotationDetailPage({
         <div>
           <p className="text-xs text-on-surface-low uppercase tracking-wide mb-1">Total</p>
           <p className="text-sm text-on-surface font-medium">
-            ₹{quotation.total.toLocaleString("en-IN")}
+            {fmt(quotation.total)}
           </p>
         </div>
         <div>
@@ -208,7 +308,7 @@ export default function QuotationDetailPage({
         {quotation.per_person_price && (
           <div>
             <p className="text-xs text-on-surface-low uppercase tracking-wide mb-1">Per Person</p>
-            <p className="text-sm text-on-surface font-medium">₹{quotation.per_person_price.toLocaleString("en-IN")}</p>
+            <p className="text-sm text-on-surface font-medium">{fmt(quotation.per_person_price)}</p>
           </div>
         )}
         {quotation.minimum_guarantee_count && (
@@ -223,10 +323,16 @@ export default function QuotationDetailPage({
             <p className="text-sm text-on-surface-medium capitalize">{quotation.client_signature_status.replace(/_/g, " ")}</p>
           </div>
         )}
-        {quotation.signed_date && (
+        {quotation.signer_name && (
+          <div>
+            <p className="text-xs text-on-surface-low uppercase tracking-wide mb-1">Signed By</p>
+            <p className="text-sm text-on-surface-medium">{quotation.signer_name}</p>
+          </div>
+        )}
+        {(quotation.signed_at ?? quotation.signed_date) && (
           <div>
             <p className="text-xs text-on-surface-low uppercase tracking-wide mb-1">Signed On</p>
-            <p className="text-sm text-on-surface-medium">{formatDate(quotation.signed_date)}</p>
+            <p className="text-sm text-on-surface-medium">{formatDateTime(quotation.signed_at) !== "—" ? formatDateTime(quotation.signed_at) : formatDate(quotation.signed_date)}</p>
           </div>
         )}
       </div>
@@ -261,10 +367,10 @@ export default function QuotationDetailPage({
                   {item.guest_count}
                 </TableCell>
                 <TableCell className="text-on-surface-medium text-right">
-                  ₹{item.unit_price.toLocaleString("en-IN")}
+                  {fmt(item.unit_price)}
                 </TableCell>
                 <TableCell className="text-on-surface text-right font-medium">
-                  ₹{item.total.toLocaleString("en-IN")}
+                  {fmt(item.total)}
                 </TableCell>
               </TableRow>
             ))}
@@ -275,55 +381,55 @@ export default function QuotationDetailPage({
         <div className="bg-surface-high border-t border-outline px-4 py-3 space-y-1">
           <div className="flex justify-between text-sm text-on-surface-medium">
             <span>Subtotal</span>
-            <span>₹{quotation.subtotal.toLocaleString("en-IN")}</span>
+            <span>{fmt(quotation.subtotal)}</span>
           </div>
           {quotation.discount > 0 && (
             <div className="flex justify-between text-sm text-on-surface-medium">
               <span>Discount</span>
-              <span>− ₹{quotation.discount.toLocaleString("en-IN")}</span>
+              <span>− {fmt(quotation.discount)}</span>
             </div>
           )}
           {(quotation.service_charge_amount ?? 0) > 0 && (
             <div className="flex justify-between text-sm text-on-surface-medium">
               <span>Service Charge{quotation.service_charge_percentage ? ` (${quotation.service_charge_percentage}%)` : ""}</span>
-              <span>₹{(quotation.service_charge_amount ?? 0).toLocaleString("en-IN")}</span>
+              <span>{fmt(quotation.service_charge_amount ?? 0)}</span>
             </div>
           )}
           {(quotation.tax_amount ?? 0) > 0 && (
             <div className="flex justify-between text-sm text-on-surface-medium">
               <span>Tax{quotation.tax_percentage ? ` (${quotation.tax_percentage}%)` : ""}</span>
-              <span>₹{(quotation.tax_amount ?? 0).toLocaleString("en-IN")}</span>
+              <span>{fmt(quotation.tax_amount ?? 0)}</span>
             </div>
           )}
           {(quotation.gratuity_amount ?? 0) > 0 && (
             <div className="flex justify-between text-sm text-on-surface-medium">
               <span>Gratuity{quotation.gratuity_percentage ? ` (${quotation.gratuity_percentage}%)` : ""}</span>
-              <span>₹{(quotation.gratuity_amount ?? 0).toLocaleString("en-IN")}</span>
+              <span>{fmt(quotation.gratuity_amount ?? 0)}</span>
             </div>
           )}
           {(quotation.delivery_fee ?? 0) > 0 && (
             <div className="flex justify-between text-sm text-on-surface-medium">
               <span>Delivery Fee</span>
-              <span>₹{(quotation.delivery_fee ?? 0).toLocaleString("en-IN")}</span>
+              <span>{fmt(quotation.delivery_fee ?? 0)}</span>
             </div>
           )}
           {(quotation.setup_fee ?? 0) > 0 && (
             <div className="flex justify-between text-sm text-on-surface-medium">
               <span>Setup Fee</span>
-              <span>₹{(quotation.setup_fee ?? 0).toLocaleString("en-IN")}</span>
+              <span>{fmt(quotation.setup_fee ?? 0)}</span>
             </div>
           )}
           <Separator className="my-1 border-outline-low" />
           <div className="flex justify-between text-base font-bold text-on-surface">
             <span>Total</span>
-            <span>₹{quotation.total.toLocaleString("en-IN")}</span>
+            <span>{fmt(quotation.total)}</span>
           </div>
           {(quotation.deposit_amount ?? 0) > 0 && (
             <>
               <Separator className="my-1 border-outline-low" />
               <div className="flex justify-between text-sm text-on-surface-medium">
                 <span>Deposit Required{quotation.deposit_percentage ? ` (${quotation.deposit_percentage}%)` : ""}</span>
-                <span>₹{(quotation.deposit_amount ?? 0).toLocaleString("en-IN")}</span>
+                <span>{fmt(quotation.deposit_amount ?? 0)}</span>
               </div>
               {quotation.deposit_due_date && (
                 <div className="flex justify-between text-xs text-on-surface-low">
@@ -366,54 +472,18 @@ export default function QuotationDetailPage({
         </div>
       )}
 
-      {/* Action buttons */}
-      <div className="flex flex-wrap gap-2 pt-2">
-        <Button variant="outline" onClick={handlePrintPDF} disabled={isMutating}>
-          Print PDF
-        </Button>
-
-        <Button
-          variant="outline"
-          onClick={handleDuplicate}
-          disabled={isMutating}
-        >
-          {duplicateQuotation.isPending ? "Duplicating…" : "Duplicate"}
-        </Button>
-
-        {quotation.status === "draft" && (
-          <Button
-            variant="outline"
-            onClick={handleMarkSent}
-            disabled={isMutating}
-            className="border-blue-600 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/20"
-          >
-            {updateQuotation.isPending ? "Saving…" : "Mark as Sent"}
-          </Button>
-        )}
-
-        {quotation.status === "sent" && (
-          <Button
-            variant="outline"
-            onClick={handleMarkApproved}
-            disabled={isMutating}
-            className="border-green-600 text-green-700 hover:bg-green-50 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-900/20"
-          >
-            {updateQuotation.isPending ? "Saving…" : "Mark as Approved"}
-          </Button>
-        )}
-
-        {quotation.status === "draft" && (
-          <Button
-            variant="outline"
-            onClick={() => setDeleteDialogOpen(true)}
-            disabled={isMutating}
-            className="border-red-600 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
-          >
-            Delete
-          </Button>
-        )}
-      </div>
-
+      {/* Signature image */}
+      {quotation.client_signature_status === "signed" && quotation.signature_image && (
+        <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+          <p className="text-xs text-on-surface-low uppercase tracking-wide mb-2">Client Signature</p>
+          <div className="rounded border border-green-200 bg-white p-3 inline-block">
+            <img src={quotation.signature_image} alt="Client signature" className="max-h-20 max-w-[240px]" />
+          </div>
+          <p className="text-xs text-on-surface-medium mt-1.5">
+            {quotation.signer_name} · {formatDateTime(quotation.signed_at) !== "—" ? formatDateTime(quotation.signed_at) : formatDate(quotation.signed_date)}
+          </p>
+        </div>
+      )}
 
       {/* Delete confirmation dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

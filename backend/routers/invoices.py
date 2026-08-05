@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 from beanie import PydanticObjectId
 from dependencies import get_current_user, require_role
-from models.invoice import Invoice, InvoiceStatus
+from models.invoice import Invoice, InvoiceStatus, InvoiceTaxLine
 from models.quotation import Quotation, QuotationLineItem
 from models.booking import Booking
 from models.organisation import Organisation
@@ -50,6 +50,7 @@ class InvoiceLineItemBody(BaseModel):
     guest_count: int
     unit_price: float
     total: float
+    tax_id: Optional[str] = None
 
 
 class InvoiceLineItemResponse(BaseModel):
@@ -59,6 +60,25 @@ class InvoiceLineItemResponse(BaseModel):
     guest_count: int
     unit_price: float
     total: float
+    tax_id: Optional[str] = None
+
+
+class InvoiceTaxLineBody(BaseModel):
+    tax_id: Optional[str] = None
+    name: str
+    rate: float
+    calculation_method: str = "additive"
+    taxable_amount: float
+    amount: float
+
+
+class InvoiceTaxLineResponse(BaseModel):
+    tax_id: Optional[str] = None
+    name: str
+    rate: float
+    calculation_method: str
+    taxable_amount: float
+    amount: float
 
 
 class InvoiceResponse(BaseModel):
@@ -68,6 +88,7 @@ class InvoiceResponse(BaseModel):
     invoice_number: str
     status: str
     line_items: list[InvoiceLineItemResponse]
+    tax_lines: list[InvoiceTaxLineResponse]
     subtotal: float
     discount: float
     total: float
@@ -93,6 +114,7 @@ class CreateInvoiceBody(BaseModel):
     booking_id: str
     quotation_id: Optional[str] = None
     line_items: list[InvoiceLineItemBody] = []
+    tax_lines: list[InvoiceTaxLineBody] = []
     subtotal: float = 0.0
     discount: float = 0.0
     total: float = 0.0
@@ -115,6 +137,7 @@ class CreateInvoiceBody(BaseModel):
 class UpdateInvoiceBody(BaseModel):
     status: Optional[InvoiceStatus] = None
     line_items: Optional[list[InvoiceLineItemBody]] = None
+    tax_lines: Optional[list[InvoiceTaxLineBody]] = None
     subtotal: Optional[float] = None
     discount: Optional[float] = None
     total: Optional[float] = None
@@ -157,6 +180,7 @@ def _build_line_items(items: list[InvoiceLineItemBody]) -> list[QuotationLineIte
     result = []
     for item in items:
         dish_id = PydanticObjectId(item.dish_id) if item.dish_id else None
+        tax_id = PydanticObjectId(item.tax_id) if item.tax_id else None
         result.append(
             QuotationLineItem(
                 dish_id=dish_id,
@@ -165,6 +189,24 @@ def _build_line_items(items: list[InvoiceLineItemBody]) -> list[QuotationLineIte
                 guest_count=item.guest_count,
                 unit_price=item.unit_price,
                 total=item.total,
+                tax_id=tax_id,
+            )
+        )
+    return result
+
+
+def _build_tax_lines(lines: list[InvoiceTaxLineBody]) -> list[InvoiceTaxLine]:
+    result = []
+    for line in lines:
+        tax_id = PydanticObjectId(line.tax_id) if line.tax_id else None
+        result.append(
+            InvoiceTaxLine(
+                tax_id=tax_id,
+                name=line.name,
+                rate=line.rate,
+                calculation_method=line.calculation_method,
+                taxable_amount=line.taxable_amount,
+                amount=line.amount,
             )
         )
     return result
@@ -198,8 +240,20 @@ async def _invoice_response(inv: Invoice) -> InvoiceResponse:
                 guest_count=item.guest_count,
                 unit_price=item.unit_price,
                 total=item.total,
+                tax_id=str(item.tax_id) if item.tax_id else None,
             )
             for item in inv.line_items
+        ],
+        tax_lines=[
+            InvoiceTaxLineResponse(
+                tax_id=str(line.tax_id) if line.tax_id else None,
+                name=line.name,
+                rate=line.rate,
+                calculation_method=line.calculation_method,
+                taxable_amount=line.taxable_amount,
+                amount=line.amount,
+            )
+            for line in inv.tax_lines
         ],
         subtotal=inv.subtotal,
         discount=inv.discount,
@@ -317,6 +371,7 @@ async def create_invoice(
 
     invoice_number = await _generate_invoice_number(current_user.org_id)
     now = datetime.now(timezone.utc)
+    tax_lines = _build_tax_lines(body.tax_lines)
     invoice = Invoice(
         org_id=current_user.org_id,
         booking_id=booking,
@@ -324,6 +379,7 @@ async def create_invoice(
         invoice_number=invoice_number,
         status=InvoiceStatus.draft,
         line_items=line_items,
+        tax_lines=tax_lines,
         subtotal=subtotal,
         discount=discount,
         total=total,
@@ -369,7 +425,7 @@ async def update_invoice(
     if not invoice or invoice.org_id != current_user.org_id:
         raise HTTPException(status_code=404, detail="Invoice not found")
 
-    if body.line_items is not None and invoice.status != InvoiceStatus.draft:
+    if (body.line_items is not None or body.tax_lines is not None) and invoice.status != InvoiceStatus.draft:
         raise HTTPException(
             status_code=400,
             detail="Can only modify line items on draft invoices",
@@ -379,6 +435,8 @@ async def update_invoice(
         invoice.status = body.status
     if body.line_items is not None:
         invoice.line_items = _build_line_items(body.line_items)
+    if body.tax_lines is not None:
+        invoice.tax_lines = _build_tax_lines(body.tax_lines)
     if body.subtotal is not None:
         invoice.subtotal = body.subtotal
     if body.discount is not None:
@@ -469,3 +527,5 @@ async def get_invoice_pdf(
         media_type="application/pdf",
         headers={"Content-Disposition": f"inline; filename={invoice.invoice_number}.pdf"},
     )
+
+

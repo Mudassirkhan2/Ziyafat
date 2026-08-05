@@ -1,15 +1,22 @@
+import hashlib
+import os
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from core.security import (
     JWTError,
     create_access_token,
     create_refresh_token,
     decode_token,
+    hash_password,
     verify_password,
 )
 from core.config import settings
+from core.email import send_password_reset_email
 from dependencies import get_current_user
 from models.user import User
+from models.password_reset import PasswordResetToken
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
@@ -108,3 +115,60 @@ async def me(current_user: User = Depends(get_current_user)):
         role=current_user.role,
         avatar_url=current_user.avatar_url,
     )
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(min_length=8)
+
+
+@router.post("/forgot-password")
+async def forgot_password(body: ForgotPasswordRequest):
+    user = await User.find_one(User.email == body.email.lower().strip())
+    if user and user.is_active:
+        await PasswordResetToken.find(PasswordResetToken.user_id == str(user.id)).delete()
+
+        raw_token = os.urandom(32).hex()
+        token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=settings.reset_token_expire_minutes)
+
+        await PasswordResetToken(
+            user_id=str(user.id),
+            token_hash=token_hash,
+            expires_at=expires_at,
+        ).insert()
+
+        reset_url = f"{settings.frontend_url}/reset-password?token={raw_token}"
+        await send_password_reset_email(user.email, reset_url)
+
+    return {"message": "If that email is registered, a reset link has been sent."}
+
+
+@router.post("/reset-password")
+async def reset_password(body: ResetPasswordRequest):
+    token_hash = hashlib.sha256(body.token.encode()).hexdigest()
+    now = datetime.now(timezone.utc)
+
+    record = await PasswordResetToken.find_one(
+        PasswordResetToken.token_hash == token_hash,
+        PasswordResetToken.used == False,
+        PasswordResetToken.expires_at > now,
+    )
+    if not record:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset link.")
+
+    user = await User.get(record.user_id)
+    if not user or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired reset link.")
+
+    user.hashed_password = hash_password(body.new_password)
+    await user.save()
+
+    record.used = True
+    await record.save()
+
+    return {"message": "Password reset successfully."}

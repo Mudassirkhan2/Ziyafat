@@ -46,6 +46,22 @@ export function useCreateQuotation() {
       total: number;
       notes?: string;
       valid_until?: string;
+      service_charge_percentage?: number;
+      tax_percentage?: number;
+      gratuity_percentage?: number;
+      service_charge_amount?: number;
+      tax_amount?: number;
+      gratuity_amount?: number;
+      delivery_fee?: number;
+      setup_fee?: number;
+      per_person_price?: number;
+      deposit_amount?: number;
+      deposit_percentage?: number;
+      deposit_due_date?: string;
+      final_balance_due_date?: string;
+      payment_terms_text?: string;
+      cancellation_policy_text?: string;
+      minimum_guarantee_count?: number;
     }) => api.post<Quotation>("/quotations", body),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["quotations"] }),
   });
@@ -62,6 +78,22 @@ export function useUpdateQuotation(id: string) {
       total: number;
       notes: string;
       valid_until: string;
+      service_charge_percentage: number;
+      tax_percentage: number;
+      gratuity_percentage: number;
+      service_charge_amount: number;
+      tax_amount: number;
+      gratuity_amount: number;
+      delivery_fee: number;
+      setup_fee: number;
+      deposit_amount: number;
+      per_person_price: number;
+      deposit_percentage: number;
+      deposit_due_date: string;
+      final_balance_due_date: string;
+      payment_terms_text: string;
+      cancellation_policy_text: string;
+      minimum_guarantee_count: number;
     }>) => api.patch<Quotation>(`/quotations/${id}`, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["quotations"] });

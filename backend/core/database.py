@@ -17,11 +17,13 @@ async def init_db() -> None:
     from models.quotation import Quotation
     from models.invoice import Invoice
     from models.ingredient import Ingredient
+    from models.tax import Tax
+    from models.password_reset import PasswordResetToken
 
     _client = AsyncIOMotorClient(settings.mongodb_url)
     await init_beanie(
         database=_client[settings.mongodb_db],
-        document_models=[User, Organisation, Lead, Customer, Booking, Event, Dish, Quotation, Invoice, Ingredient],
+        document_models=[User, Organisation, Lead, Customer, Booking, Event, Dish, Quotation, Invoice, Ingredient, Tax, PasswordResetToken],
     )
 
 

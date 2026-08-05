@@ -18,6 +18,11 @@ function fmtDate(d: string | null) {
   return new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
+function fmtDateTime(d: string | null) {
+  if (!d) return "—";
+  return new Date(d).toLocaleString("en-US", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
+}
+
 function StatusPill({ status }: { status: string }) {
   const map: Record<string, string> = {
     signed: "bg-green-100 text-green-700",
@@ -48,7 +53,7 @@ function SignatureSection({
   status: string;
   signerName: string | null;
   signatureImage: string | null;
-  onSigned: (name: string, image: string) => void;
+  onSigned: (name: string, image: string, signedAt: string) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const lastPos = useRef<{ x: number; y: number } | null>(null);
@@ -139,9 +144,9 @@ function SignatureSection({
     const signatureImage = canvas.toDataURL("image/png");
     setLoading(true);
     try {
-      await signPortal(token, name.trim(), signatureImage);
+      const res = await signPortal(token, name.trim(), signatureImage);
       toast.success("Quotation signed successfully.");
-      onSigned(name.trim(), signatureImage);
+      onSigned(name.trim(), signatureImage, res.signed_at ?? new Date().toISOString());
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to sign. Try again.");
     } finally {
@@ -337,10 +342,10 @@ export default function PortalPage() {
   const unsigned = quotation && quotation.client_signature_status !== "signed";
   const dietaryPending = events.some((e) => !e.client_dietary_notes);
 
-  function handleSigned(name: string, signatureImage: string) {
+  function handleSigned(name: string, signatureImage: string, signedAt: string) {
     setData((prev) =>
       prev && prev.quotation
-        ? { ...prev, quotation: { ...prev.quotation, client_signature_status: "signed", signer_name: name, signature_image: signatureImage } }
+        ? { ...prev, quotation: { ...prev.quotation, client_signature_status: "signed", signer_name: name, signature_image: signatureImage, signed_at: signedAt } }
         : prev
     );
   }
@@ -496,7 +501,7 @@ export default function PortalPage() {
                   <div className="rounded-lg border border-stone-200 bg-stone-50 p-3 inline-block">
                     <img src={quotation.signature_image} alt="Client signature" className="max-h-16 max-w-[220px]" />
                   </div>
-                  <p className="text-xs text-stone-500 mt-1.5">{quotation.signer_name} · {fmtDate(quotation.signed_date)}</p>
+                  <p className="text-xs text-stone-500 mt-1.5">{quotation.signer_name} · {fmtDateTime(quotation.signed_at ?? quotation.signed_date)}</p>
                 </div>
               )}
             </div>

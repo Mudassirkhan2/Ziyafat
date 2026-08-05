@@ -13,6 +13,8 @@ interface FormPageShellProps {
   icon: React.ReactNode;
   title: string;
   subtitle: string;
+  /** Buttons/actions rendered on the right side of the page header */
+  actions?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -22,6 +24,7 @@ export function FormPageShell({
   icon,
   title,
   subtitle,
+  actions,
   children,
 }: FormPageShellProps) {
   const router = useRouter();
@@ -51,7 +54,7 @@ export function FormPageShell({
         >
           {icon}
         </div>
-        <div>
+        <div className="flex-1">
           <h1
             className="text-[36px] font-semibold leading-[1.05] tracking-[-0.4px] text-on-surface"
             style={{ fontFamily: "var(--font-serif)" }}
@@ -60,6 +63,11 @@ export function FormPageShell({
           </h1>
           <p className="text-[15px] text-on-surface-medium mt-1">{subtitle}</p>
         </div>
+        {actions && (
+          <div className="flex items-center gap-2 pt-1 flex-shrink-0">
+            {actions}
+          </div>
+        )}
       </div>
 
       {children}

@@ -28,7 +28,7 @@ export default function LandingBento() {
               <div className={s.statusRow}>
                 <div className={s.statusLn}><b>Reception · 600 pax</b><span className={`${s.pill2} ${s.pill2Quote}`}>Quoted</span></div>
                 <div className={s.statusLn}><b>Corporate · 250 pax</b><span className={`${s.pill2} ${s.pill2Neg}`}>Negotiating</span></div>
-                <div className={s.statusLn}><b>Fatima &amp; Bilal · 1,450</b><span className={`${s.pill2} ${s.pill2Won}`}>Won</span></div>
+                <div className={s.statusLn}><b>Emily &amp; James · 1,450</b><span className={`${s.pill2} ${s.pill2Won}`}>Won</span></div>
               </div>
             </div>
           </Reveal>
@@ -46,9 +46,9 @@ export default function LandingBento() {
                 <div className={s.cChip}><b>86</b> corporate</div>
               </div>
               <div className={s.cList}>
-                <div className={s.cRow}><div className={s.cAv}>SK</div><div className={s.cInfo}><b className={s.cInfoB}>Sana Khan</b>Wedding planner</div><span className={`${s.cTag} ${s.cTagVip}`}>VIP</span></div>
+                <div className={s.cRow}><div className={s.cAv}>SK</div><div className={s.cInfo}><b className={s.cInfoB}>Sarah Kim</b>Wedding planner</div><span className={`${s.cTag} ${s.cTagVip}`}>VIP</span></div>
                 <div className={s.cRow}><div className={s.cAv}>AC</div><div className={s.cInfo}><b className={s.cInfoB}>Acme Corp</b>Corporate</div><span className={s.cTag}>Repeat</span></div>
-                <div className={s.cRow}><div className={s.cAv}>RB</div><div className={s.cInfo}><b className={s.cInfoB}>Rahul &amp; Bisma</b>Individual</div><span className={s.cTag}>New</span></div>
+                <div className={s.cRow}><div className={s.cAv}>AJ</div><div className={s.cInfo}><b className={s.cInfoB}>Alex &amp; Jamie</b>Individual</div><span className={s.cTag}>New</span></div>
               </div>
             </div>
           </Reveal>
@@ -62,7 +62,7 @@ export default function LandingBento() {
             <p className={s.cellP}>Deposits, contracts and minimum guarantee, all in one place.</p>
             <div className={s.cellVisual}>
               <div className={s.statusRow}>
-                <div className={s.statusLn}><b>Fatima &amp; Bilal</b><span className={`${s.pill2} ${s.pill2Won}`}>Deposit ✓</span></div>
+                <div className={s.statusLn}><b>Emily &amp; James</b><span className={`${s.pill2} ${s.pill2Won}`}>Deposit ✓</span></div>
                 <div className={s.statusLn}><b>Acme Corp · Gala</b><span className={`${s.pill2} ${s.pill2Quote}`}>Contract</span></div>
               </div>
               <div className={s.stockBars} style={{ marginTop: 12 }}>
@@ -93,7 +93,7 @@ export default function LandingBento() {
                   <div className={s.bdocHead}><span>Invoice</span><span className={s.bdocPdf}>PDF</span></div>
                   <div className={s.bdocNum}>SHC-044</div>
                   <div className={s.bdocAmt}>₹4.7L</div>
-                  <div className={s.bdocMeta}>Paid · Fatima &amp; Bilal</div>
+                  <div className={s.bdocMeta}>Paid · Emily &amp; James</div>
                 </div>
               </div>
               <div className={s.printRow}>
@@ -120,8 +120,8 @@ export default function LandingBento() {
               <div className={s.statusRow}>
                 <div className={s.statusLn}><b><span className={s.vTagNon} />Chicken Biryani</b><span style={{ color: "var(--gold-s)", fontWeight: 700 }}>₹310</span></div>
                 <div className={s.statusLn}><b><span className={s.vTagNon} />Slow-cooked Lamb Stew</b><span style={{ color: "var(--gold-s)", fontWeight: 700 }}>₹260</span></div>
-                <div className={s.statusLn}><b><span className={s.vTagVeg} />Spiced Pepper Curry</b><span style={{ color: "var(--gold-s)", fontWeight: 700 }}>₹120</span></div>
-                <div className={s.statusLn}><b><span className={s.vTagVeg} />Apricot Pudding</b><span style={{ color: "var(--gold-s)", fontWeight: 700 }}>₹140</span></div>
+                <div className={s.statusLn}><b><span className={s.vTagVeg} />Roasted Garden Vegetables</b><span style={{ color: "var(--gold-s)", fontWeight: 700 }}>₹120</span></div>
+                <div className={s.statusLn}><b><span className={s.vTagVeg} />Vanilla Panna Cotta</b><span style={{ color: "var(--gold-s)", fontWeight: 700 }}>₹140</span></div>
               </div>
             </div>
           </Reveal>
@@ -132,7 +132,7 @@ export default function LandingBento() {
             </div>
             <span className={s.cellTagline}>Functions</span>
             <h3 className={s.cellH3}>Events</h3>
-            <p className={s.cellP}>Many events per booking — Mehendi, Ceremony, Reception — each with its own venue, headcount and service style.</p>
+            <p className={s.cellP}>Many events per booking — Ceremony, Reception, After-party — each with its own venue, headcount and service style.</p>
             <div className={s.cellVisual}>
               <div className={s.statusRow}>
                 <div className={s.statusLn}><b>Ceremony · 450 pax</b><span className={`${s.pill2} ${s.pill2Quote}`}>Family</span></div>

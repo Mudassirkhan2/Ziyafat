@@ -63,6 +63,7 @@ class QuotationResponse(BaseModel):
     id: str
     booking_id: str
     event_id: Optional[str]
+    ref_number: Optional[str]
     version: int
     status: str
     line_items: list[QuotationLineItemResponse]
@@ -85,6 +86,9 @@ class QuotationResponse(BaseModel):
     deposit_due_date: Optional[date]
     final_balance_due_date: Optional[date]
     signed_date: Optional[date]
+    signed_at: Optional[datetime]
+    signer_name: Optional[str]
+    signature_image: Optional[str]
     payment_terms_text: Optional[str]
     cancellation_policy_text: Optional[str]
     minimum_guarantee_count: Optional[int]
@@ -181,6 +185,7 @@ async def _quotation_response(q: Quotation) -> QuotationResponse:
         id=str(q.id),
         booking_id=_resolve_id(q.booking_id),
         event_id=str(q.event_id) if q.event_id else None,
+        ref_number=q.ref_number,
         version=q.version,
         status=q.status,
         line_items=[
@@ -213,6 +218,9 @@ async def _quotation_response(q: Quotation) -> QuotationResponse:
         deposit_due_date=q.deposit_due_date,
         final_balance_due_date=q.final_balance_due_date,
         signed_date=q.signed_date,
+        signed_at=q.signed_at,
+        signer_name=q.signer_name,
+        signature_image=q.signature_image,
         payment_terms_text=q.payment_terms_text,
         cancellation_policy_text=q.cancellation_policy_text,
         minimum_guarantee_count=q.minimum_guarantee_count,
@@ -283,10 +291,15 @@ async def create_quotation(
         raise HTTPException(status_code=404, detail="Booking not found")
 
     now = datetime.now(timezone.utc)
+    org = await Organisation.get(current_user.org_id)
+    prefix = (org.quotation_prefix if org else None) or "QT"
+    count = await Quotation.find({"org_id": current_user.org_id}).count()
+    ref_number = f"{prefix}-{now.year}-{count + 1:04d}"
     quotation = Quotation(
         org_id=current_user.org_id,
         booking_id=booking,
         event_id=PydanticObjectId(body.event_id) if body.event_id else None,
+        ref_number=ref_number,
         version=1,
         status=QuotationStatus.draft,
         line_items=_build_line_items(body.line_items),
@@ -425,10 +438,15 @@ async def duplicate_quotation(
 
     booking = await Booking.get(_resolve_id(original.booking_id))
     now = datetime.now(timezone.utc)
+    org = await Organisation.get(current_user.org_id)
+    prefix = (org.quotation_prefix if org else None) or "QT"
+    count = await Quotation.find({"org_id": current_user.org_id}).count()
+    ref_number = f"{prefix}-{now.year}-{count + 1:04d}"
     new_quotation = Quotation(
         org_id=current_user.org_id,
         booking_id=booking,
         event_id=original.event_id,
+        ref_number=ref_number,
         version=original.version + 1,
         status=QuotationStatus.draft,
         line_items=[

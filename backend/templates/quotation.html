@@ -17,6 +17,10 @@
     .summary tr td { border: none; padding: 4px 10px; }
     .summary .total-row td { font-weight: bold; border-top: 2px solid #333; font-size: 15px; padding-top: 8px; }
     .notes { margin-top: 24px; font-size: 12px; color: #555; }
+    .signature-block { margin-top: 32px; border-top: 1px solid #ddd; padding-top: 20px; }
+    .signature-block h3 { font-size: 13px; color: #333; margin: 0 0 10px; }
+    .signature-img { max-height: 80px; max-width: 240px; border: 1px solid #eee; padding: 6px; background: #fafafa; }
+    .signature-meta { font-size: 11px; color: #777; margin-top: 6px; }
   </style>
 </head>
 <body>
@@ -68,6 +72,23 @@
 
   {% if quotation.notes %}
     <div class="notes"><strong>Notes:</strong> {{ quotation.notes }}</div>
+  {% endif %}
+
+  {% if quotation.client_signature_status == 'signed' %}
+    <div class="signature-block">
+      <h3>Client Signature</h3>
+      {% if quotation.signature_image %}
+        <img class="signature-img" src="{{ quotation.signature_image }}" alt="Signature" />
+      {% endif %}
+      <div class="signature-meta">
+        Signed by: <strong>{{ quotation.signer_name or '—' }}</strong>
+        {% if quotation.signed_at %}
+          &nbsp;·&nbsp; {{ quotation.signed_at.strftime('%d %b %Y, %H:%M UTC') }}
+        {% elif quotation.signed_date %}
+          &nbsp;·&nbsp; {{ quotation.signed_date.strftime('%d %b %Y') }}
+        {% endif %}
+      </div>
+    </div>
   {% endif %}
 </body>
 </html>

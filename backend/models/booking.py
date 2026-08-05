@@ -9,6 +9,7 @@ from models.customer import Customer
 
 
 class BookingStatus(str, Enum):
+    draft = "draft"
     confirmed = "confirmed"
     in_progress = "in_progress"
     completed = "completed"
@@ -19,7 +20,7 @@ class Booking(Document):
     org_id: PydanticObjectId
     customer: Link[Customer]
     title: str
-    status: BookingStatus = BookingStatus.confirmed
+    status: BookingStatus = BookingStatus.draft
     notes: Optional[str] = None
     # Deposit tracking
     deposit_amount: Optional[float] = None

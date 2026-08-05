@@ -2,13 +2,15 @@ from enum import Enum
 
 
 class CeremonyType(str, Enum):
-    nikah = "nikah"
-    walima = "walima"
-    mehendi = "mehendi"
+    wedding = "wedding"
+    engagement = "engagement"
     reception = "reception"
-    aqiqah = "aqiqah"
     birthday = "birthday"
+    anniversary = "anniversary"
+    baby_shower = "baby_shower"
     corporate = "corporate"
+    graduation = "graduation"
+    gala = "gala"
     other = "other"
 
 

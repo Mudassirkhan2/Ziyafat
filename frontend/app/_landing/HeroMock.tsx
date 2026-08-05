@@ -75,7 +75,7 @@ export default function HeroMock() {
           </svg>
         </div>
         <div className={s.floatText}>
-          <b className={s.floatTextB}>New lead · Walima</b>
+          <b className={s.floatTextB}>New lead · Wedding</b>
           600 pax · Banjara Hills
         </div>
       </motion.div>
@@ -93,7 +93,7 @@ export default function HeroMock() {
         </div>
         <div className={s.floatText}>
           <b className={s.floatTextB}>Invoice paid</b>
-          ₹4.7L · Fatima &amp; Bilal
+          ₹4.7L · Emily &amp; James
         </div>
       </motion.div>
     </motion.div>

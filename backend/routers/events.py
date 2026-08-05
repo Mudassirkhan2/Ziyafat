@@ -23,6 +23,7 @@ router = APIRouter(prefix="/api/v1/bookings", tags=["events"])
 class EventResponse(BaseModel):
     id: str
     booking_id: str
+    ref_number: Optional[str]
     name: str
     date: str
     venue: Optional[str]
@@ -137,6 +138,7 @@ def _event_response(event: Event) -> EventResponse:
     return EventResponse(
         id=str(event.id),
         booking_id=booking_id,
+        ref_number=event.ref_number,
         name=event.name,
         date=event.date.isoformat(),
         venue=event.venue,
@@ -204,9 +206,12 @@ async def create_event(
 ):
     booking = await _get_booking_or_404(booking_id, current_user.org_id)
     now = datetime.now(timezone.utc)
+    count = await Event.find({"org_id": current_user.org_id}).count()
+    ref_number = f"EVT-{now.year}-{count + 1:04d}"
     event = Event(
         org_id=current_user.org_id,
         booking=booking,
+        ref_number=ref_number,
         name=body.name,
         date=body.date,
         venue=body.venue,

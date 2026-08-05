@@ -170,10 +170,10 @@ html.dark {
   --on-surface-low: #737373;
   --on-surface-lowest: #404040;
 
-  --outline-lowest: #1a1a1a;
-  --outline-low: #262626;
-  --outline: #404040;
-  --outline-high: #525252;
+  --outline-lowest: #2a2a2a;
+  --outline-low: #3d3d3d;
+  --outline: #5c5c5c;
+  --outline-high: #787878;
 }
 
 @layer base {

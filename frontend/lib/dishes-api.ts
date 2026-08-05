@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api";
 import type { Dish, Paginated } from "./types";
 
@@ -34,6 +34,26 @@ export function useDishesForSelect() {
   return useQuery<Paginated<Dish>>({
     queryKey: ["dishes", "select"],
     queryFn: () => api.get<Paginated<Dish>>("/dishes?page_size=1000&sort_by=name&sort_dir=asc&active_only=true"),
+  });
+}
+
+export function useInfiniteDishes(search?: string) {
+  return useInfiniteQuery<Paginated<Dish>>({
+    queryKey: ["dishes", "infinite", search],
+    queryFn: ({ pageParam }) => {
+      const q = new URLSearchParams({
+        page_size: "50",
+        sort_by: "name",
+        sort_dir: "asc",
+        active_only: "true",
+        page: String(pageParam),
+      });
+      if (search) q.set("search", search);
+      return api.get<Paginated<Dish>>(`/dishes?${q.toString()}`);
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.pages ? lastPage.page + 1 : undefined,
   });
 }
 

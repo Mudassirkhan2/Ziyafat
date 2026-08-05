@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -24,7 +24,7 @@ import {
   useUpdateEventById,
   useDeleteEvent,
 } from "@/lib/events-api";
-import { useDishes } from "@/lib/dishes-api";
+import { useDishes, useInfiniteDishes, useCreateDish } from "@/lib/dishes-api";
 import type { BookingEvent, BookingStatus, CateringModel } from "@/lib/types";
 import {
   CEREMONY_TYPE_OPTIONS,
@@ -57,6 +57,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   Select,
@@ -66,7 +67,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Form } from "@/components/ui/form";
-import { Users, Trash2 } from "lucide-react";
+import { Share2, Trash2 } from "lucide-react";
+import { FiPlus } from "react-icons/fi";
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -77,6 +79,7 @@ const CATERING_MODEL_OPTIONS = [
 ];
 
 const BOOKING_STATUS_COLORS: Record<BookingStatus, string> = {
+  draft: "border-outline text-on-surface-medium",
   confirmed: "bg-green-100 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800",
   in_progress: "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800",
   completed: "bg-surface-highest text-on-surface-medium border-outline",
@@ -84,6 +87,7 @@ const BOOKING_STATUS_COLORS: Record<BookingStatus, string> = {
 };
 
 const BOOKING_STATUSES: BookingStatus[] = [
+  "draft",
   "confirmed",
   "in_progress",
   "completed",
@@ -421,17 +425,86 @@ function MenuDialog({
   onOpenChange: (v: boolean) => void;
   bookingId: string;
 }) {
-  const { data: dishes } = useDishes();
+  const createDish = useCreateDish();
   const updateEvent = useUpdateEventById(bookingId, event.id);
+
   const [selected, setSelected] = useState<string[]>(event.menu_dish_ids);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newDish, setNewDish] = useState({ name: "", category: "", selling_price: "", per_plate_cost: "" });
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteDishes(debouncedSearch || undefined);
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Debounce search → server query
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  // Intersection observer drives infinite scroll
+  const onIntersect = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage]
+  );
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(onIntersect, { threshold: 0.1 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [onIntersect]);
 
   useEffect(() => {
     setSelected(event.menu_dish_ids);
   }, [event.id, event.menu_dish_ids]);
 
+  useEffect(() => {
+    if (open) {
+      setSearch("");
+      setDebouncedSearch("");
+      setShowAddForm(false);
+      setNewDish({ name: "", category: "", selling_price: "", per_plate_cost: "" });
+    }
+  }, [open]);
+
+  const allDishes = data?.pages.flatMap((p) => p.items) ?? [];
+
   function toggle(id: string) {
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }
+
+  function handleAddDish() {
+    createDish.mutate(
+      {
+        name: newDish.name.trim(),
+        category: newDish.category.trim(),
+        selling_price: parseFloat(newDish.selling_price),
+        per_plate_cost: parseFloat(newDish.per_plate_cost || "0"),
+      },
+      {
+        onSuccess: (dish) => {
+          setSelected((prev) => [...prev, dish.id]);
+          setShowAddForm(false);
+          setNewDish({ name: "", category: "", selling_price: "", per_plate_cost: "" });
+          toast.success(`"${dish.name}" created and added to menu.`);
+        },
+        onError: () => toast.error("Failed to create dish. Try again."),
+      }
     );
   }
 
@@ -451,14 +524,25 @@ function MenuDialog({
         <DialogHeader>
           <DialogTitle>Set Menu — {event.name}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-2 max-h-80 overflow-y-auto py-2">
-          {(dishes?.items ?? []).map((dish) => (
-            <label key={dish.id} className="flex items-center gap-3 cursor-pointer rounded-lg border border-outline p-2 hover:bg-surface-high">
+
+        <Input
+          placeholder="Search dishes…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="h-9"
+        />
+
+        <div className="space-y-1.5 max-h-64 overflow-y-auto py-1 pr-1">
+          {allDishes.length === 0 && !isFetchingNextPage && (
+            <p className="text-sm text-on-surface-low text-center py-6">No dishes found.</p>
+          )}
+          {allDishes.map((dish) => (
+            <label key={dish.id} className="flex items-center gap-3 cursor-pointer rounded-lg border border-outline p-2.5 hover:bg-surface-high">
               <input
                 type="checkbox"
                 checked={selected.includes(dish.id)}
                 onChange={() => toggle(dish.id)}
-                className="h-4 w-4"
+                className="h-4 w-4 shrink-0"
               />
               <span className="flex-1 text-sm text-on-surface">{dish.name}</span>
               <span className="text-xs text-on-surface-medium">{dish.category}</span>
@@ -467,11 +551,79 @@ function MenuDialog({
               )}
             </label>
           ))}
+          {/* Sentinel — triggers next page load when visible */}
+          <div ref={sentinelRef} className="py-1 text-center">
+            {isFetchingNextPage && (
+              <span className="text-xs text-on-surface-low">Loading more…</span>
+            )}
+          </div>
         </div>
+
+        {showAddForm ? (
+          <div className="rounded-lg border border-outline-low bg-surface-high p-3 space-y-2">
+            <p className="text-xs font-semibold text-on-surface-medium uppercase tracking-wide">New Dish</p>
+            <Input
+              placeholder="Dish name *"
+              value={newDish.name}
+              onChange={(e) => setNewDish((p) => ({ ...p, name: e.target.value }))}
+              className="h-9"
+            />
+            <Input
+              placeholder="Category * (e.g. Starters)"
+              value={newDish.category}
+              onChange={(e) => setNewDish((p) => ({ ...p, category: e.target.value }))}
+              className="h-9"
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                type="number"
+                placeholder="Selling price *"
+                value={newDish.selling_price}
+                onChange={(e) => setNewDish((p) => ({ ...p, selling_price: e.target.value }))}
+                className="h-9"
+              />
+              <Input
+                type="number"
+                placeholder="Cost per plate"
+                value={newDish.per_plate_cost}
+                onChange={(e) => setNewDish((p) => ({ ...p, per_plate_cost: e.target.value }))}
+                className="h-9"
+              />
+            </div>
+            <div className="flex gap-2 pt-1">
+              <Button
+                size="sm"
+                onClick={handleAddDish}
+                disabled={
+                  createDish.isPending ||
+                  !newDish.name.trim() ||
+                  !newDish.category.trim() ||
+                  !newDish.selling_price
+                }
+              >
+                {createDish.isPending ? "Adding…" : "Add & Select"}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setShowAddForm(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full border-dashed"
+            onClick={() => setShowAddForm(true)}
+          >
+            <FiPlus className="h-4 w-4 mr-1.5" />
+            Add new dish on the go
+          </Button>
+        )}
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={save} disabled={updateEvent.isPending}>
-            {updateEvent.isPending ? "Saving…" : "Save Menu"}
+            {updateEvent.isPending ? "Saving…" : `Save Menu (${selected.length})`}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -667,8 +819,8 @@ export default function BookingDetailPage() {
             }}
             className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-secondary text-on-secondary text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer"
           >
-            <Users className="h-3.5 w-3.5" />
-            Share Portal
+            <Share2 className="h-3.5 w-3.5" />
+            Share
           </button>
           <button
             onClick={() => setDeleteOpen(true)}
@@ -761,6 +913,7 @@ export default function BookingDetailPage() {
           <Table>
             <TableHeader>
               <TableRow className="bg-surface-high">
+                <TableHead className="text-on-surface-medium">Event ID</TableHead>
                 <TableHead className="text-on-surface-medium">Name</TableHead>
                 <TableHead className="text-on-surface-medium">Date</TableHead>
                 <TableHead className="text-on-surface-medium">Venue</TableHead>
@@ -775,7 +928,7 @@ export default function BookingDetailPage() {
               {events.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={7}
                     className="py-0"
                   >
                     <EmptyState
@@ -789,6 +942,9 @@ export default function BookingDetailPage() {
               {events.map((event: BookingEvent) => (
                 <React.Fragment key={event.id}>
                   <TableRow className="border-outline-low">
+                    <TableCell className="text-on-surface-medium font-mono text-xs">
+                      {event.ref_number ?? "—"}
+                    </TableCell>
                     <TableCell className="text-on-surface font-medium">
                       {event.name}
                     </TableCell>
@@ -816,6 +972,15 @@ export default function BookingDetailPage() {
                         <Button variant="outline" size="sm" onClick={() => setMenuTarget(event)}>
                           Set Menu{event.menu_dish_ids.length > 0 ? ` (${event.menu_dish_ids.length})` : ""}
                         </Button>
+                        <Link href={`/quotations/new?booking_id=${id}&event_id=${event.id}`}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-primary/40 text-primary hover:bg-primary/5"
+                          >
+                            Create Quotation
+                          </Button>
+                        </Link>
                         <Link href={`/bookings/${id}/procurement/${event.id}`}>
                           <Button variant="outline" size="sm">Procurement</Button>
                         </Link>
@@ -825,7 +990,7 @@ export default function BookingDetailPage() {
                   </TableRow>
                   {event.menu_dish_ids.length > 0 && (
                     <TableRow className="border-outline-low hover:bg-transparent">
-                      <TableCell colSpan={6} className="pt-0 pb-2.5 pl-10">
+                      <TableCell colSpan={7} className="pt-0 pb-2.5 pl-10">
                         <div className="flex flex-wrap gap-1.5">
                           {event.menu_dish_ids.map((dishId) => (
                             <span

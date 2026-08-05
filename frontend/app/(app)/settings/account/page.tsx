@@ -32,14 +32,11 @@ const accountSchema = z.object({
   tagline: z.string().optional(),
   website: z.string().optional(),
   gstin: z.string().optional(),
-  bank_account_name: z.string().optional(),
-  bank_account_number: z.string().optional(),
-  bank_ifsc: z.string().optional(),
-  bank_name: z.string().optional(),
   default_service_charge_percentage: z.string().optional(),
   default_tax_rate: z.string().optional(),
   default_gratuity_percentage: z.string().optional(),
   invoice_prefix: z.string().optional(),
+  quotation_prefix: z.string().optional(),
   default_payment_terms: z.string().optional(),
   default_cancellation_policy: z.string().optional(),
   currency_code: z.string().optional(),
@@ -55,12 +52,12 @@ export default function AccountSettingsPage() {
     resolver: zodResolver(accountSchema),
     defaultValues: {
       name: "", slug: "", address: "", phone: "", email: "", tagline: "",
-      website: "", gstin: "", bank_account_name: "", bank_account_number: "",
-      bank_ifsc: "", bank_name: "",
+      website: "", gstin: "",
       default_service_charge_percentage: "0",
       default_tax_rate: "0",
       default_gratuity_percentage: "0",
       invoice_prefix: "INV",
+      quotation_prefix: "QT",
       default_payment_terms: "",
       default_cancellation_policy: "",
       currency_code: "INR",
@@ -78,14 +75,11 @@ export default function AccountSettingsPage() {
         tagline: org.tagline ?? "",
         website: org.website ?? "",
         gstin: org.gstin ?? "",
-        bank_account_name: org.bank_account_name ?? "",
-        bank_account_number: org.bank_account_number ?? "",
-        bank_ifsc: org.bank_ifsc ?? "",
-        bank_name: org.bank_name ?? "",
         default_service_charge_percentage: String(org.default_service_charge_percentage ?? 0),
         default_tax_rate: String(org.default_tax_rate ?? 0),
         default_gratuity_percentage: String(org.default_gratuity_percentage ?? 0),
         invoice_prefix: org.invoice_prefix ?? "INV",
+        quotation_prefix: org.quotation_prefix ?? "QT",
         default_payment_terms: org.default_payment_terms ?? "",
         default_cancellation_policy: org.default_cancellation_policy ?? "",
         currency_code: org.currency_code ?? "INR",
@@ -104,10 +98,6 @@ export default function AccountSettingsPage() {
         tagline: values.tagline || undefined,
         website: values.website || undefined,
         gstin: values.gstin || undefined,
-        bank_account_name: values.bank_account_name || undefined,
-        bank_account_number: values.bank_account_number || undefined,
-        bank_ifsc: values.bank_ifsc || undefined,
-        bank_name: values.bank_name || undefined,
         default_service_charge_percentage: values.default_service_charge_percentage
           ? parseFloat(values.default_service_charge_percentage)
           : undefined,
@@ -118,6 +108,7 @@ export default function AccountSettingsPage() {
           ? parseFloat(values.default_gratuity_percentage)
           : undefined,
         invoice_prefix: values.invoice_prefix || undefined,
+        quotation_prefix: values.quotation_prefix || undefined,
         default_payment_terms: values.default_payment_terms || undefined,
         default_cancellation_policy: values.default_cancellation_policy || undefined,
         currency_code: values.currency_code || undefined,
@@ -202,43 +193,6 @@ export default function AccountSettingsPage() {
         </div>
 
         <Separator className="my-2" />
-        <p className="text-sm font-medium text-on-surface">Bank Details</p>
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormField control={form.control} name="bank_name" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Bank Name</FormLabel>
-              <FormControl><Input placeholder="e.g. HDFC Bank" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={form.control} name="bank_ifsc" render={({ field }) => (
-            <FormItem>
-              <FormLabel>IFSC Code</FormLabel>
-              <FormControl><Input placeholder="e.g. HDFC0001234" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <FormField control={form.control} name="bank_account_name" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Account Name</FormLabel>
-              <FormControl><Input placeholder="Name on account" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-          <FormField control={form.control} name="bank_account_number" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Account Number</FormLabel>
-              <FormControl><Input placeholder="Account number" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-        </div>
-
-        <Separator className="my-2" />
         <p className="text-sm font-medium text-on-surface">Invoice &amp; Billing Defaults</p>
 
           <FormField control={form.control} name="currency_code" render={({ field }) => (
@@ -253,7 +207,7 @@ export default function AccountSettingsPage() {
                 <SelectContent>
                   {CURRENCIES.map((c) => (
                     <SelectItem key={c.code} value={c.code}>
-                      {c.symbol} — {c.name} ({c.code})
+                      {`${c.symbol} — ${c.name} (${c.code})`}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -286,13 +240,22 @@ export default function AccountSettingsPage() {
           )} />
         </div>
 
-        <FormField control={form.control} name="invoice_prefix" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Invoice Number Prefix</FormLabel>
-            <FormControl><Input placeholder="INV" {...field} /></FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
+        <div className="grid grid-cols-2 gap-4">
+          <FormField control={form.control} name="invoice_prefix" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Invoice Number Prefix</FormLabel>
+              <FormControl><Input placeholder="INV" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+          <FormField control={form.control} name="quotation_prefix" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Quotation Number Prefix</FormLabel>
+              <FormControl><Input placeholder="QT" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+        </div>
 
         <FormField control={form.control} name="default_payment_terms" render={({ field }) => (
           <FormItem>

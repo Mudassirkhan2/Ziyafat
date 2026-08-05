@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "./api";
-import type { Invoice, QuotationLineItem, InvoiceStatus, Paginated } from "./types";
+import type { Invoice, QuotationLineItem, InvoiceTaxLine, InvoiceStatus, Paginated } from "./types";
 
 interface InvoiceParams {
   booking_id?: string;
@@ -41,9 +41,11 @@ export function useCreateInvoice() {
       booking_id: string;
       quotation_id?: string;
       line_items?: QuotationLineItem[];
+      tax_lines?: Omit<InvoiceTaxLine, "tax_id"> & { tax_id?: string | null }[];
       subtotal: number;
       discount: number;
       total: number;
+      tax_amount?: number;
       due_date?: string;
       notes?: string;
     }) => api.post<Invoice>("/invoices", body),
@@ -77,3 +79,4 @@ export function useDeleteInvoice() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["invoices"] }),
   });
 }
+

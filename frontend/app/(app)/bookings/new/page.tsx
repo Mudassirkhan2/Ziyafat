@@ -1,14 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { UserPlus } from "lucide-react";
 
 import { format } from "date-fns"
 import { useCreateBooking } from "@/lib/bookings-api";
+import { useCustomers, useCreateCustomer } from "@/lib/customers-api";
+import { useCurrencyStore } from "@/lib/currency-store";
+import { getCurrencyMeta } from "@/lib/currencies";
 import { toast } from "sonner";
-import { useCustomers } from "@/lib/customers-api";
 import { FormDatePicker } from "@/components/ui/form-fields";
 
 import { Button } from "@/components/ui/button";
@@ -29,6 +33,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const schema = z.object({
   customer_id: z.string().min(1, "Customer is required"),
@@ -42,13 +53,24 @@ const schema = z.object({
   special_instructions: z.string().optional(),
 });
 
+const newCustomerSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  phone: z.string().min(1, "Phone is required"),
+  email: z.string().email("Invalid email").optional().or(z.literal("")),
+  company_name: z.string().optional(),
+});
+
 type FormValues = z.infer<typeof schema>;
+type NewCustomerValues = z.infer<typeof newCustomerSchema>;
 
 export default function NewBookingPage() {
   const router = useRouter();
+  const symbol = getCurrencyMeta(useCurrencyStore((s) => s.currencyCode)).symbol
   const createBooking = useCreateBooking();
+  const createCustomer = useCreateCustomer();
   const { data: customersPage } = useCustomers({ pageSize: 100 });
   const customers = customersPage?.items ?? [];
+  const [modalOpen, setModalOpen] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -63,6 +85,11 @@ export default function NewBookingPage() {
       cancellation_policy: "",
       special_instructions: "",
     },
+  });
+
+  const customerForm = useForm<NewCustomerValues>({
+    resolver: zodResolver(newCustomerSchema),
+    defaultValues: { name: "", phone: "", email: "", company_name: "" },
   });
 
   function onSubmit(values: FormValues) {
@@ -81,6 +108,26 @@ export default function NewBookingPage() {
       {
         onSuccess: (booking) => { toast.success("Booking created."); router.push(`/bookings/${booking.id}`); },
         onError: () => toast.error("Failed to create booking. Try again."),
+      },
+    );
+  }
+
+  function handleCreateCustomer(values: NewCustomerValues) {
+    createCustomer.mutate(
+      {
+        name: values.name,
+        phone: values.phone,
+        email: values.email || null,
+        company_name: values.company_name || null,
+      },
+      {
+        onSuccess: (customer) => {
+          toast.success(`Customer "${customer.name}" created.`);
+          form.setValue("customer_id", customer.id, { shouldValidate: true });
+          setModalOpen(false);
+          customerForm.reset();
+        },
+        onError: () => toast.error("Failed to create customer. Try again."),
       },
     );
   }
@@ -104,8 +151,18 @@ export default function NewBookingPage() {
             name="customer_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Customer *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Customer *</FormLabel>
+                  <button
+                    type="button"
+                    onClick={() => setModalOpen(true)}
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline cursor-pointer"
+                  >
+                    <UserPlus className="h-3.5 w-3.5" />
+                    New Customer
+                  </button>
+                </div>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a customer" />
@@ -144,7 +201,7 @@ export default function NewBookingPage() {
               name="deposit_amount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Deposit Amount (₹)</FormLabel>
+                  <FormLabel>{`Deposit Amount (${symbol})`}</FormLabel>
                   <FormControl>
                     <Input type="number" placeholder="Advance deposit" {...field} />
                   </FormControl>
@@ -225,7 +282,6 @@ export default function NewBookingPage() {
             )}
           />
 
-
           <div className="flex gap-3 pt-2">
             <Button type="submit" disabled={createBooking.isPending}>
               {createBooking.isPending ? "Creating…" : "Create Booking"}
@@ -236,6 +292,81 @@ export default function NewBookingPage() {
           </div>
         </form>
       </Form>
+
+      {/* New Customer Modal */}
+      <Dialog open={modalOpen} onOpenChange={(open) => { setModalOpen(open); if (!open) customerForm.reset(); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>New Customer</DialogTitle>
+          </DialogHeader>
+          <Form {...customerForm}>
+            <form onSubmit={customerForm.handleSubmit(handleCreateCustomer)} className="space-y-4 pt-2">
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={customerForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Full name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={customerForm.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Phone number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={customerForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="Email (optional)" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={customerForm.control}
+                name="company_name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Company</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Company name (optional)" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter className="pt-2">
+                <Button type="button" variant="outline" onClick={() => { setModalOpen(false); customerForm.reset(); }}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createCustomer.isPending}>
+                  {createCustomer.isPending ? "Creating…" : "Create Customer"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

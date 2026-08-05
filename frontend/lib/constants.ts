@@ -1,11 +1,13 @@
 export const CEREMONY_TYPE_OPTIONS = [
-  { value: "nikah", label: "Nikah" },
-  { value: "walima", label: "Walima" },
-  { value: "mehendi", label: "Mehendi" },
+  { value: "wedding", label: "Wedding" },
+  { value: "engagement", label: "Engagement" },
   { value: "reception", label: "Reception" },
-  { value: "aqiqah", label: "Aqiqah" },
   { value: "birthday", label: "Birthday" },
-  { value: "corporate", label: "Corporate" },
+  { value: "anniversary", label: "Anniversary" },
+  { value: "baby_shower", label: "Baby Shower" },
+  { value: "corporate", label: "Corporate Event" },
+  { value: "graduation", label: "Graduation" },
+  { value: "gala", label: "Gala / Fundraiser" },
   { value: "other", label: "Other" },
 ] as const;
 

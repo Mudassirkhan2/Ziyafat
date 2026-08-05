@@ -41,7 +41,7 @@ class BookingDetailResponse(BookingResponse):
 class CreateBookingBody(BaseModel):
     customer_id: str
     title: str
-    status: BookingStatus = BookingStatus.confirmed
+    status: BookingStatus = BookingStatus.draft
     notes: Optional[str] = None
     deposit_amount: Optional[float] = None
     deposit_due_date: Optional[date] = None
@@ -154,7 +154,7 @@ async def list_bookings(
     )
 
 
-@router.post("", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=BookingDetailResponse, status_code=status.HTTP_201_CREATED)
 async def create_booking(
     body: CreateBookingBody,
     current_user: User = Depends(require_role(UserRole.owner, UserRole.manager)),
@@ -185,7 +185,7 @@ async def create_booking(
         updated_at=now,
     )
     await booking.insert()
-    return await _booking_response(booking)
+    return await _booking_detail_response(booking)
 
 
 @router.get("/{booking_id}", response_model=BookingDetailResponse)

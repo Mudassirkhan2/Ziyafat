@@ -7,7 +7,7 @@ export interface Paginated<T> {
 }
 
 export type LeadStatus = "new" | "quoted" | "negotiating" | "won" | "lost";
-export type BookingStatus = "confirmed" | "in_progress" | "completed" | "cancelled";
+export type BookingStatus = "draft" | "confirmed" | "in_progress" | "completed" | "cancelled";
 export type CateringModel = "per_plate" | "chef_driven";
 export type UserRole = "owner" | "manager" | "kitchen" | "viewer";
 export type CeremonyType = "wedding" | "engagement" | "reception" | "birthday" | "anniversary" | "baby_shower" | "corporate" | "graduation" | "gala" | "other";
@@ -103,6 +103,7 @@ export interface Booking {
 export interface BookingEvent {
   id: string;
   booking_id: string;
+  ref_number: string | null;
   name: string;
   date: string;
   venue: string | null;
@@ -198,6 +199,7 @@ export interface Quotation {
   id: string;
   booking_id: string;
   event_id: string | null;
+  ref_number: string | null;
   version: number;
   status: QuotationStatus;
   line_items: QuotationLineItem[];
@@ -220,6 +222,9 @@ export interface Quotation {
   deposit_due_date: string | null;
   final_balance_due_date: string | null;
   signed_date: string | null;
+  signed_at: string | null;
+  signer_name: string | null;
+  signature_image: string | null;
   payment_terms_text: string | null;
   cancellation_policy_text: string | null;
   minimum_guarantee_count: number | null;
@@ -305,6 +310,7 @@ export interface Organisation {
   default_tax_rate: number;
   default_gratuity_percentage: number;
   invoice_prefix: string;
+  quotation_prefix: string;
   social_links: Record<string, string>;
   setup_completed: boolean;
   currency_code: string;

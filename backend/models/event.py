@@ -16,6 +16,7 @@ class CateringModel(str, Enum):
 class Event(Document):
     org_id: PydanticObjectId
     booking: Link[Booking]
+    ref_number: Optional[str] = None
     name: str
     date: date
     venue: Optional[str] = None

@@ -12,6 +12,7 @@ router = APIRouter(prefix="/api/v1/organisation", tags=["organisation"])
 
 
 class OrgResponse(BaseModel):
+    id: str
     name: str
     slug: str
     logo_url: str | None
@@ -42,8 +43,50 @@ class OrgResponse(BaseModel):
     default_tax_rate: float
     default_gratuity_percentage: float
     invoice_prefix: str
+    quotation_prefix: str
     social_links: dict
     setup_completed: bool
+    currency_code: str
+
+
+def _org_response(org: Organisation) -> OrgResponse:
+    return OrgResponse(
+        id=str(org.id),
+        name=org.name,
+        slug=org.slug,
+        logo_url=org.logo_url,
+        banner_url=org.banner_url,
+        address=org.address,
+        phone=org.phone,
+        email=org.email,
+        tagline=org.tagline,
+        primary=org.primary,
+        on_primary=org.on_primary,
+        primary_container=org.primary_container,
+        on_primary_container=org.on_primary_container,
+        secondary=org.secondary,
+        on_secondary=org.on_secondary,
+        secondary_container=org.secondary_container,
+        on_secondary_container=org.on_secondary_container,
+        report_header=org.report_header,
+        storefront_sections=org.storefront_sections,
+        gstin=org.gstin,
+        website=org.website,
+        bank_account_name=org.bank_account_name,
+        bank_account_number=org.bank_account_number,
+        bank_ifsc=org.bank_ifsc,
+        bank_name=org.bank_name,
+        default_payment_terms=org.default_payment_terms,
+        default_cancellation_policy=org.default_cancellation_policy,
+        default_service_charge_percentage=org.default_service_charge_percentage,
+        default_tax_rate=org.default_tax_rate,
+        default_gratuity_percentage=org.default_gratuity_percentage,
+        invoice_prefix=org.invoice_prefix,
+        quotation_prefix=org.quotation_prefix,
+        social_links=org.social_links,
+        setup_completed=org.setup_completed,
+        currency_code=org.currency_code,
+    )
 
 
 class ReportHeaderUpdateConfig(BaseModel):
@@ -83,8 +126,10 @@ class OrgUpdateRequest(BaseModel):
     default_tax_rate: float | None = None
     default_gratuity_percentage: float | None = None
     invoice_prefix: str | None = None
+    quotation_prefix: str | None = None
     social_links: dict | None = None
     setup_completed: bool | None = None
+    currency_code: str | None = None
 
 
 async def _get_org(current_user: User) -> Organisation:
@@ -96,7 +141,8 @@ async def _get_org(current_user: User) -> Organisation:
 
 @router.get("", response_model=OrgResponse)
 async def get_organisation(current_user: User = Depends(get_current_user)):
-    return await _get_org(current_user)
+    org = await _get_org(current_user)
+    return _org_response(org)
 
 
 @router.patch("", response_model=OrgResponse)
@@ -115,7 +161,7 @@ async def update_organisation(
         setattr(org, field, value)
 
     await org.save()
-    return org
+    return _org_response(org)
 
 
 @router.post("/logo", response_model=OrgResponse)
@@ -128,7 +174,7 @@ async def upload_org_logo(
     url = await asyncio.to_thread(upload_image, file_bytes, "ziyafat/org", f"{org.slug}-logo")
     org.logo_url = url
     await org.save()
-    return org
+    return _org_response(org)
 
 
 @router.post("/banner", response_model=OrgResponse)
@@ -141,7 +187,7 @@ async def upload_org_banner(
     url = await asyncio.to_thread(upload_image, file_bytes, "ziyafat/org", f"{org.slug}-banner")
     org.banner_url = url
     await org.save()
-    return org
+    return _org_response(org)
 
 
 @router.delete("/logo", response_model=OrgResponse)
@@ -156,7 +202,7 @@ async def delete_org_logo(
         await asyncio.to_thread(delete_image, public_id)
     org.logo_url = None
     await org.save()
-    return org
+    return _org_response(org)
 
 
 @router.delete("/banner", response_model=OrgResponse)
@@ -171,4 +217,4 @@ async def delete_org_banner(
         await asyncio.to_thread(delete_image, public_id)
     org.banner_url = None
     await org.save()
-    return org
+    return _org_response(org)

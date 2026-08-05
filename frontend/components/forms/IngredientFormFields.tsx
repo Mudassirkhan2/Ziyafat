@@ -9,6 +9,8 @@ import {
   FormSwitch,
   SectionLabel,
 } from "@/components/ui/form-fields"
+import { useCurrencyStore } from "@/lib/currency-store"
+import { getCurrencyMeta } from "@/lib/currencies"
 
 export const INGREDIENT_UNITS = ["kg", "g", "L", "ml", "pcs", "dozen", "box", "bag"]
 
@@ -45,6 +47,7 @@ interface IngredientFormFieldsProps {
 }
 
 export function IngredientFormFields({ showActiveToggle = false }: IngredientFormFieldsProps) {
+  const symbol = getCurrencyMeta(useCurrencyStore((s) => s.currencyCode)).symbol
   return (
     <>
       {/* 1 · Basics */}
@@ -61,7 +64,7 @@ export function IngredientFormFields({ showActiveToggle = false }: IngredientFor
         <SectionLabel number={2}>Units & Cost</SectionLabel>
         <div className="grid grid-cols-3 gap-4">
           <FormSelect name="base_unit" label="Base Unit *" placeholder="Unit" options={UNIT_OPTIONS} />
-          <FormInput name="cost_per_unit" label="Cost per Unit (₹) *" type="number" step="0.01" placeholder="0.00" />
+          <FormInput name="cost_per_unit" label={`Cost per Unit (${symbol}) *`} type="number" step="0.01" placeholder="0.00" />
           <FormInput name="purchase_unit" label="Purchase Unit" placeholder="e.g. 50kg bag" />
         </div>
       </div>

@@ -69,6 +69,15 @@ function formatDate(dateStr: string | null | undefined) {
 function getColumns(bookingMap: Map<string, Booking>, fmt: (n: number) => string): ColumnDef<Quotation>[] {
   return [
     {
+      id: "ref_number",
+      header: "Ref #",
+      cell: ({ row }) => (
+        <span className="font-mono text-xs text-on-surface-medium">
+          {row.original.ref_number ?? "—"}
+        </span>
+      ),
+    },
+    {
       id: "booking",
       header: "Booking",
       cell: ({ row }) => {
