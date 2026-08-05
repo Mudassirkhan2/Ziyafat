@@ -41,7 +41,7 @@ export function useCreateInvoice() {
       booking_id: string;
       quotation_id?: string;
       line_items?: QuotationLineItem[];
-      tax_lines?: Omit<InvoiceTaxLine, "tax_id"> & { tax_id?: string | null }[];
+      tax_lines?: (Omit<InvoiceTaxLine, "tax_id"> & { tax_id?: string | null })[];
       subtotal: number;
       discount: number;
       total: number;
